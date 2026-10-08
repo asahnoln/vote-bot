@@ -5,20 +5,21 @@ import (
 	"testing"
 
 	"github.com/asahnoln/vote-bot/bot"
+	"github.com/asahnoln/vote-bot/store"
 	"github.com/google/go-cmp/cmp"
 )
 
 func TestQuestion(t *testing.T) {
 	spy := &spyQuestionOutput{}
-	b := &bot.Bot{
-		QuestionStore: &stubQuestionStore{
+	b := &bot.Question{
+		Store: &stubQuestionStore{
 			q:    "A or B?",
 			opts: []string{"A", "B"},
 		},
-		QuestionOutput: spy,
+		Output: spy,
 	}
 
-	err := b.CurrentQuestion()
+	err := b.Current()
 	if err != nil {
 		t.Fatalf("got err %v; want nil", err)
 	}
@@ -33,13 +34,13 @@ func TestQuestion(t *testing.T) {
 }
 
 func TestQuestionStoreErr(t *testing.T) {
-	b := &bot.Bot{
-		QuestionStore: &stubQuestionStore{
+	b := &bot.Question{
+		Store: &stubQuestionStore{
 			err: errors.New("store error"),
 		},
 	}
 
-	err := b.CurrentQuestion()
+	err := b.Current()
 
 	if err == nil {
 		t.Error("got err nil; want not nil")
@@ -47,15 +48,53 @@ func TestQuestionStoreErr(t *testing.T) {
 }
 
 func TestQuestionOutputErr(t *testing.T) {
-	b := &bot.Bot{
-		QuestionStore: &stubQuestionStore{},
-		QuestionOutput: &spyQuestionOutput{
+	b := &bot.Question{
+		Store: &stubQuestionStore{},
+		Output: &spyQuestionOutput{
 			err: errors.New("output error"),
 		},
 	}
 
-	err := b.CurrentQuestion()
+	err := b.Current()
 
+	if err == nil {
+		t.Error("got err nil; want not nil")
+	}
+}
+
+func TestAnswer(t *testing.T) {
+	spy := &spyAnswerStore{}
+	b := &bot.Answer{
+		Store: spy,
+	}
+
+	err := b.Save("userID", "ANSWER!!!", 200)
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	if got, want := spy.a, "ANSWER!!!"; got != want {
+		t.Errorf("answer: got %q; want %q", got, want)
+	}
+
+	if got, want := spy.bet, 200; got != want {
+		t.Errorf("bet: got %v; want %v", got, want)
+	}
+
+	if got, want := spy.uID, "userID"; got != want {
+		t.Errorf("user: got %v; want %v", got, want)
+	}
+}
+
+func TestAnswerErr(t *testing.T) {
+	spy := &spyAnswerStore{
+		err: errors.New("store error"),
+	}
+	b := &bot.Answer{
+		Store: spy,
+	}
+
+	err := b.Save("", "", 0)
 	if err == nil {
 		t.Error("got err nil; want not nil")
 	}
@@ -63,12 +102,13 @@ func TestQuestionOutputErr(t *testing.T) {
 
 type stubQuestionStore struct {
 	q    string
+	a    string
 	opts []string
 	err  error
 }
 
-func (q *stubQuestionStore) CurrentQuestion() (string, []string, error) {
-	return q.q, q.opts, q.err
+func (q *stubQuestionStore) CurrentQuestion() (store.Question, error) {
+	return store.Question{Q: q.q, A: q.a, Opts: q.opts}, q.err
 }
 
 type spyQuestionOutput struct {
@@ -81,4 +121,18 @@ func (o *spyQuestionOutput) OutputQuestion(q string, opts []string) error {
 	o.q = q
 	o.opts = opts
 	return o.err
+}
+
+type spyAnswerStore struct {
+	a   string
+	bet int
+	uID string
+	err error
+}
+
+func (s *spyAnswerStore) SaveAnswer(uID string, a string, bet int) error {
+	s.a = a
+	s.bet = bet
+	s.uID = uID
+	return s.err
 }

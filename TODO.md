@@ -67,7 +67,7 @@ Each user has an account. (At the start they have 1000$)
 
 ## API
 
-- [ ] Gets current question with answers
+- [x] Gets current question with answers
 - [ ] Receives answer with a bet
 - [ ] Closes a question
 - [ ] Get answer status
