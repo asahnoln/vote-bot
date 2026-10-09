@@ -65,26 +65,14 @@ If user is the fastest to answer - double it.
 
 Each user has an account. (At the start they have 1000$)
 
-## API
-
-- [x] Gets current question with answers
-- [x] Receives answer with a bet
-- [ ] Closes a question
-- [ ] Get answer status
-- [ ] Get account status
-- [ ] Get stats for a category
-
 ## Telegram
 
-### Preparation
-
-- [ ] Admin ID
-
-### Code
-
-- [ ] Admin send question
-- [ ] Admin send answer and account status
-- [ ] Receive answer and a bet for a question
+- [ ] Admin sends question with answers
+- [ ] Receive and save answer
+- [ ] Receive and save bet
+- [ ] Admin close question - update latest message to stop accepting answers
+- [ ] What if someone didn't answer?
+- [ ] Admin sends answer and account status to all
 
 ## Stats
 
