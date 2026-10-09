@@ -192,8 +192,8 @@ func TestQuestionUpdateError(t *testing.T) {
 		errCh := make(chan error)
 		go func() {
 			err := <-errCh
-			if got, want := err, io.EOF; !errors.Is(got, want) {
-				t.Errorf("got err %v; want %q", got, want)
+			if got, want := err.Error(), "update decode: unexpected end of JSON input"; got != want {
+				t.Errorf("got err %q; want %q", got, want)
 			}
 		}()
 

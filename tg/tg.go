@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 )
@@ -83,14 +84,21 @@ var ErrStoreNil = errors.New("store is nil")
 
 func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	upd := Update{}
-	err := json.NewDecoder(r.Body).Decode(&upd)
+	updBody, err := io.ReadAll(r.Body)
+	// TODO: Test for this error
 	if err != nil {
-		b.error(fmt.Errorf("update decode: %w", err), w, http.StatusInternalServerError)
+		b.error(fmt.Errorf("update read: %w", err), w, http.StatusInternalServerError)
 		return
 	}
 	defer r.Body.Close()
 
-	slog.InfoContext(r.Context(), "update", "upd", upd)
+	slog.InfoContext(r.Context(), "update", "upd", updBody)
+
+	err = json.Unmarshal(updBody, &upd)
+	if err != nil {
+		b.error(fmt.Errorf("update decode: %w", err), w, http.StatusInternalServerError)
+		return
+	}
 
 	if b.Store == nil {
 		b.error(ErrStoreNil, w, http.StatusInternalServerError)
