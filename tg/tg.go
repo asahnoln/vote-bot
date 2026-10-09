@@ -16,8 +16,8 @@ const (
 )
 
 type SendRichMessage struct {
-	ChatID      int
-	RichMessage InputRichMessage
+	ChatID      int              `json:"chat_id"`
+	RichMessage InputRichMessage `json:"rich_message"`
 }
 
 type InputRichMessage struct {

@@ -1,0 +1,17 @@
+{
+  "chat_id": 67,
+  "rich_message": {
+    "blocks": [
+      {
+        "type": "someType",
+        "text": "some text",
+        "align": "left",
+        "buttons": [
+          {
+            "text": "button 1"
+          }
+        ]
+      }
+    ]
+  }
+}
