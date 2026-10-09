@@ -3,6 +3,8 @@ package tg
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -64,16 +66,32 @@ type CurrentQuestioner interface {
 }
 
 type Bot struct {
-	Store CurrentQuestioner
-	URL   string
+	Store     CurrentQuestioner
+	URL       string
+	ErrorChan chan<- error
 }
+
+var ErrStoreNil = errors.New("store is nil")
 
 func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	upd := Update{}
-	json.NewDecoder(r.Body).Decode(&upd)
+	err := json.NewDecoder(r.Body).Decode(&upd)
+	if err != nil {
+		b.error(fmt.Errorf("update decode: %w", err), w)
+		return
+	}
 	defer r.Body.Close()
 
-	q, _ := b.Store.CurrentQuestion()
+	if b.Store == nil {
+		b.error(ErrStoreNil, w)
+		return
+	}
+
+	q, err := b.Store.CurrentQuestion()
+	if err != nil {
+		b.error(fmt.Errorf("question store: %w", err), w)
+		return
+	}
 
 	msg := SendRichMessage{
 		ChatID: upd.Message.Chat.ID,
@@ -95,7 +113,20 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		msg.RichMessage.Blocks[1].Buttons = append(msg.RichMessage.Blocks[1].Buttons, RichMessageButton{Text: o})
 	}
 
-	body, _ := json.Marshal(&msg)
+	body, err := json.Marshal(&msg)
+	if err != nil {
+		b.error(fmt.Errorf("message marshal: %w", err), w)
+		return
+	}
 
-	http.Post(b.URL+"/"+SendRichMessageMethod, ApplicationJSONContentType, bytes.NewReader(body))
+	_, err = http.Post(b.URL+"/"+SendRichMessageMethod, ApplicationJSONContentType, bytes.NewReader(body))
+	if err != nil {
+		b.error(fmt.Errorf("http post: %w", err), w)
+		return
+	}
+}
+
+func (b *Bot) error(err error, w http.ResponseWriter) {
+	b.ErrorChan <- err
+	w.WriteHeader(http.StatusInternalServerError)
 }

@@ -3,9 +3,13 @@ package tg_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"testing/synctest"
 
 	"github.com/asahnoln/vote-bot/tg"
 	"github.com/google/go-cmp/cmp"
@@ -13,6 +17,7 @@ import (
 
 // TODO: Check webhook target
 
+// TODO: Separate different parts into different tests?
 func TestQuestion(t *testing.T) {
 	got := tg.SendRichMessage{}
 	tgSrvStubCalled := false
@@ -101,22 +106,113 @@ func TestQuestion(t *testing.T) {
 // TODO: Check for store to be passed
 
 func TestQuestionUpdateError(t *testing.T) {
-	r := httptest.NewRequest(http.MethodPost, "/webhook", nil)
-	w := httptest.NewRecorder()
+	synctest.Test(t, func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPost, "/webhook", nil)
+		w := httptest.NewRecorder()
 
-	b := tg.Bot{}
-	b.ServeHTTP(w, r)
+		errCh := make(chan error)
+		go func() {
+			err := <-errCh
+			if got, want := err, io.EOF; !errors.Is(got, want) {
+				t.Errorf("got err %v; want %q", got, want)
+			}
+		}()
 
-	if got, want := w.Code, http.StatusInternalServerError; got != want {
-		t.Errorf("bot response code: got %v; want %v", got, want)
-	}
+		b := tg.Bot{
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusInternalServerError; got != want {
+			t.Errorf("bot response code: got %v; want %v", got, want)
+		}
+	})
 }
 
-type stubStore struct{}
+func TestQuestionNoStoreError(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))
+		w := httptest.NewRecorder()
+
+		errCh := make(chan error)
+		go func() {
+			err := <-errCh
+			if got, want := err, tg.ErrStoreNil; !errors.Is(got, want) {
+				t.Errorf("got err %q; want %q", got, want)
+			}
+		}()
+
+		b := tg.Bot{
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusInternalServerError; got != want {
+			t.Errorf("bot response code: got %v; want %v", got, want)
+		}
+	})
+}
+
+func TestQuestionStoreError(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))
+		w := httptest.NewRecorder()
+
+		wantErr := errors.New("store error")
+		errCh := make(chan error)
+		go func() {
+			err := <-errCh
+			if got, want := err, wantErr; !errors.Is(got, want) {
+				t.Errorf("got err %q; want %q", got, want)
+			}
+		}()
+
+		b := tg.Bot{
+			Store: &stubStore{
+				err: wantErr,
+			},
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusInternalServerError; got != want {
+			t.Errorf("bot response code: got %v; want %v", got, want)
+		}
+	})
+}
+
+func TestQuestionTgSrvRequestError(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))
+		w := httptest.NewRecorder()
+
+		errCh := make(chan error)
+		go func() {
+			err := <-errCh
+			if err == nil {
+				t.Error("got err nil; want not nil")
+			}
+		}()
+
+		b := tg.Bot{
+			Store:     &stubStore{},
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusInternalServerError; got != want {
+			t.Errorf("bot response code: got %v; want %v", got, want)
+		}
+	})
+}
+
+type stubStore struct {
+	err error
+}
 
 func (s *stubStore) CurrentQuestion() (tg.Question, error) {
 	return tg.Question{
 		Q:    "X or Y?",
 		Opts: []string{"X", "Y"},
-	}, nil
+	}, s.err
 }
