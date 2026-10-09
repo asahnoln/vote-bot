@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 )
 
@@ -22,14 +21,14 @@ type SendRichMessage struct {
 }
 
 type InputRichMessage struct {
-	Blocks []InputRichBlock
+	Blocks []InputRichBlock `json:"blocks"`
 }
 
 type InputRichBlock struct {
-	Type    string
-	Text    string
-	Align   string
-	Buttons []RichMessageButton
+	Type    string              `json:"type"`
+	Text    string              `json:"text"`
+	Align   string              `json:"align"`
+	Buttons []RichMessageButton `json:"buttons"`
 }
 
 const (
@@ -42,7 +41,7 @@ const (
 )
 
 type RichMessageButton struct {
-	Text string
+	Text string `json:"text"`
 }
 
 type Update struct {
@@ -89,7 +88,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	slog.InfoContext(r.Context(), "update", "upd", upd)
+	// slog.InfoContext(r.Context(), "update", "upd", upd)
 
 	if b.Store == nil {
 		b.error(ErrStoreNil, w, http.StatusInternalServerError)
@@ -122,7 +121,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		msg.RichMessage.Blocks[1].Buttons = append(msg.RichMessage.Blocks[1].Buttons, RichMessageButton{Text: o})
 	}
 
-	slog.InfoContext(r.Context(), "message", "msg", msg)
+	// slog.InfoContext(r.Context(), "message", "msg", msg)
 
 	body, err := json.Marshal(&msg)
 	if err != nil {
@@ -130,7 +129,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.InfoContext(r.Context(), "request body", "body", body)
+	// slog.InfoContext(r.Context(), "request body", "body", body)
 
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, b.URL+"/"+SendRichMessageMethod, bytes.NewReader(body))
 	req.Header.Set("Content-Type", ApplicationJSONContentType)
