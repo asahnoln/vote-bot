@@ -130,6 +130,8 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	slog.InfoContext(r.Context(), "request body", "body", body)
+
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, b.URL+"/"+SendRichMessageMethod, bytes.NewReader(body))
 	req.Header.Set("Content-Type", ApplicationJSONContentType)
 	if err != nil {
