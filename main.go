@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -11,10 +11,11 @@ import (
 
 func main() {
 	// TODO: Create http server for context
+	ctx := context.Background()
 	errCh := make(chan error)
 	go func() {
 		for err := range errCh {
-			log.Printf("bot err: %v", err)
+			slog.ErrorContext(ctx, "bot", "err", err)
 		}
 	}()
 
@@ -26,7 +27,7 @@ func main() {
 
 	err := http.ListenAndServe(":8080", b)
 	if err != nil {
-		log.Fatalf("http err: %v", err)
+		slog.ErrorContext(ctx, "http srv", "err", err)
 	}
 }
 

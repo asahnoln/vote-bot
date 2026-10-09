@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 )
 
@@ -88,6 +89,8 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	slog.InfoContext(r.Context(), "update", "upd", upd)
+
 	if b.Store == nil {
 		b.error(ErrStoreNil, w, http.StatusInternalServerError)
 		return
@@ -118,6 +121,8 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// TODO: TDD utility for button auto row placement
 		msg.RichMessage.Blocks[1].Buttons = append(msg.RichMessage.Blocks[1].Buttons, RichMessageButton{Text: o})
 	}
+
+	slog.InfoContext(r.Context(), "message", "msg", msg)
 
 	body, err := json.Marshal(&msg)
 	if err != nil {
