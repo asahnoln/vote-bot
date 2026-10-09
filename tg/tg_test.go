@@ -11,6 +11,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// TODO: Check webhook target
+
 func TestQuestion(t *testing.T) {
 	got := tg.SendRichMessage{}
 	tgSrvStubCalled := false
@@ -61,7 +63,7 @@ func TestQuestion(t *testing.T) {
 	b.ServeHTTP(w, r)
 
 	if got, want := w.Code, http.StatusOK; got != want {
-		t.Errorf("update response code: got %v; want %v", got, want)
+		t.Errorf("bot response code: got %v; want %v", got, want)
 	}
 
 	if got, want := tgSrvStubCalled, true; got != want {
@@ -93,6 +95,20 @@ func TestQuestion(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("request mismatch (-want +got):%s", diff)
+	}
+}
+
+// TODO: Check for store to be passed
+
+func TestQuestionUpdateError(t *testing.T) {
+	r := httptest.NewRequest(http.MethodPost, "/webhook", nil)
+	w := httptest.NewRecorder()
+
+	b := tg.Bot{}
+	b.ServeHTTP(w, r)
+
+	if got, want := w.Code, http.StatusInternalServerError; got != want {
+		t.Errorf("bot response code: got %v; want %v", got, want)
 	}
 }
 

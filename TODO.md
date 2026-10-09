@@ -67,6 +67,8 @@ Each user has an account. (At the start they have 1000$)
 
 ## Telegram
 
+- [ ] Auto deploy
+- [ ] Register webhook
 - [ ] Admin sends question with answers
 - [ ] Receive and save answer
 - [ ] Receive and save bet
