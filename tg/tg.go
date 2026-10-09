@@ -1,6 +1,10 @@
 package tg
 
-import "net/http"
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+)
 
 type SendRichMessage struct {
 	ChatID      int
@@ -50,4 +54,30 @@ type Bot struct {
 }
 
 func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	msg := SendRichMessage{
+		ChatID: 123,
+		RichMessage: InputRichMessage{
+			Blocks: []InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "X or Y?",
+				},
+				{
+					Type:  "buttons",
+					Align: "center",
+					Buttons: []RichMessageButton{
+						{
+							Text: "X",
+						},
+						{
+							Text: "Y",
+						},
+					},
+				},
+			},
+		},
+	}
+	body, _ := json.Marshal(&msg)
+
+	http.Post(b.URL+"/sendRichMessage", "application/json", bytes.NewReader(body))
 }

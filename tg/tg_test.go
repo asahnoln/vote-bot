@@ -17,13 +17,21 @@ func TestQuestion(t *testing.T) {
 	tgSrvStub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tgSrvStubCalled = true
 
+		if got, want := r.Method, http.MethodPost; got != want {
+			t.Errorf("tg srv request method: got %q; want %q", got, want)
+		}
+
+		if got, want := r.Header.Get("Content-Type"), "application/json"; got != want {
+			t.Errorf("tg srv request method: got %q; want %q", got, want)
+		}
+
 		if got, want := r.URL.Path, "/sendRichMessage"; got != want {
 			t.Errorf("tg srv request path: got %q; want %q", got, want)
 		}
 
 		err := json.NewDecoder(r.Body).Decode(&got)
 		if err != nil {
-			t.Fatalf("tg srv request unmarshal error: %v", err)
+			t.Errorf("tg srv request unmarshal error: %v", err)
 		}
 
 		defer r.Body.Close()
