@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 )
 
@@ -41,7 +42,8 @@ const (
 )
 
 type RichMessageButton struct {
-	Text string `json:"text"`
+	Text         string `json:"text"`
+	CallbackData string `json:"callback_data"`
 }
 
 type Update struct {
@@ -88,7 +90,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// slog.InfoContext(r.Context(), "update", "upd", upd)
+	slog.InfoContext(r.Context(), "update", "upd", upd)
 
 	if b.Store == nil {
 		b.error(ErrStoreNil, w, http.StatusInternalServerError)
@@ -118,18 +120,19 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, o := range q.Opts {
 		// TODO: TDD utility for button auto row placement
-		msg.RichMessage.Blocks[1].Buttons = append(msg.RichMessage.Blocks[1].Buttons, RichMessageButton{Text: o})
+		msg.RichMessage.Blocks[1].Buttons = append(
+			msg.RichMessage.Blocks[1].Buttons,
+			RichMessageButton{Text: o, CallbackData: o},
+		)
 	}
 
-	// slog.InfoContext(r.Context(), "message", "msg", msg)
+	slog.InfoContext(r.Context(), "message", "msg", msg)
 
 	body, err := json.Marshal(&msg)
 	if err != nil {
 		b.error(fmt.Errorf("message marshal: %w", err), w, http.StatusInternalServerError)
 		return
 	}
-
-	// slog.InfoContext(r.Context(), "request body", "body", body)
 
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, b.URL+"/"+SendRichMessageMethod, bytes.NewReader(body))
 	req.Header.Set("Content-Type", ApplicationJSONContentType)

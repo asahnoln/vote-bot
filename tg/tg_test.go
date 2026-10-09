@@ -97,10 +97,12 @@ func TestQuestion(t *testing.T) {
 					Align: "center",
 					Buttons: []tg.RichMessageButton{
 						{
-							Text: "X",
+							Text:         "X",
+							CallbackData: "X",
 						},
 						{
-							Text: "Y",
+							Text:         "Y",
+							CallbackData: "Y",
 						},
 					},
 				},

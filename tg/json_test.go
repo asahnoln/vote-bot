@@ -24,7 +24,8 @@ func TestSendRichMessageStr(t *testing.T) {
 					Align: "left",
 					Buttons: []tg.RichMessageButton{
 						{
-							Text: "button 1",
+							Text:         "button 1",
+							CallbackData: "button data",
 						},
 					},
 				},
