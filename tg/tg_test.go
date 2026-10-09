@@ -40,8 +40,16 @@ func TestQuestion(t *testing.T) {
 		if err != nil {
 			t.Errorf("tg srv request unmarshal error: %v", err)
 		}
-
 		defer r.Body.Close()
+
+		resp := tg.Response{
+			OK: true,
+		}
+
+		err = json.NewEncoder(w).Encode(resp)
+		if err != nil {
+			t.Fatalf("tg srv resp err: %v", err)
+		}
 	}))
 	defer tgSrvStub.Close()
 
@@ -103,7 +111,75 @@ func TestQuestion(t *testing.T) {
 	}
 }
 
-// TODO: Check for store to be passed
+func TestTgSrvNotOK(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		tgSrvStub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			resp := tg.Response{
+				OK:          false,
+				Description: "something is not ok",
+			}
+
+			err := json.NewEncoder(w).Encode(resp)
+			if err != nil {
+				t.Fatalf("tg srv resp err: %v", err)
+			}
+		}))
+		defer tgSrvStub.Close()
+
+		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))
+		w := httptest.NewRecorder()
+
+		errCh := make(chan error)
+		go func() {
+			err := <-errCh
+			if got, want := err.Error(), "tg srv not ok: something is not ok"; got != want {
+				t.Errorf("got err %q; want %q", got, want)
+			}
+		}()
+
+		b := tg.Bot{
+			Store:     &stubStore{},
+			URL:       tgSrvStub.URL,
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusServiceUnavailable; got != want {
+			t.Errorf("bot response code: got %v; want %v", got, want)
+		}
+	})
+}
+
+func TestTgSrvNotOKWrongJSON(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		tgSrvStub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(``))
+		}))
+		defer tgSrvStub.Close()
+
+		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))
+		w := httptest.NewRecorder()
+
+		errCh := make(chan error)
+		go func() {
+			err := <-errCh
+			if got, want := err, io.EOF; !errors.Is(got, want) {
+				t.Errorf("got err %v; want %q", got, want)
+			}
+		}()
+
+		b := tg.Bot{
+			Store:     &stubStore{},
+			URL:       tgSrvStub.URL,
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusInternalServerError; got != want {
+			t.Errorf("bot response code: got %v; want %v", got, want)
+		}
+	})
+}
 
 func TestQuestionUpdateError(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {

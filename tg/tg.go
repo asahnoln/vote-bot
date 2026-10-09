@@ -65,31 +65,39 @@ type CurrentQuestioner interface {
 	CurrentQuestion() (Question, error)
 }
 
+type Response struct {
+	OK          bool
+	Description string
+}
+
 type Bot struct {
 	Store     CurrentQuestioner
 	URL       string
 	ErrorChan chan<- error
 }
 
-var ErrStoreNil = errors.New("store is nil")
+var (
+	ErrStoreNil      = errors.New("store is nil")
+	ErrTgSrvResponse = errors.New("tg srv response not ok")
+)
 
 func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	upd := Update{}
 	err := json.NewDecoder(r.Body).Decode(&upd)
 	if err != nil {
-		b.error(fmt.Errorf("update decode: %w", err), w)
+		b.error(fmt.Errorf("update decode: %w", err), w, http.StatusInternalServerError)
 		return
 	}
 	defer r.Body.Close()
 
 	if b.Store == nil {
-		b.error(ErrStoreNil, w)
+		b.error(ErrStoreNil, w, http.StatusInternalServerError)
 		return
 	}
 
 	q, err := b.Store.CurrentQuestion()
 	if err != nil {
-		b.error(fmt.Errorf("question store: %w", err), w)
+		b.error(fmt.Errorf("question store: %w", err), w, http.StatusInternalServerError)
 		return
 	}
 
@@ -115,18 +123,31 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(&msg)
 	if err != nil {
-		b.error(fmt.Errorf("message marshal: %w", err), w)
+		b.error(fmt.Errorf("message marshal: %w", err), w, http.StatusInternalServerError)
 		return
 	}
 
-	_, err = http.Post(b.URL+"/"+SendRichMessageMethod, ApplicationJSONContentType, bytes.NewReader(body))
+	response, err := http.Post(b.URL+"/"+SendRichMessageMethod, ApplicationJSONContentType, bytes.NewReader(body))
 	if err != nil {
-		b.error(fmt.Errorf("http post: %w", err), w)
+		b.error(fmt.Errorf("http post: %w", err), w, http.StatusInternalServerError)
+		return
+	}
+	defer response.Body.Close()
+
+	resp := Response{}
+	err = json.NewDecoder(response.Body).Decode(&resp)
+	if err != nil {
+		b.error(fmt.Errorf("tg srv response decode: %w", err), w, http.StatusInternalServerError)
+		return
+	}
+
+	if !resp.OK {
+		b.error(fmt.Errorf("tg srv not ok: %s", resp.Description), w, http.StatusServiceUnavailable)
 		return
 	}
 }
 
-func (b *Bot) error(err error, w http.ResponseWriter) {
+func (b *Bot) error(err error, w http.ResponseWriter, s int) {
 	b.ErrorChan <- err
-	w.WriteHeader(http.StatusInternalServerError)
+	w.WriteHeader(s)
 }
