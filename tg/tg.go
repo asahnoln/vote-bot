@@ -2,6 +2,7 @@ package tg
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -62,7 +63,7 @@ type Question struct {
 }
 
 type CurrentQuestioner interface {
-	CurrentQuestion() (Question, error)
+	CurrentQuestion(context.Context) (Question, error)
 }
 
 type Response struct {
@@ -76,10 +77,7 @@ type Bot struct {
 	ErrorChan chan<- error
 }
 
-var (
-	ErrStoreNil      = errors.New("store is nil")
-	ErrTgSrvResponse = errors.New("tg srv response not ok")
-)
+var ErrStoreNil = errors.New("store is nil")
 
 func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	upd := Update{}
@@ -95,7 +93,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q, err := b.Store.CurrentQuestion()
+	q, err := b.Store.CurrentQuestion(r.Context())
 	if err != nil {
 		b.error(fmt.Errorf("question store: %w", err), w, http.StatusInternalServerError)
 		return
@@ -127,9 +125,17 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := http.Post(b.URL+"/"+SendRichMessageMethod, ApplicationJSONContentType, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, b.URL+"/"+SendRichMessageMethod, bytes.NewReader(body))
+	req.Header.Set("Content-Type", ApplicationJSONContentType)
 	if err != nil {
-		b.error(fmt.Errorf("http post: %w", err), w, http.StatusInternalServerError)
+		b.error(fmt.Errorf("request creation: %w", err), w, http.StatusInternalServerError)
+		return
+	}
+
+	// TODO: Test for this err
+	response, err := http.DefaultClient.Do(req)
+	if err != nil {
+		b.error(fmt.Errorf("http client do: %w", err), w, http.StatusInternalServerError)
 		return
 	}
 	defer response.Body.Close()

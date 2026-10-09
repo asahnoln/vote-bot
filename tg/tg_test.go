@@ -2,6 +2,7 @@ package tg_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -29,7 +30,7 @@ func TestQuestion(t *testing.T) {
 		}
 
 		if got, want := r.Header.Get("Content-Type"), "application/json"; got != want {
-			t.Errorf("tg srv request method: got %q; want %q", got, want)
+			t.Errorf("tg srv request Content-Type: got %q; want %q", got, want)
 		}
 
 		if got, want := r.URL.Path, "/sendRichMessage"; got != want {
@@ -286,7 +287,7 @@ type stubStore struct {
 	err error
 }
 
-func (s *stubStore) CurrentQuestion() (tg.Question, error) {
+func (s *stubStore) CurrentQuestion(context.Context) (tg.Question, error) {
 	return tg.Question{
 		Q:    "X or Y?",
 		Opts: []string{"X", "Y"},
