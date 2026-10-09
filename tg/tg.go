@@ -6,6 +6,12 @@ import (
 	"net/http"
 )
 
+const ApplicationJSONContentType = "application/json"
+
+const (
+	SendRichMessageMethod = "sendRichMessage"
+)
+
 type SendRichMessage struct {
 	ChatID      int
 	RichMessage InputRichMessage
@@ -21,6 +27,15 @@ type InputRichBlock struct {
 	Align   string
 	Buttons []RichMessageButton
 }
+
+const (
+	InputRichBlockParagraphType = "paragraph"
+	InputRichBlockButtonsType   = "buttons"
+)
+
+const (
+	InputRichBlockButtonsAlignCenter = "center"
+)
 
 type RichMessageButton struct {
 	Text string
@@ -54,30 +69,33 @@ type Bot struct {
 }
 
 func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	upd := Update{}
+	json.NewDecoder(r.Body).Decode(&upd)
+	defer r.Body.Close()
+
+	q, _ := b.Store.CurrentQuestion()
+
 	msg := SendRichMessage{
-		ChatID: 123,
+		ChatID: upd.Message.Chat.ID,
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{
 				{
-					Type: "paragraph",
-					Text: "X or Y?",
+					Type: InputRichBlockParagraphType,
+					Text: q.Q,
 				},
 				{
-					Type:  "buttons",
-					Align: "center",
-					Buttons: []RichMessageButton{
-						{
-							Text: "X",
-						},
-						{
-							Text: "Y",
-						},
-					},
+					Type:  InputRichBlockButtonsType,
+					Align: InputRichBlockButtonsAlignCenter,
 				},
 			},
 		},
 	}
+	for _, o := range q.Opts {
+		// TODO: TDD utility for button auto row placement
+		msg.RichMessage.Blocks[1].Buttons = append(msg.RichMessage.Blocks[1].Buttons, RichMessageButton{Text: o})
+	}
+
 	body, _ := json.Marshal(&msg)
 
-	http.Post(b.URL+"/sendRichMessage", "application/json", bytes.NewReader(body))
+	http.Post(b.URL+"/"+SendRichMessageMethod, ApplicationJSONContentType, bytes.NewReader(body))
 }
