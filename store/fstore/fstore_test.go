@@ -3,8 +3,10 @@ package fstore_test
 import (
 	"context"
 	"errors"
+	"os"
 	"testing"
 
+	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/store/fstore"
@@ -13,50 +15,37 @@ import (
 )
 
 func TestQuestion(t *testing.T) {
-	opt := option.WithAuthCredentialsFile(option.ServiceAccount, "testdata/firebase-adminsdk.json")
-	ctx := context.Background()
-	app, err := firebase.NewApp(ctx, nil, opt)
-	if err != nil {
-		t.Fatalf("firebase new app: got err %v; want nil", err)
-	}
+	os.Setenv("FIRESTORE_EMULATOR_HOST", "[::1]:8711")
 
-	c, err := app.Firestore(ctx)
+	ctx := context.Background()
+
+	c, err := firestore.NewClient(ctx, "test")
 	if err != nil {
 		t.Fatalf("app firestore: got err %v; want nil", err)
 	}
 
 	col := c.Collection("questions")
-	_, err = col.Doc("test-q-0").Set(ctx, store.Question{
+	col.Doc("test-q-0").Set(ctx, store.Question{
 		Q:      "Should not be used?",
 		Closed: true,
 		A:      1,
 		Opts:   []string{"skip", "avoid"},
 		Order:  0,
 	})
-	if err != nil {
-		t.Fatalf("test data add 0: got err %v; want nil", err)
-	}
-	_, err = col.Doc("test-q-1").Set(ctx, store.Question{
+	col.Doc("test-q-1").Set(ctx, store.Question{
 		Q:      "SaaaS or SoooS?",
 		Closed: false,
 		A:      2,
 		Opts:   []string{"jej", "joj", "sas", "sos"},
 		Order:  1,
 	})
-	if err != nil {
-		t.Fatalf("test data add 1: got err %v; want nil", err)
-	}
-
-	_, err = col.Doc("test-q-2").Set(ctx, store.Question{
+	col.Doc("test-q-2").Set(ctx, store.Question{
 		Q:      "Should skip in future?",
 		Closed: false,
 		A:      1,
 		Opts:   []string{"SKIP", "FUTURE"},
 		Order:  2,
 	})
-	if err != nil {
-		t.Fatalf("test data add 2: got err %v; want nil", err)
-	}
 
 	f := fstore.New(c)
 
@@ -77,14 +66,11 @@ func TestQuestion(t *testing.T) {
 }
 
 func TestNoQuestion(t *testing.T) {
-	opt := option.WithAuthCredentialsFile(option.ServiceAccount, "testdata/firebase-adminsdk.json")
-	ctx := context.Background()
-	app, err := firebase.NewApp(ctx, nil, opt)
-	if err != nil {
-		t.Fatalf("firebase new app: got err %v; want nil", err)
-	}
+	os.Setenv("FIRESTORE_EMULATOR_HOST", "[::1]:8711")
 
-	c, err := app.Firestore(ctx)
+	ctx := context.Background()
+
+	c, err := firestore.NewClient(ctx, "test")
 	if err != nil {
 		t.Fatalf("app firestore: got err %v; want nil", err)
 	}
@@ -100,4 +86,21 @@ func TestNoQuestion(t *testing.T) {
 	if got, want := err, store.ErrNoQuestionsFound; !errors.Is(got, want) {
 		t.Fatalf("fstore no questions: got err %v; want %v", got, want)
 	}
+}
+
+func firestoreIntegrationClient(t testing.T, ctx context.Context) *firestore.Client {
+	t.Helper()
+
+	opt := option.WithAuthCredentialsFile(option.ServiceAccount, "testdata/firebase-adminsdk.json")
+	app, err := firebase.NewApp(ctx, nil, opt)
+	if err != nil {
+		t.Fatalf("firebase new app: got err %v; want nil", err)
+	}
+
+	c, err := app.Firestore(ctx)
+	if err != nil {
+		t.Fatalf("app firestore: got err %v; want nil", err)
+	}
+
+	return c
 }

@@ -69,15 +69,18 @@ Each user has an account. (At the start they have 1000$)
 
 - [x] Auto deploy
 - [x] Register webhook
-- [ ] Auto register webhook?
 - [x] Admin sends question with answers
 - [x] Check for webhook url
-- [ ] Store for questions
-- [ ] Receive and save answer
+- [x] Store for questions
+- [x] Ask Alina about bets - are they different for questions?
+- [x] Use firebase emulator?
+- [ ] Auto register webhook?
+- [ ] Receive and save answer and then send bets
+- [ ] Bets are always same, but sometimes there is an option for "all in"
 - [ ] Receive and save bet
 - [ ] Save users who join the bot
 - [ ] Send question to those who joined (and didn't stop?)
-- [ ] Admin close question - update latest message to stop accepting answers
+- [ ] Admin closes question - update latest message to stop accepting answers
 - [ ] What if someone didn't answer?
 - [ ] Admin sends answer and account status to all
 
