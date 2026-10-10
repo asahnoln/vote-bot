@@ -9,15 +9,6 @@ import (
 	"net/http"
 )
 
-func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	srv := http.NewServeMux()
-	srv.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.NotFound(w, r)
-	}))
-	srv.Handle("/webhook", http.HandlerFunc(b.question))
-	srv.ServeHTTP(w, r)
-}
-
 func (b *Bot) question(w http.ResponseWriter, r *http.Request) {
 	upd := Update{}
 	updBody, err := io.ReadAll(r.Body)

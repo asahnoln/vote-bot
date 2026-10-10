@@ -71,7 +71,7 @@ Each user has an account. (At the start they have 1000$)
 - [x] Register webhook
 - [ ] Auto register webhook?
 - [x] Admin sends question with answers
-- [ ] Check for webhook url
+- [x] Check for webhook url
 - [ ] Save users who join the bot
 - [ ] Send question to those who joined (and didn't stop?)
 - [ ] Store for questions

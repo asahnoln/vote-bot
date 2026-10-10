@@ -3,6 +3,7 @@ package tg
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 )
 
@@ -76,6 +77,18 @@ type Bot struct {
 }
 
 var ErrStoreNil = errors.New("store is nil")
+
+func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	srv := http.NewServeMux()
+
+	slog.InfoContext(r.Context(), "request", "r", r)
+
+	srv.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	}))
+	srv.Handle("/webhook", http.HandlerFunc(b.question))
+	srv.ServeHTTP(w, r)
+}
 
 func (b *Bot) error(err error, w http.ResponseWriter, s int) {
 	w.WriteHeader(s)
