@@ -5,6 +5,8 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+
+	"github.com/asahnoln/vote-bot/store"
 )
 
 const ApplicationJSONContentType = "application/json"
@@ -56,13 +58,8 @@ type Chat struct {
 	ID int
 }
 
-type Question struct {
-	Q    string
-	Opts []string
-}
-
 type CurrentQuestioner interface {
-	CurrentQuestion(context.Context) (Question, error)
+	CurrentQuestion(context.Context) (store.Question, error)
 }
 
 type Response struct {

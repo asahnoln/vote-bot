@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
 )
 
@@ -33,8 +34,8 @@ func main() {
 
 type inMemoryStore struct{}
 
-func (s *inMemoryStore) CurrentQuestion(context.Context) (tg.Question, error) {
-	return tg.Question{
+func (s *inMemoryStore) CurrentQuestion(context.Context) (store.Question, error) {
+	return store.Question{
 		Q:    "Кто убийца ваших снов и мечтаний?",
 		Opts: []string{"Нечаев", "П-3", "Сеченов", "Левая"},
 	}, nil

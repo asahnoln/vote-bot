@@ -12,6 +12,7 @@ import (
 	"testing"
 	"testing/synctest"
 
+	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
 	"github.com/google/go-cmp/cmp"
 )
@@ -289,8 +290,8 @@ type stubStore struct {
 	err error
 }
 
-func (s *stubStore) CurrentQuestion(context.Context) (tg.Question, error) {
-	return tg.Question{
+func (s *stubStore) CurrentQuestion(context.Context) (store.Question, error) {
+	return store.Question{
 		Q:    "X or Y?",
 		Opts: []string{"X", "Y"},
 	}, s.err

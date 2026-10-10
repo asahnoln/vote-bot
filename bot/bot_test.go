@@ -102,13 +102,12 @@ func TestAnswerErr(t *testing.T) {
 
 type stubQuestionStore struct {
 	q    string
-	a    string
 	opts []string
 	err  error
 }
 
 func (q *stubQuestionStore) CurrentQuestion() (store.Question, error) {
-	return store.Question{Q: q.q, A: q.a, Opts: q.opts}, q.err
+	return store.Question{Q: q.q, Opts: q.opts}, q.err
 }
 
 type spyQuestionOutput struct {

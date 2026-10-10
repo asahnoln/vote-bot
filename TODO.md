@@ -72,11 +72,11 @@ Each user has an account. (At the start they have 1000$)
 - [ ] Auto register webhook?
 - [x] Admin sends question with answers
 - [x] Check for webhook url
-- [ ] Save users who join the bot
-- [ ] Send question to those who joined (and didn't stop?)
 - [ ] Store for questions
 - [ ] Receive and save answer
 - [ ] Receive and save bet
+- [ ] Save users who join the bot
+- [ ] Send question to those who joined (and didn't stop?)
 - [ ] Admin close question - update latest message to stop accepting answers
 - [ ] What if someone didn't answer?
 - [ ] Admin sends answer and account status to all

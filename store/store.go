@@ -1,7 +1,9 @@
 package store
 
 type Question struct {
-	Q    string
-	A    string
-	Opts []string
+	Q      string
+	A      int
+	Opts   []string
+	Closed bool
+	Order  int
 }
