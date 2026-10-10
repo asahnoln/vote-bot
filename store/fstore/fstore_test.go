@@ -47,6 +47,17 @@ func TestQuestion(t *testing.T) {
 		t.Fatalf("test data add 1: got err %v; want nil", err)
 	}
 
+	_, err = col.Doc("test-q-2").Set(ctx, store.Question{
+		Q:      "Should skip in future?",
+		Closed: false,
+		A:      1,
+		Opts:   []string{"SKIP", "FUTURE"},
+		Order:  2,
+	})
+	if err != nil {
+		t.Fatalf("test data add 2: got err %v; want nil", err)
+	}
+
 	f := fstore.New(c)
 
 	q, err := f.CurrentQuestion(ctx)
@@ -81,6 +92,7 @@ func TestNoQuestion(t *testing.T) {
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Delete(ctx)
 	col.Doc("test-q-1").Delete(ctx)
+	col.Doc("test-q-2").Delete(ctx)
 
 	f := fstore.New(c)
 
