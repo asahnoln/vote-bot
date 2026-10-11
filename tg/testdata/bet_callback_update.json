@@ -1,0 +1,61 @@
+{
+  "update_id": 193123812,
+  "callback_query": {
+    "id": "193402463238345208",
+    "from": {
+      "id": 45030020,
+      "is_bot": false,
+      "first_name": "Артур",
+      "last_name": "Асланян",
+      "username": "asahnoln",
+      "language_code": "ru",
+      "is_premium": true
+    },
+    "message": {
+      "message_id": 105,
+      "from": {
+        "id": 5061867860,
+        "is_bot": true,
+        "first_name": "asahnoln_test_bot",
+        "username": "asahnoln_test_bot"
+      },
+      "chat": {
+        "id": 45030020,
+        "first_name": "Артур",
+        "last_name": "Асланян",
+        "username": "asahnoln",
+        "type": "private"
+      },
+      "date": 1791723134,
+      "edit_date": 1791723138,
+      "rich_message": {
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Выберите ставку:"
+          },
+          {
+            "type": "buttons",
+            "buttons": [
+              {
+                "text": "100",
+                "callback_data": "bet:100"
+              },
+              {
+                "text": "200",
+                "callback_data": "bet:200"
+              },
+              {
+                "text": "500",
+                "callback_data": "bet:500"
+              }
+            ],
+            "align": "left"
+          }
+        ]
+      }
+    },
+    "chat_instance": "-8468197742047179003",
+    "data": "bet:200"
+  }
+}

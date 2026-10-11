@@ -105,6 +105,50 @@ func TestAnswerSaveError(t *testing.T) {
 	})
 }
 
+//go:embed testdata/bet_callback_update.json
+var betCallbackUpdate []byte
+
+func TestBet(t *testing.T) {
+	r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(answerCallbackUpdate))
+	w := httptest.NewRecorder()
+
+	storeSpy := &storeSpy{}
+	destSpy := &destSpy{}
+	b := tg.Bot{
+		Store: storeSpy,
+		Dest:  destSpy,
+	}
+	b.ServeHTTP(w, r)
+
+	if got, want := w.Code, http.StatusOK; got != want {
+		t.Errorf("answer status: got %v; want %v", got, want)
+	}
+
+	want := tg.EditMessageText{
+		ChatID:    45030021,
+		MessageID: 79,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					// TODO: Подумать над ответом
+					Text: "Ваш ответ и ваша ставка!",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, destSpy.got); diff != "" {
+		t.Errorf("edit message text mismatch (-want +got):%s", diff)
+	}
+
+	if got, want := storeSpy.userID, 45030021; got != want {
+		t.Errorf("save bet: got %v; want %v", got, want)
+	}
+	if got, want := storeSpy.bet, 500; got != want {
+		t.Errorf("save bet: got %v; want %v", got, want)
+	}
+}
+
 type destSpy struct {
 	got any
 	err error
