@@ -5,17 +5,17 @@ import (
 	"net/http"
 )
 
-func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) (msg SendRichMessage, err error) {
+func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) (data any, err error) {
 	if b.Store == nil {
-		return msg, ErrStoreNil
+		return nil, ErrStoreNil
 	}
 
 	q, err := b.Store.CurrentQuestion(r.Context())
 	if err != nil {
-		return msg, fmt.Errorf("question store: %w", err)
+		return nil, fmt.Errorf("question store: %w", err)
 	}
 
-	msg = SendRichMessage{
+	msg := SendRichMessage{
 		ChatID: upd.Message.Chat.ID,
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{

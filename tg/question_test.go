@@ -73,6 +73,7 @@ func TestQuestion(t *testing.T) {
 	}
 }
 
+// TODO: Check generally in webhook?
 func TestQuestionUpdateError(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPost, "/webhook", nil)
@@ -97,6 +98,7 @@ func TestQuestionUpdateError(t *testing.T) {
 	})
 }
 
+// TODO: Check generally in bot?
 func TestQuestionNoStoreError(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))

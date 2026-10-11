@@ -106,20 +106,16 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	proc := b.question
+	procName := "question"
 	if upd.CallbackQuery != nil {
-		msg, err := b.answer(w, r, upd)
-		if err != nil {
-			b.error(fmt.Errorf("answer: %w", err), w, http.StatusInternalServerError)
-			return
-		}
-
-		b.Dest.Send(r.Context(), msg)
-		return
+		proc = b.answer
+		procName = "answer"
 	}
 
-	msg, err := b.question(w, r, upd)
+	msg, err := proc(w, r, upd)
 	if err != nil {
-		b.error(fmt.Errorf("answer: %w", err), w, http.StatusInternalServerError)
+		b.error(fmt.Errorf("proc %q: %w", procName, err), w, http.StatusInternalServerError)
 		return
 	}
 

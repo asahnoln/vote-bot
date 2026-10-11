@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// TODO: Check if anything missing in checking
 func TestDestination(t *testing.T) {
 	got := tg.SendRichMessage{}
 	tgSrvStubCalled := false
