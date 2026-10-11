@@ -7,7 +7,7 @@ import (
 
 const BetCallbackDataPrefix = "bet:"
 
-func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data any, err error) {
+func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,

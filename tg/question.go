@@ -7,7 +7,7 @@ import (
 
 const OptCallbackDataPrefix = "opt:"
 
-func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) (data any, err error) {
+func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
 	if b.Store == nil {
 		return nil, ErrStoreNil
 	}

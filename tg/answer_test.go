@@ -110,7 +110,7 @@ type destSpy struct {
 	err error
 }
 
-func (d *destSpy) Send(ctx context.Context, data any) error {
+func (d *destSpy) Send(ctx context.Context, data tg.URLer) error {
 	d.got = data
 	return d.err
 }

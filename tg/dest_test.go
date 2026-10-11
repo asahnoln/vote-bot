@@ -115,7 +115,7 @@ func TestDestTgSrvNotOK(t *testing.T) {
 
 	d := tg.NewDest(tgSrvStub.URL)
 
-	err := d.Send(context.Background(), nil)
+	err := d.Send(context.Background(), tg.SendRichMessage{})
 	if got, want := err.Error(), "tg srv not ok: something is not ok"; got != want {
 		t.Errorf("got err %q; want %q", got, want)
 	}
@@ -129,7 +129,7 @@ func TestDestTgSrvWrongJSON(t *testing.T) {
 
 	d := tg.NewDest(tgSrvStub.URL)
 
-	err := d.Send(context.Background(), nil)
+	err := d.Send(context.Background(), tg.SendRichMessage{})
 	if got, want := err, io.EOF; !errors.Is(got, want) {
 		t.Errorf("got err %v; want %q", got, want)
 	}
@@ -139,8 +139,20 @@ func TestDestTgSrvWrongJSON(t *testing.T) {
 func TestDestRequestError(t *testing.T) {
 	d := tg.NewDest("")
 
-	err := d.Send(context.Background(), nil)
+	err := d.Send(context.Background(), tg.SendRichMessage{})
 	if got, want := err.Error(), `http client do: Post "/sendRichMessage": unsupported protocol scheme ""`; got != want {
 		t.Errorf("got err %q; want %q", got, want)
+	}
+}
+
+func TestDestNoopForNil(t *testing.T) {
+	tgSrvStub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	}))
+	defer tgSrvStub.Close()
+	d := tg.NewDest(tgSrvStub.URL)
+
+	err := d.Send(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
 	}
 }

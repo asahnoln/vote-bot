@@ -14,12 +14,6 @@ import (
 
 const ApplicationJSONContentType = "application/json"
 
-type EditMessageText struct {
-	ChatID      int
-	MessageID   int
-	RichMessage InputRichMessage
-}
-
 type InputRichMessage struct {
 	Blocks []InputRichBlock `json:"blocks"`
 }
@@ -76,7 +70,7 @@ type Response struct {
 }
 
 type Sender interface {
-	Send(ctx context.Context, data any) error
+	Send(ctx context.Context, data URLer) error
 }
 
 type Bot struct {

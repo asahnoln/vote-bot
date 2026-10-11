@@ -14,11 +14,6 @@ const (
 	EditMessageTextMethod = "editMessageText"
 )
 
-type SendRichMessage struct {
-	ChatID      int              `json:"chat_id"`
-	RichMessage InputRichMessage `json:"rich_message"`
-}
-
 type Dest struct {
 	URL string
 }
@@ -27,13 +22,34 @@ func NewDest(url string) Dest {
 	return Dest{URL: url}
 }
 
-func (d Dest) Send(ctx context.Context, data any) error {
-	url := SendRichMessageMethod
+type URLer interface {
+	URL() string
+}
+type SendRichMessage struct {
+	ChatID      int              `json:"chat_id"`
+	RichMessage InputRichMessage `json:"rich_message"`
+}
 
-	switch data.(type) {
-	case EditMessageText:
-		url = EditMessageTextMethod
+func (SendRichMessage) URL() string {
+	return "sendRichMessage"
+}
+
+type EditMessageText struct {
+	ChatID      int
+	MessageID   int
+	RichMessage InputRichMessage
+}
+
+func (EditMessageText) URL() string {
+	return "editMessageText"
+}
+
+func (d Dest) Send(ctx context.Context, data URLer) error {
+	if data == nil {
+		return nil
 	}
+
+	url := data.URL()
 
 	slog.InfoContext(ctx, "message", "data", data)
 
@@ -42,7 +58,8 @@ func (d Dest) Send(ctx context.Context, data any) error {
 		return fmt.Errorf("message marshal: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, d.URL+"/"+url, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx,
+		http.MethodPost, d.URL+"/"+url, bytes.NewReader(body))
 	req.Header.Set("Content-Type", ApplicationJSONContentType)
 	if err != nil {
 		return fmt.Errorf("request creation: %w", err)
