@@ -2,7 +2,6 @@ package tg_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -12,7 +11,6 @@ import (
 	"testing"
 	"testing/synctest"
 
-	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
 	"github.com/google/go-cmp/cmp"
 )
@@ -72,7 +70,7 @@ func TestQuestion(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	b := tg.Bot{
-		Store: &stubStore{},
+		Store: &storeSpy{},
 		URL:   tgSrvStub.URL,
 	}
 	b.ServeHTTP(w, r)
@@ -142,7 +140,7 @@ func TestTgSrvNotOK(t *testing.T) {
 		}()
 
 		b := tg.Bot{
-			Store:     &stubStore{},
+			Store:     &storeSpy{},
 			URL:       tgSrvStub.URL,
 			ErrorChan: errCh,
 		}
@@ -173,7 +171,7 @@ func TestTgSrvNotOKWrongJSON(t *testing.T) {
 		}()
 
 		b := tg.Bot{
-			Store:     &stubStore{},
+			Store:     &storeSpy{},
 			URL:       tgSrvStub.URL,
 			ErrorChan: errCh,
 		}
@@ -248,7 +246,7 @@ func TestQuestionStoreError(t *testing.T) {
 		}()
 
 		b := tg.Bot{
-			Store: &stubStore{
+			Store: &storeSpy{
 				err: wantErr,
 			},
 			ErrorChan: errCh,
@@ -275,7 +273,7 @@ func TestQuestionTgSrvRequestError(t *testing.T) {
 		}()
 
 		b := tg.Bot{
-			Store:     &stubStore{},
+			Store:     &storeSpy{},
 			ErrorChan: errCh,
 		}
 		b.ServeHTTP(w, r)
@@ -284,15 +282,4 @@ func TestQuestionTgSrvRequestError(t *testing.T) {
 			t.Errorf("bot response code: got %v; want %v", got, want)
 		}
 	})
-}
-
-type stubStore struct {
-	err error
-}
-
-func (s *stubStore) CurrentQuestion(context.Context) (store.Question, error) {
-	return store.Question{
-		Q:    "X or Y?",
-		Opts: []string{"X", "Y"},
-	}, s.err
 }

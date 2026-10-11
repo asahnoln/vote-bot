@@ -23,6 +23,12 @@ type SendRichMessage struct {
 	RichMessage InputRichMessage `json:"rich_message"`
 }
 
+type EditMessageText struct {
+	ChatID      int
+	MessageID   int
+	RichMessage InputRichMessage
+}
+
 type InputRichMessage struct {
 	Blocks []InputRichBlock `json:"blocks"`
 }
@@ -52,19 +58,25 @@ type Update struct {
 	Message       Message
 	CallbackQuery *CallbackQuery `json:"callback_query"`
 }
-type CallbackQuery struct{}
+type CallbackQuery struct {
+	// NOTE: Actually MaybeInaccessibleMessage, probably should work it out
+	Message Message
+	Data    string
+}
 
 type Message struct {
-	Chat Chat
-	Text string
+	MessageID int `json:"message_id"`
+	Chat      Chat
+	Text      string
 }
 
 type Chat struct {
 	ID int
 }
 
-type CurrentQuestioner interface {
+type Store interface {
 	CurrentQuestion(context.Context) (store.Question, error)
+	SaveAnswer(ctx context.Context, userID int, answer string) error
 }
 
 type Response struct {
@@ -72,8 +84,13 @@ type Response struct {
 	Description string
 }
 
+type Sender interface {
+	Send(data any) error
+}
+
 type Bot struct {
-	Store     CurrentQuestioner
+	Store     Store
+	Dest      Sender
 	URL       string
 	ErrorChan chan<- error
 }
