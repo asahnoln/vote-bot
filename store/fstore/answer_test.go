@@ -23,10 +23,11 @@ func TestSaveAnswer(t *testing.T) {
 		t.Fatalf("app firestore: got err %v; want nil", err)
 	}
 
+	resetDB(ctx, c)
+
 	c.Collection("answers").Doc("test-q-67:52").Delete(ctx)
-	col := c.Collection("questions")
-	col.Doc("test-q-67").Set(ctx, store.Question{
-		Q:      "52 or 42",
+	c.Collection(fstore.QuestionsCollection).Doc("test-q-67").Set(ctx, store.Question{
+		Q:      "52 or 42?",
 		Closed: false,
 		A:      1,
 		Opts:   []string{"wrong", "right"},
@@ -37,7 +38,7 @@ func TestSaveAnswer(t *testing.T) {
 
 	err = f.SaveAnswer(ctx, 52, "right")
 	if err != nil {
-		t.Fatalf("fstore question: got err %v; want nil", err)
+		t.Fatalf("fstore save answer: got err %q; want nil", err)
 	}
 
 	d, err := c.Collection("answers").Doc("test-q-67:52").Get(ctx)

@@ -76,8 +76,8 @@ Each user has an account. (At the start they have 1000$)
 - [x] Use firebase emulator?
 - [ ] Remove redundant bot
 - [ ] Auto register webhook?
-- [ ] Receive and save answer and then send bets
-- [ ] Bets are always same, but sometimes there is an option for "all in"
+- [x] Receive and save answer and then send bets
+- [ ] Check unhappy cases for fstore answer save
 - [ ] Receive and save bet
 - [ ] Save users who join the bot
 - [ ] Send question to those who joined (and didn't stop?)
