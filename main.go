@@ -32,7 +32,7 @@ func main() {
 	}()
 
 	b := &tg.Bot{
-		URL:       os.Getenv("BOT_URL"),
+		Dest:      tg.NewDest(os.Getenv("BOT_URL")),
 		Store:     fstore.New(fc),
 		ErrorChan: errCh,
 	}

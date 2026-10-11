@@ -102,3 +102,13 @@ func TestDestTgSrvWrongJSON(t *testing.T) {
 		t.Errorf("got err %v; want %q", got, want)
 	}
 }
+
+// TODO: Change string errors to own wrapped types
+func TestDestRequestError(t *testing.T) {
+	d := tg.NewDest("")
+
+	err := d.Send(context.Background(), nil)
+	if got, want := err.Error(), `http client do: Post "/sendRichMessage": unsupported protocol scheme ""`; got != want {
+		t.Errorf("got err %q; want %q", got, want)
+	}
+}

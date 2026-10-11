@@ -76,13 +76,12 @@ type Response struct {
 }
 
 type Sender interface {
-	Send(data any) error
+	Send(ctx context.Context, data any) error
 }
 
 type Bot struct {
 	Store     Store
 	Dest      Sender
-	URL       string
 	ErrorChan chan<- error
 }
 

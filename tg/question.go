@@ -1,10 +1,7 @@
 package tg
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 )
 
@@ -43,38 +40,5 @@ func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) {
 		)
 	}
 
-	slog.InfoContext(r.Context(), "message", "msg", msg)
-
-	body, err := json.Marshal(&msg)
-	if err != nil {
-		b.error(fmt.Errorf("message marshal: %w", err), w, http.StatusInternalServerError)
-		return
-	}
-
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, b.URL+"/"+SendRichMessageMethod, bytes.NewReader(body))
-	req.Header.Set("Content-Type", ApplicationJSONContentType)
-	if err != nil {
-		b.error(fmt.Errorf("request creation: %w", err), w, http.StatusInternalServerError)
-		return
-	}
-
-	// TODO: Test for this err
-	response, err := http.DefaultClient.Do(req)
-	if err != nil {
-		b.error(fmt.Errorf("http client do: %w", err), w, http.StatusInternalServerError)
-		return
-	}
-	defer response.Body.Close()
-
-	resp := Response{}
-	err = json.NewDecoder(response.Body).Decode(&resp)
-	if err != nil {
-		b.error(fmt.Errorf("tg srv response decode: %w", err), w, http.StatusInternalServerError)
-		return
-	}
-
-	if !resp.OK {
-		b.error(fmt.Errorf("tg srv not ok: %s", resp.Description), w, http.StatusServiceUnavailable)
-		return
-	}
+	b.Dest.Send(r.Context(), msg)
 }

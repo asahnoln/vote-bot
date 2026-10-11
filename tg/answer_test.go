@@ -2,6 +2,7 @@ package tg_test
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"errors"
 	"net/http"
@@ -108,7 +109,7 @@ type destSpy struct {
 	got any
 }
 
-func (d *destSpy) Send(data any) error {
+func (d *destSpy) Send(ctx context.Context, data any) error {
 	d.got = data
 	return nil
 }

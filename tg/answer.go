@@ -42,7 +42,7 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) error {
 		return fmt.Errorf("save answer: %w", err)
 	}
 
-	b.Dest.Send(msg)
+	b.Dest.Send(r.Context(), msg)
 
 	return nil
 }
