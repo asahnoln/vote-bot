@@ -6,7 +6,7 @@ import (
 )
 
 func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) error {
-	want := EditMessageText{
+	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,
 		RichMessage: InputRichMessage{
@@ -42,7 +42,7 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) error {
 		return fmt.Errorf("save answer: %w", err)
 	}
 
-	b.Dest.Send(want)
+	b.Dest.Send(msg)
 
 	return nil
 }

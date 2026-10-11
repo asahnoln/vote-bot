@@ -14,15 +14,6 @@ import (
 
 const ApplicationJSONContentType = "application/json"
 
-const (
-	SendRichMessageMethod = "sendRichMessage"
-)
-
-type SendRichMessage struct {
-	ChatID      int              `json:"chat_id"`
-	RichMessage InputRichMessage `json:"rich_message"`
-}
-
 type EditMessageText struct {
 	ChatID      int
 	MessageID   int

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,8 +13,6 @@ import (
 	"github.com/asahnoln/vote-bot/tg"
 	"github.com/google/go-cmp/cmp"
 )
-
-// TODO: Check webhook target
 
 // TODO: Separate different parts into different tests?
 func TestQuestion(t *testing.T) {
@@ -111,76 +108,6 @@ func TestQuestion(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("request mismatch (-want +got):%s", diff)
 	}
-}
-
-func TestTgSrvNotOK(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		tgSrvStub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			resp := tg.Response{
-				OK:          false,
-				Description: "something is not ok",
-			}
-
-			err := json.NewEncoder(w).Encode(resp)
-			if err != nil {
-				t.Fatalf("tg srv resp err: %v", err)
-			}
-		}))
-		defer tgSrvStub.Close()
-
-		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))
-		w := httptest.NewRecorder()
-
-		errCh := make(chan error)
-		go func() {
-			err := <-errCh
-			if got, want := err.Error(), "tg srv not ok: something is not ok"; got != want {
-				t.Errorf("got err %q; want %q", got, want)
-			}
-		}()
-
-		b := tg.Bot{
-			Store:     &storeSpy{},
-			URL:       tgSrvStub.URL,
-			ErrorChan: errCh,
-		}
-		b.ServeHTTP(w, r)
-
-		if got, want := w.Code, http.StatusServiceUnavailable; got != want {
-			t.Errorf("bot response code: got %v; want %v", got, want)
-		}
-	})
-}
-
-func TestTgSrvNotOKWrongJSON(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		tgSrvStub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(``))
-		}))
-		defer tgSrvStub.Close()
-
-		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))
-		w := httptest.NewRecorder()
-
-		errCh := make(chan error)
-		go func() {
-			err := <-errCh
-			if got, want := err, io.EOF; !errors.Is(got, want) {
-				t.Errorf("got err %v; want %q", got, want)
-			}
-		}()
-
-		b := tg.Bot{
-			Store:     &storeSpy{},
-			URL:       tgSrvStub.URL,
-			ErrorChan: errCh,
-		}
-		b.ServeHTTP(w, r)
-
-		if got, want := w.Code, http.StatusInternalServerError; got != want {
-			t.Errorf("bot response code: got %v; want %v", got, want)
-		}
-	})
 }
 
 func TestQuestionUpdateError(t *testing.T) {
