@@ -51,7 +51,3 @@ func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err 
 
 	return q, nil
 }
-
-func (f *Firestore) SaveAnswer(ctx context.Context, userID int, answer string) error {
-	return nil
-}

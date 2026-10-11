@@ -3,6 +3,7 @@ package tg
 import (
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 const BetCallbackDataPrefix = "bet:"
@@ -39,7 +40,9 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data U
 		},
 	}
 
-	err = b.Store.SaveAnswer(r.Context(), upd.CallbackQuery.Message.Chat.ID, upd.CallbackQuery.Data)
+	err = b.Store.SaveAnswer(r.Context(),
+		upd.CallbackQuery.Message.Chat.ID,
+		strings.TrimPrefix(upd.CallbackQuery.Data, OptCallbackDataPrefix))
 	if err != nil {
 		return nil, fmt.Errorf("save answer: %w", err)
 	}
