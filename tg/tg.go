@@ -2,7 +2,10 @@ package tg
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 
@@ -87,6 +90,39 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}))
 	srv.Handle("/webhook", http.HandlerFunc(b.webhook))
 	srv.ServeHTTP(w, r)
+}
+
+func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
+	upd, err := parseUpdate(w, r)
+	if err != nil {
+		b.error(err, w, http.StatusInternalServerError)
+		return
+	}
+
+	if upd.CallbackQuery != nil {
+		b.answer(w, r, upd)
+		return
+	}
+
+	b.question(w, r, upd)
+}
+
+func parseUpdate(w http.ResponseWriter, r *http.Request) (upd Update, err error) {
+	updBody, err := io.ReadAll(r.Body)
+	// TODO: Test for this error
+	if err != nil {
+		return upd, fmt.Errorf("update read: %w", err)
+	}
+	defer r.Body.Close()
+
+	slog.InfoContext(r.Context(), "update", "upd", updBody)
+
+	err = json.Unmarshal(updBody, &upd)
+	if err != nil {
+		return upd, fmt.Errorf("update decode: %w", err)
+	}
+
+	return upd, nil
 }
 
 func (b *Bot) error(err error, w http.ResponseWriter, s int) {

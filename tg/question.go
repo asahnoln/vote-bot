@@ -4,36 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 )
-
-func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
-	upd := Update{}
-	updBody, err := io.ReadAll(r.Body)
-	// TODO: Test for this error
-	if err != nil {
-		b.error(fmt.Errorf("update read: %w", err), w, http.StatusInternalServerError)
-		return
-	}
-	defer r.Body.Close()
-
-	slog.InfoContext(r.Context(), "update", "upd", updBody)
-
-	err = json.Unmarshal(updBody, &upd)
-	if err != nil {
-		b.error(fmt.Errorf("update decode: %w", err), w, http.StatusInternalServerError)
-		return
-	}
-
-	if upd.CallbackQuery != nil {
-		b.answer(w, r, upd)
-		return
-	}
-
-	b.question(w, r, upd)
-}
 
 func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) {
 	if b.Store == nil {
@@ -104,7 +77,4 @@ func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) {
 		b.error(fmt.Errorf("tg srv not ok: %s", resp.Description), w, http.StatusServiceUnavailable)
 		return
 	}
-}
-
-func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) {
 }
