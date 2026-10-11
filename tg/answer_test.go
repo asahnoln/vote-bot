@@ -3,9 +3,11 @@ package tg_test
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"testing/synctest"
 
 	"github.com/asahnoln/vote-bot/tg"
 	"github.com/google/go-cmp/cmp"
@@ -70,6 +72,36 @@ func TestAnswer(t *testing.T) {
 	if got, want := storeSpy.answer, "Ты"; got != want {
 		t.Errorf("save answer: got %v; want %v", got, want)
 	}
+}
+
+func TestAnswerSaveError(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(answerCallbackUpdate))
+		w := httptest.NewRecorder()
+
+		wantErr := errors.New("save error")
+
+		errCh := make(chan error)
+		go func() {
+			err := <-errCh
+			if got, want := err, wantErr; !errors.Is(got, want) {
+				t.Fatalf("got err %v; want %v", got, want)
+			}
+		}()
+
+		storeSpy := &storeSpy{
+			err: wantErr,
+		}
+		b := tg.Bot{
+			Store:     storeSpy,
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusInternalServerError; got != want {
+			t.Errorf("answer status: got %v; want %v", got, want)
+		}
+	})
 }
 
 type destSpy struct {

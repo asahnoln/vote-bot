@@ -117,7 +117,10 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if upd.CallbackQuery != nil {
-		b.answer(w, r, upd)
+		err := b.answer(w, r, upd)
+		if err != nil {
+			b.error(fmt.Errorf("answer: %w", err), w, http.StatusInternalServerError)
+		}
 		return
 	}
 

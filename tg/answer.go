@@ -1,8 +1,11 @@
 package tg
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
-func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) {
+func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) error {
 	want := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,
@@ -34,7 +37,12 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) {
 		},
 	}
 
-	b.Store.SaveAnswer(r.Context(), upd.CallbackQuery.Message.Chat.ID, upd.CallbackQuery.Data)
+	err := b.Store.SaveAnswer(r.Context(), upd.CallbackQuery.Message.Chat.ID, upd.CallbackQuery.Data)
+	if err != nil {
+		return fmt.Errorf("save answer: %w", err)
+	}
 
 	b.Dest.Send(want)
+
+	return nil
 }
