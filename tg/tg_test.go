@@ -2,14 +2,18 @@ package tg_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"testing/synctest"
 
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
 )
 
+// TODO: Check if update is correct for every type of action, have a default action as well
 func TestDefaultNotFound(t *testing.T) {
 	r := httptest.NewRequest("", "/", nil)
 	w := httptest.NewRecorder()
@@ -20,6 +24,33 @@ func TestDefaultNotFound(t *testing.T) {
 	if got, want := w.Code, http.StatusNotFound; got != want {
 		t.Errorf("bot response code: got %v; want %v", got, want)
 	}
+}
+
+func TestBotDestError(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		r := httptest.NewRequest("", "/webhook", strings.NewReader("{}"))
+		w := httptest.NewRecorder()
+
+		errCh := make(chan error)
+		wantErr := errors.New("dest error")
+		go func() {
+			err := <-errCh
+			if got, want := err, wantErr; !errors.Is(got, want) {
+				t.Fatalf("got err %v; want %v", got, want)
+			}
+		}()
+
+		b := tg.Bot{
+			Dest:      &destSpy{err: wantErr},
+			Store:     &storeSpy{},
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusInternalServerError; got != want {
+			t.Errorf("bot response code: got %v; want %v", got, want)
+		}
+	})
 }
 
 type storeSpy struct {

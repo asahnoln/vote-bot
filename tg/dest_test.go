@@ -68,6 +68,37 @@ func TestDestination(t *testing.T) {
 	}
 }
 
+func TestDestinationEditText(t *testing.T) {
+	var gotURL string
+	tgSrvStub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotURL = r.URL.Path
+
+		resp := tg.Response{
+			OK: true,
+		}
+
+		err := json.NewEncoder(w).Encode(resp)
+		if err != nil {
+			t.Fatalf("tg srv resp err: %v", err)
+		}
+	}))
+	defer tgSrvStub.Close()
+
+	d := tg.NewDest(tgSrvStub.URL)
+
+	want := tg.EditMessageText{
+		ChatID: 42,
+	}
+	err := d.Send(context.Background(), want)
+	if err != nil {
+		t.Fatalf("send err: got %v; want nil", err)
+	}
+
+	if got, want := gotURL, "/editMessageText"; got != want {
+		t.Errorf("tg srv request path: got %q; want %q", got, want)
+	}
+}
+
 func TestDestTgSrvNotOK(t *testing.T) {
 	tgSrvStub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := tg.Response{

@@ -11,6 +11,7 @@ import (
 
 const (
 	SendRichMessageMethod = "sendRichMessage"
+	EditMessageTextMethod = "editMessageText"
 )
 
 type SendRichMessage struct {
@@ -27,6 +28,13 @@ func NewDest(url string) Dest {
 }
 
 func (d Dest) Send(ctx context.Context, data any) error {
+	url := SendRichMessageMethod
+
+	switch data.(type) {
+	case EditMessageText:
+		url = EditMessageTextMethod
+	}
+
 	slog.InfoContext(ctx, "message", "data", data)
 
 	body, err := json.Marshal(&data)
@@ -34,7 +42,7 @@ func (d Dest) Send(ctx context.Context, data any) error {
 		return fmt.Errorf("message marshal: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, d.URL+"/"+SendRichMessageMethod, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, d.URL+"/"+url, bytes.NewReader(body))
 	req.Header.Set("Content-Type", ApplicationJSONContentType)
 	if err != nil {
 		return fmt.Errorf("request creation: %w", err)

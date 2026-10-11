@@ -96,6 +96,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	}))
 	srv.Handle("/webhook", http.HandlerFunc(b.webhook))
+
 	srv.ServeHTTP(w, r)
 }
 
@@ -106,6 +107,7 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: Handle this beautifully
 	proc := b.question
 	procName := "question"
 	if upd.CallbackQuery != nil {
@@ -119,7 +121,11 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b.Dest.Send(r.Context(), msg)
+	err = b.Dest.Send(r.Context(), msg)
+	if err != nil {
+		b.error(fmt.Errorf("dest send: %w", err), w, http.StatusInternalServerError)
+		return
+	}
 }
 
 func parseUpdate(w http.ResponseWriter, r *http.Request) (upd Update, err error) {

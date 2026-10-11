@@ -107,9 +107,10 @@ func TestAnswerSaveError(t *testing.T) {
 
 type destSpy struct {
 	got any
+	err error
 }
 
 func (d *destSpy) Send(ctx context.Context, data any) error {
 	d.got = data
-	return nil
+	return d.err
 }
