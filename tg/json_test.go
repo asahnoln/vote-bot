@@ -42,3 +42,38 @@ func TestSendRichMessageStr(t *testing.T) {
 		t.Errorf("send rich message mismatch (-want +got):\n%s", diff)
 	}
 }
+
+//
+//go:embed testdata/editMessageText.json
+var editMessageText string
+
+func TestEditMessageText(t *testing.T) {
+	msg := tg.EditMessageText{
+		ChatID:    12,
+		MessageID: 13,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type:  "editType",
+					Text:  "edit text",
+					Align: "right",
+					Buttons: []tg.RichMessageButton{
+						{
+							Text:         "edit button 1",
+							CallbackData: "edit button data",
+						},
+					},
+				},
+			},
+		},
+	}
+	got, err := json.MarshalIndent(&msg, "", "  ")
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	want := strings.TrimSpace(editMessageText)
+	if diff := cmp.Diff(want, string(got)); diff != "" {
+		t.Errorf("send rich message mismatch (-want +got):\n%s", diff)
+	}
+}

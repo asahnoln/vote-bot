@@ -1,0 +1,19 @@
+{
+  "chat_id": 12,
+  "message_id": 13,
+  "rich_message": {
+    "blocks": [
+      {
+        "type": "editType",
+        "text": "edit text",
+        "align": "right",
+        "buttons": [
+          {
+            "text": "edit button 1",
+            "callback_data": "edit button data"
+          }
+        ]
+      }
+    ]
+  }
+}

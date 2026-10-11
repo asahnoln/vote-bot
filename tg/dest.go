@@ -35,9 +35,9 @@ func (SendRichMessage) URL() string {
 }
 
 type EditMessageText struct {
-	ChatID      int
-	MessageID   int
-	RichMessage InputRichMessage
+	ChatID      int              `json:"chat_id"`
+	MessageID   int              `json:"message_id"`
+	RichMessage InputRichMessage `json:"rich_message"`
 }
 
 func (EditMessageText) URL() string {
