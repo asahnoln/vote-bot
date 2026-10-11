@@ -46,8 +46,10 @@ type RichMessageButton struct {
 }
 
 type Update struct {
-	Message Message
+	Message       Message
+	CallbackQuery *CallbackQuery `json:"callback_query"`
 }
+type CallbackQuery struct{}
 
 type Message struct {
 	Chat Chat
@@ -83,7 +85,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	srv.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	}))
-	srv.Handle("/webhook", http.HandlerFunc(b.question))
+	srv.Handle("/webhook", http.HandlerFunc(b.webhook))
 	srv.ServeHTTP(w, r)
 }
 

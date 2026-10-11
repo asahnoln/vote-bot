@@ -74,6 +74,7 @@ Each user has an account. (At the start they have 1000$)
 - [x] Store for questions
 - [x] Ask Alina about bets - are they different for questions?
 - [x] Use firebase emulator?
+- [ ] Remove redundant bot
 - [ ] Auto register webhook?
 - [ ] Receive and save answer and then send bets
 - [ ] Bets are always same, but sometimes there is an option for "all in"
@@ -83,6 +84,7 @@ Each user has an account. (At the start they have 1000$)
 - [ ] Admin closes question - update latest message to stop accepting answers
 - [ ] What if someone didn't answer?
 - [ ] Admin sends answer and account status to all
+- [ ] Check if question was delivered and if the command was repeated - send it if it was not delivered
 
 ## Stats
 

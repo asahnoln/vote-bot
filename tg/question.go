@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func (b *Bot) question(w http.ResponseWriter, r *http.Request) {
+func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 	upd := Update{}
 	updBody, err := io.ReadAll(r.Body)
 	// TODO: Test for this error
@@ -27,6 +27,15 @@ func (b *Bot) question(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if upd.CallbackQuery != nil {
+		b.answer(w, r, upd)
+		return
+	}
+
+	b.question(w, r, upd)
+}
+
+func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) {
 	if b.Store == nil {
 		b.error(ErrStoreNil, w, http.StatusInternalServerError)
 		return
@@ -95,4 +104,7 @@ func (b *Bot) question(w http.ResponseWriter, r *http.Request) {
 		b.error(fmt.Errorf("tg srv not ok: %s", resp.Description), w, http.StatusServiceUnavailable)
 		return
 	}
+}
+
+func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) {
 }

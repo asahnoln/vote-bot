@@ -1,0 +1,60 @@
+{
+  "update_id": 193123787,
+  "callback_query": {
+    "id": "193402463806492393",
+    "from": {
+      "id": 45030020,
+      "is_bot": false,
+      "first_name": "Артур",
+      "last_name": "Асланян",
+      "username": "asahnoln",
+      "language_code": "ru",
+      "is_premium": true
+    },
+    "message": {
+      "message_id": 79,
+      "from": {
+        "id": 5061867860,
+        "is_bot": true,
+        "first_name": "asahnoln_test_bot",
+        "username": "asahnoln_test_bot"
+      },
+      "chat": {
+        "id": 45030020,
+        "first_name": "Артур",
+        "last_name": "Асланян",
+        "username": "asahnoln",
+        "type": "private"
+      },
+      "date": 1791708538,
+      "rich_message": {
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Кто же вам желает добра?"
+          },
+          {
+            "type": "buttons",
+            "buttons": [
+              {
+                "text": "Я",
+                "callback_data": "Я"
+              },
+              {
+                "text": "Ты",
+                "callback_data": "Ты"
+              },
+              {
+                "text": "Он",
+                "callback_data": "Он"
+              }
+            ],
+            "align": "center"
+          }
+        ]
+      }
+    },
+    "chat_instance": "-8468197742047179003",
+    "data": "Ты"
+  }
+}
