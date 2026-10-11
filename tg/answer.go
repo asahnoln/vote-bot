@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+const BetCallbackDataPrefix = "bet:"
+
 func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data any, err error) {
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
@@ -21,15 +23,15 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data a
 					Buttons: []RichMessageButton{
 						{
 							Text:         "100",
-							CallbackData: "100",
+							CallbackData: BetCallbackDataPrefix + "100",
 						},
 						{
 							Text:         "200",
-							CallbackData: "200",
+							CallbackData: BetCallbackDataPrefix + "200",
 						},
 						{
 							Text:         "500",
-							CallbackData: "500",
+							CallbackData: BetCallbackDataPrefix + "500",
 						},
 					},
 				},

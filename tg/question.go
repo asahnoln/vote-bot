@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+const OptCallbackDataPrefix = "opt:"
+
 func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) (data any, err error) {
 	if b.Store == nil {
 		return nil, ErrStoreNil
@@ -34,7 +36,7 @@ func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) (data
 		// TODO: TDD utility for button auto row placement
 		msg.RichMessage.Blocks[1].Buttons = append(
 			msg.RichMessage.Blocks[1].Buttons,
-			RichMessageButton{Text: o, CallbackData: o},
+			RichMessageButton{Text: o, CallbackData: OptCallbackDataPrefix + o},
 		)
 	}
 

@@ -48,15 +48,15 @@ func TestAnswer(t *testing.T) {
 					Buttons: []tg.RichMessageButton{
 						{
 							Text:         "100",
-							CallbackData: "100",
+							CallbackData: "bet:100",
 						},
 						{
 							Text:         "200",
-							CallbackData: "200",
+							CallbackData: "bet:200",
 						},
 						{
 							Text:         "500",
-							CallbackData: "500",
+							CallbackData: "bet:500",
 						},
 					},
 				},
