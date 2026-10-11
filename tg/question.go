@@ -5,19 +5,17 @@ import (
 	"net/http"
 )
 
-func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) {
+func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) (msg SendRichMessage, err error) {
 	if b.Store == nil {
-		b.error(ErrStoreNil, w, http.StatusInternalServerError)
-		return
+		return msg, ErrStoreNil
 	}
 
 	q, err := b.Store.CurrentQuestion(r.Context())
 	if err != nil {
-		b.error(fmt.Errorf("question store: %w", err), w, http.StatusInternalServerError)
-		return
+		return msg, fmt.Errorf("question store: %w", err)
 	}
 
-	msg := SendRichMessage{
+	msg = SendRichMessage{
 		ChatID: upd.Message.Chat.ID,
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{
@@ -40,5 +38,5 @@ func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) {
 		)
 	}
 
-	b.Dest.Send(r.Context(), msg)
+	return msg, nil
 }

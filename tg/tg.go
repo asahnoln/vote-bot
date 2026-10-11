@@ -107,14 +107,23 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if upd.CallbackQuery != nil {
-		err := b.answer(w, r, upd)
+		msg, err := b.answer(w, r, upd)
 		if err != nil {
 			b.error(fmt.Errorf("answer: %w", err), w, http.StatusInternalServerError)
+			return
 		}
+
+		b.Dest.Send(r.Context(), msg)
 		return
 	}
 
-	b.question(w, r, upd)
+	msg, err := b.question(w, r, upd)
+	if err != nil {
+		b.error(fmt.Errorf("answer: %w", err), w, http.StatusInternalServerError)
+		return
+	}
+
+	b.Dest.Send(r.Context(), msg)
 }
 
 func parseUpdate(w http.ResponseWriter, r *http.Request) (upd Update, err error) {

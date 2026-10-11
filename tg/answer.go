@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) error {
-	msg := EditMessageText{
+func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (msg EditMessageText, err error) {
+	msg = EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,
 		RichMessage: InputRichMessage{
@@ -37,12 +37,10 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) error {
 		},
 	}
 
-	err := b.Store.SaveAnswer(r.Context(), upd.CallbackQuery.Message.Chat.ID, upd.CallbackQuery.Data)
+	err = b.Store.SaveAnswer(r.Context(), upd.CallbackQuery.Message.Chat.ID, upd.CallbackQuery.Data)
 	if err != nil {
-		return fmt.Errorf("save answer: %w", err)
+		return msg, fmt.Errorf("save answer: %w", err)
 	}
 
-	b.Dest.Send(r.Context(), msg)
-
-	return nil
+	return msg, nil
 }
