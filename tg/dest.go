@@ -49,7 +49,7 @@ func (d Dest) Send(ctx context.Context, data URLer) error {
 		return nil
 	}
 
-	url := data.URL()
+	methodURL := data.URL()
 
 	slog.InfoContext(ctx, "message", "data", data)
 
@@ -59,7 +59,7 @@ func (d Dest) Send(ctx context.Context, data URLer) error {
 	}
 
 	req, err := http.NewRequestWithContext(ctx,
-		http.MethodPost, d.URL+"/"+url, bytes.NewReader(body))
+		http.MethodPost, d.URL+"/"+methodURL, bytes.NewReader(body))
 	req.Header.Set("Content-Type", ApplicationJSONContentType)
 	if err != nil {
 		return fmt.Errorf("request creation: %w", err)
