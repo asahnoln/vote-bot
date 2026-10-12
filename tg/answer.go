@@ -10,41 +10,6 @@ import (
 const BetCallbackDataPrefix = "bet:"
 
 func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
-	if strings.HasPrefix(upd.CallbackQuery.Data, BetCallbackDataPrefix) {
-		msg := EditMessageText{
-			ChatID:    upd.CallbackQuery.Message.Chat.ID,
-			MessageID: upd.CallbackQuery.Message.MessageID,
-			RichMessage: InputRichMessage{
-				Blocks: []InputRichBlock{
-					{
-						Type: InputRichBlockParagraphType,
-						// TODO: Подумать над ответом
-						Text: "Ваш ответ и ваша ставка!",
-					},
-				},
-			},
-		}
-
-		qIDandBetStr := strings.TrimPrefix(upd.CallbackQuery.Data, BetCallbackDataPrefix)
-
-		// TODO: Case for wrong format
-		qIDandBet := strings.Split(qIDandBetStr, ":")
-
-		// TODO: Case for wrong bet string
-		bet, _ := strconv.Atoi(qIDandBet[1])
-
-		err = b.Store.SaveBet(r.Context(),
-			upd.CallbackQuery.Message.Chat.ID,
-			qIDandBet[0],
-			bet,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("save bet: %w", err)
-		}
-
-		return msg, nil
-	}
-
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,
@@ -81,6 +46,41 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data U
 		strings.TrimPrefix(upd.CallbackQuery.Data, OptCallbackDataPrefix))
 	if err != nil {
 		return nil, fmt.Errorf("save answer: %w", err)
+	}
+
+	return msg, nil
+}
+
+func (b *Bot) bet(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
+	msg := EditMessageText{
+		ChatID:    upd.CallbackQuery.Message.Chat.ID,
+		MessageID: upd.CallbackQuery.Message.MessageID,
+		RichMessage: InputRichMessage{
+			Blocks: []InputRichBlock{
+				{
+					Type: InputRichBlockParagraphType,
+					// TODO: Подумать над ответом
+					Text: "Ваш ответ и ваша ставка!",
+				},
+			},
+		},
+	}
+
+	qIDandBetStr := strings.TrimPrefix(upd.CallbackQuery.Data, BetCallbackDataPrefix)
+
+	// TODO: Case for wrong format
+	qIDandBet := strings.Split(qIDandBetStr, ":")
+
+	// TODO: Case for wrong bet string
+	bet, _ := strconv.Atoi(qIDandBet[1])
+
+	err = b.Store.SaveBet(r.Context(),
+		upd.CallbackQuery.Message.Chat.ID,
+		qIDandBet[0],
+		bet,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("save bet: %w", err)
 	}
 
 	return msg, nil

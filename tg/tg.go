@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/asahnoln/vote-bot/store"
 )
@@ -114,6 +115,11 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 	if upd.CallbackQuery != nil {
 		proc = b.answer
 		procName = "answer"
+
+		if strings.HasPrefix(upd.CallbackQuery.Data, BetCallbackDataPrefix) {
+			proc = b.bet
+			procName = "bet"
+		}
 	}
 
 	msg, err := proc(w, r, upd)
