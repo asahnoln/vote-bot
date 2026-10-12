@@ -39,6 +39,14 @@ func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err 
 		return q, fmt.Errorf("data to: %w", err)
 	}
 
+	if len(q.Opts) == 0 {
+		return q, store.ErrQuestionHasNoOpts
+	}
+
+	if q.A < 0 || q.A >= len(q.Opts) {
+		return q, store.ErrQuestionAnswerIndexIsOutOfBounds
+	}
+
 	q.ID = docs[0].Ref.ID
 
 	return q, nil

@@ -32,7 +32,7 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data URLer, e
 
 	q, err := h.Store.CurrentQuestion(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("question store: %w", err)
+		return nil, fmt.Errorf("question store: obj %#v: %w", q, err)
 	}
 
 	msg := SendRichMessage{

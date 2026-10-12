@@ -3,25 +3,18 @@ package fstore_test
 import (
 	"context"
 	"errors"
-	"os"
+	"fmt"
 	"testing"
 
-	"cloud.google.com/go/firestore"
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/store/fstore"
 	"github.com/google/go-cmp/cmp"
 )
 
 func TestQuestion(t *testing.T) {
-	os.Setenv("FIRESTORE_EMULATOR_HOST", "[::1]:8711")
-
 	ctx := context.Background()
 
-	c, err := firestore.NewClient(ctx, "test")
-	if err != nil {
-		t.Fatalf("app firestore: got err %v; want nil", err)
-	}
-
+	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
 	col := c.Collection("questions")
@@ -67,21 +60,69 @@ func TestQuestion(t *testing.T) {
 }
 
 func TestNoQuestion(t *testing.T) {
-	os.Setenv("FIRESTORE_EMULATOR_HOST", "[::1]:8711")
-
 	ctx := context.Background()
 
-	c, err := firestore.NewClient(ctx, "test")
-	if err != nil {
-		t.Fatalf("app firestore: got err %v; want nil", err)
-	}
-
+	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
 	f := fstore.New(c)
 
-	_, err = f.CurrentQuestion(ctx)
+	_, err := f.CurrentQuestion(ctx)
 	if got, want := err, store.ErrNoQuestionsFound; !errors.Is(got, want) {
 		t.Fatalf("fstore no questions: got err %v; want %v", got, want)
+	}
+}
+
+func TestSomeQuestionHasNoOpts(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	col := c.Collection("questions")
+	col.Doc("test-q-0").Set(ctx, store.Question{
+		Q:      "NO OPTS???",
+		Closed: false,
+		A:      1,
+		Order:  0,
+	})
+	f := fstore.New(c)
+
+	_, err := f.CurrentQuestion(ctx)
+	if got, want := err, store.ErrQuestionHasNoOpts; !errors.Is(got, want) {
+		t.Fatalf("fstore no questions: got err %v; want %v", got, want)
+	}
+}
+
+func TestSomeQuestionAnswerIndexIsLarger(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	tests := []struct {
+		a int
+	}{
+		{100},
+		{-999},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("index %d", tt.a), func(t *testing.T) {
+			col := c.Collection("questions")
+			col.Doc("test-q-0").Set(ctx, store.Question{
+				Q:      "Answer is out of bounds???",
+				Closed: false,
+				A:      tt.a,
+				Opts:   []string{"One answer..."},
+				Order:  0,
+			})
+			f := fstore.New(c)
+
+			_, err := f.CurrentQuestion(ctx)
+			if got, want := err, store.ErrQuestionAnswerIndexIsOutOfBounds; !errors.Is(got, want) {
+				t.Fatalf("fstore no questions: got err %v; want %v", got, want)
+			}
+		})
 	}
 }

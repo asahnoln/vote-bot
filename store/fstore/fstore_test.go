@@ -41,6 +41,7 @@ func firestoreMemoryEmulatorClient(t *testing.T, ctx context.Context) *firestore
 
 func resetDB(ctx context.Context, c *firestore.Client) {
 	col := c.Collection("questions")
+	// TODO: Make easier by loop
 	col.Doc("test-q-0").Delete(ctx)
 	col.Doc("test-q-1").Delete(ctx)
 	col.Doc("test-q-2").Delete(ctx)

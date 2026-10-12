@@ -18,4 +18,8 @@ type Answer struct {
 	Bet     int  `firestore:"bet"`
 }
 
-var ErrNoQuestionsFound = errors.New("no questions found")
+var (
+	ErrNoQuestionsFound                 = errors.New("no questions found")
+	ErrQuestionHasNoOpts                = errors.New("question has no opts")
+	ErrQuestionAnswerIndexIsOutOfBounds = errors.New("question answer index is out of bounds")
+)
