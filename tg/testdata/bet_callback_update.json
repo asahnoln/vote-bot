@@ -3,7 +3,7 @@
   "callback_query": {
     "id": "193402463238345208",
     "from": {
-      "id": 45030020,
+      "id": 45030021,
       "is_bot": false,
       "first_name": "Артур",
       "last_name": "Асланян",
@@ -20,7 +20,7 @@
         "username": "asahnoln_test_bot"
       },
       "chat": {
-        "id": 45030020,
+        "id": 45030021,
         "first_name": "Артур",
         "last_name": "Асланян",
         "username": "asahnoln",
@@ -56,6 +56,6 @@
       }
     },
     "chat_instance": "-8468197742047179003",
-    "data": "bet:200"
+    "data": "bet:bet-q-1:500"
   }
 }

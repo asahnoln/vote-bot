@@ -9,6 +9,33 @@ import (
 const BetCallbackDataPrefix = "bet:"
 
 func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
+	if strings.HasPrefix(upd.CallbackQuery.Data, BetCallbackDataPrefix) {
+		msg := EditMessageText{
+			ChatID:    upd.CallbackQuery.Message.Chat.ID,
+			MessageID: upd.CallbackQuery.Message.MessageID,
+			RichMessage: InputRichMessage{
+				Blocks: []InputRichBlock{
+					{
+						Type: "paragraph",
+						// TODO: Подумать над ответом
+						Text: "Ваш ответ и ваша ставка!",
+					},
+				},
+			},
+		}
+
+		err = b.Store.SaveBet(r.Context(),
+			upd.CallbackQuery.Message.Chat.ID,
+			"bet-q-1",
+			500,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("save bet: %w", err)
+		}
+
+		return msg, nil
+	}
+
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,

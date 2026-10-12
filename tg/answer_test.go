@@ -109,7 +109,7 @@ func TestAnswerSaveError(t *testing.T) {
 var betCallbackUpdate []byte
 
 func TestBet(t *testing.T) {
-	r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(answerCallbackUpdate))
+	r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(betCallbackUpdate))
 	w := httptest.NewRecorder()
 
 	storeSpy := &storeSpy{}
@@ -121,12 +121,12 @@ func TestBet(t *testing.T) {
 	b.ServeHTTP(w, r)
 
 	if got, want := w.Code, http.StatusOK; got != want {
-		t.Errorf("answer status: got %v; want %v", got, want)
+		t.Errorf("bet status: got %v; want %v", got, want)
 	}
 
 	want := tg.EditMessageText{
 		ChatID:    45030021,
-		MessageID: 79,
+		MessageID: 105,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
 				{

@@ -28,3 +28,7 @@ func (f *Firestore) SaveAnswer(ctx context.Context, userID int, answer string) e
 	}
 	return nil
 }
+
+func (f *Firestore) SaveBet(context.Context, int, string, int) error {
+	return nil
+}

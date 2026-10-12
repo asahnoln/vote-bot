@@ -54,9 +54,11 @@ func TestBotDestError(t *testing.T) {
 }
 
 type storeSpy struct {
-	err    error
-	answer string
-	userID int
+	err        error
+	userID     int
+	questionID string
+	answer     string
+	bet        int
 }
 
 func (s *storeSpy) CurrentQuestion(context.Context) (store.Question, error) {
@@ -69,5 +71,12 @@ func (s *storeSpy) CurrentQuestion(context.Context) (store.Question, error) {
 func (s *storeSpy) SaveAnswer(ctx context.Context, userID int, answer string) error {
 	s.userID = userID
 	s.answer = answer
+	return s.err
+}
+
+func (s *storeSpy) SaveBet(ctx context.Context, userID int, questionID string, bet int) error {
+	s.userID = userID
+	s.questionID = questionID
+	s.bet = bet
 	return s.err
 }
