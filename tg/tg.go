@@ -68,8 +68,8 @@ type Chat struct {
 
 type Store interface {
 	CurrentQuestion(context.Context) (store.Question, error)
-	SaveAnswer(ctx context.Context, userID int, questionID string, answer string) error
-	SaveBet(ctx context.Context, userID int, questionID string, bet int) error
+	AnswerSaver
+	BetSaver
 }
 
 type Response struct {
@@ -110,19 +110,22 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Handle this beautifully
-	proc := b.question
+	h := QuestionHandler{Store: b.Store}
+	proc := h.Handle
 	procName := "question"
 	if upd.CallbackQuery != nil {
-		proc = b.answer
+		h := AnswerHandler{Store: b.Store}
+		proc = h.Handle
 		procName = "answer"
 
 		if strings.HasPrefix(upd.CallbackQuery.Data, BetCallbackDataPrefix) {
-			proc = b.bet
+			h := BetHandler{Store: b.Store}
+			proc = h.Handle
 			procName = "bet"
 		}
 	}
 
-	msg, err := proc(w, r, upd)
+	msg, err := proc(r.Context(), upd)
 	if err != nil {
 		b.error(fmt.Errorf("proc %q: %w", procName, err), w, http.StatusInternalServerError)
 		return

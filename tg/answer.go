@@ -1,16 +1,24 @@
 package tg
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 )
 
 const BetCallbackDataPrefix = "bet:"
 
-func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
+type AnswerSaver interface {
+	SaveAnswer(ctx context.Context, userID int, questionID string, answer string) error
+}
+
+type AnswerHandler struct {
+	Store AnswerSaver
+}
+
+func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (data URLer, err error) {
 	// TODO: Test for wrong data format
 	qID, answer, _ := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
 
@@ -46,7 +54,7 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data U
 		},
 	}
 
-	err = b.Store.SaveAnswer(r.Context(),
+	err = h.Store.SaveAnswer(ctx,
 		upd.CallbackQuery.Message.Chat.ID,
 		qID,
 		answer,
@@ -63,7 +71,15 @@ var (
 	ErrWrongCallbackData = errors.New("wrong callback data")
 )
 
-func (b *Bot) bet(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
+type BetSaver interface {
+	SaveBet(ctx context.Context, userID int, questionID string, bet int) error
+}
+
+type BetHandler struct {
+	Store BetSaver
+}
+
+func (h *BetHandler) Handle(ctx context.Context, upd Update) (data URLer, err error) {
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,
@@ -88,7 +104,7 @@ func (b *Bot) bet(w http.ResponseWriter, r *http.Request, upd Update) (data URLe
 		return nil, errors.Join(ErrBetIsNotANumber, err)
 	}
 
-	err = b.Store.SaveBet(r.Context(),
+	err = h.Store.SaveBet(ctx,
 		upd.CallbackQuery.Message.Chat.ID,
 		qID,
 		bet,

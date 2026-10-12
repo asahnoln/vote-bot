@@ -1,20 +1,30 @@
 package tg
 
 import (
+	"context"
 	"fmt"
-	"net/http"
+
+	"github.com/asahnoln/vote-bot/store"
 )
 
 type Prefix string
 
 const OptCallbackDataPrefix Prefix = "opt:"
 
-func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
-	if b.Store == nil {
+type CurrentQuestioner interface {
+	CurrentQuestion(context.Context) (store.Question, error)
+}
+
+type QuestionHandler struct {
+	Store CurrentQuestioner
+}
+
+func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data URLer, err error) {
+	if h.Store == nil {
 		return nil, ErrStoreNil
 	}
 
-	q, err := b.Store.CurrentQuestion(r.Context())
+	q, err := h.Store.CurrentQuestion(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("question store: %w", err)
 	}

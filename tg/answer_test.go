@@ -209,27 +209,16 @@ func TestBetWrongBetFormatError(t *testing.T) {
 var betCallbackUpdateWrongData []byte
 
 func TestBetWrongDataFormatError(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(betCallbackUpdateWrongData))
-		w := httptest.NewRecorder()
+	h := tg.BetHandler{}
 
-		errCh := make(chan error)
-		go func() {
-			err := <-errCh
-			if got, want := err, tg.ErrWrongCallbackData; !errors.Is(got, want) {
-				t.Fatalf("got err %v; want %v", got, want)
-			}
-		}()
-
-		b := tg.Bot{
-			ErrorChan: errCh,
-		}
-		b.ServeHTTP(w, r)
-
-		if got, want := w.Code, http.StatusInternalServerError; got != want {
-			t.Errorf("bet status: got %v; want %v", got, want)
-		}
+	_, err := h.Handle(context.Background(), tg.Update{
+		CallbackQuery: &tg.CallbackQuery{
+			Data: "bet: this is very wrong data ",
+		},
 	})
+	if got, want := err, tg.ErrWrongCallbackData; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
 }
 
 type destSpy struct {
