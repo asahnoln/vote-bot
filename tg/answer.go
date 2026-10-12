@@ -18,6 +18,14 @@ type AnswerHandler struct {
 	Store AnswerSaver
 }
 
+func (h *AnswerHandler) Condition(upd Update) bool {
+	return upd.CallbackQuery != nil && strings.HasPrefix(upd.CallbackQuery.Data, string(OptCallbackDataPrefix))
+}
+
+func (h *AnswerHandler) Name() string {
+	return "answer"
+}
+
 func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (data URLer, err error) {
 	// TODO: Test for wrong data format
 	qID, answer, _ := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
@@ -77,6 +85,14 @@ type BetSaver interface {
 
 type BetHandler struct {
 	Store BetSaver
+}
+
+func (h *BetHandler) Condition(upd Update) bool {
+	return upd.CallbackQuery != nil && strings.HasPrefix(upd.CallbackQuery.Data, BetCallbackDataPrefix)
+}
+
+func (h *BetHandler) Name() string {
+	return "bet"
 }
 
 func (h *BetHandler) Handle(ctx context.Context, upd Update) (data URLer, err error) {

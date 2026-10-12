@@ -19,6 +19,14 @@ type QuestionHandler struct {
 	Store CurrentQuestioner
 }
 
+func (h *QuestionHandler) Condition(upd Update) bool {
+	return upd.CallbackQuery == nil
+}
+
+func (h *QuestionHandler) Name() string {
+	return "question"
+}
+
 func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data URLer, err error) {
 	if h.Store == nil {
 		return nil, ErrStoreNil

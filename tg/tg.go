@@ -8,9 +8,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"strings"
-
-	"github.com/asahnoln/vote-bot/store"
 )
 
 const ApplicationJSONContentType = "application/json"
@@ -67,7 +64,7 @@ type Chat struct {
 }
 
 type Store interface {
-	CurrentQuestion(context.Context) (store.Question, error)
+	CurrentQuestioner
 	AnswerSaver
 	BetSaver
 }
@@ -89,6 +86,12 @@ type Bot struct {
 
 var ErrStoreNil = errors.New("store is nil")
 
+type Handler interface {
+	Condition(Update) bool
+	Handle(context.Context, Update) (data URLer, err error)
+	Name() string
+}
+
 func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	srv := http.NewServeMux()
 
@@ -109,25 +112,25 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Handle this beautifully
-	h := QuestionHandler{Store: b.Store}
-	proc := h.Handle
-	procName := "question"
-	if upd.CallbackQuery != nil {
-		h := AnswerHandler{Store: b.Store}
-		proc = h.Handle
-		procName = "answer"
-
-		if strings.HasPrefix(upd.CallbackQuery.Data, BetCallbackDataPrefix) {
-			h := BetHandler{Store: b.Store}
-			proc = h.Handle
-			procName = "bet"
-		}
+	hs := []Handler{
+		&QuestionHandler{Store: b.Store},
+		&AnswerHandler{Store: b.Store},
+		&BetHandler{Store: b.Store},
 	}
 
-	msg, err := proc(r.Context(), upd)
+	var handler Handler
+	for _, h := range hs {
+		if !h.Condition(upd) {
+			continue
+		}
+
+		handler = h
+		break
+	}
+
+	msg, err := handler.Handle(r.Context(), upd)
 	if err != nil {
-		b.error(fmt.Errorf("proc %q: %w", procName, err), w, http.StatusInternalServerError)
+		b.error(fmt.Errorf("proc %q: %w", handler.Name(), err), w, http.StatusInternalServerError)
 		return
 	}
 
