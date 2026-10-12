@@ -3,6 +3,7 @@ package tg
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -24,10 +25,18 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data U
 			},
 		}
 
+		qIDandBetStr := strings.TrimPrefix(upd.CallbackQuery.Data, BetCallbackDataPrefix)
+
+		// TODO: Case for wrong format
+		qIDandBet := strings.Split(qIDandBetStr, ":")
+
+		// TODO: Case for wrong bet string
+		bet, _ := strconv.Atoi(qIDandBet[1])
+
 		err = b.Store.SaveBet(r.Context(),
 			upd.CallbackQuery.Message.Chat.ID,
-			"bet-q-1",
-			500,
+			qIDandBet[0],
+			bet,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("save bet: %w", err)
