@@ -3,6 +3,7 @@ package tg_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -25,7 +26,9 @@ func TestReveal(t *testing.T) {
 	b := tg.Bot{
 		Dest: destSpy,
 	}
-	b.Handle(tg.RevealHandler{Store: &revealStoreStub{}})
+	b.Handle(tg.RevealHandler{Store: &revealStoreStub{
+		isRight: true,
+	}})
 	b.ServeHTTP(w, r)
 
 	if got, want := w.Code, http.StatusOK; got != want {
@@ -56,22 +59,77 @@ func TestReveal(t *testing.T) {
 	}
 }
 
-type revealStoreStub struct{}
+func TestRevealWrongAnswer(t *testing.T) {
+	h := tg.RevealHandler{Store: &revealStoreStub{
+		isRight: false,
+	}}
+	data, err := h.Handle(context.Background(), tg.Update{})
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	if got, want := data.(tg.SendRichMessage).RichMessage.Blocks[1].Text, "Вы ответили неправильно."; got != want {
+		t.Errorf("got %q; want %q", got, want)
+	}
+}
+
+func TestRevealLastClosedQuestionError(t *testing.T) {
+	wantErr := errors.New("last question error")
+	h := tg.RevealHandler{Store: &revealStoreStub{
+		lastClosedQuestionErr: wantErr,
+	}}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %q; want %q", got, want)
+	}
+}
+
+func TestRevealAnswerError(t *testing.T) {
+	wantErr := errors.New("answer error")
+	h := tg.RevealHandler{Store: &revealStoreStub{
+		answerErr: wantErr,
+	}}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %q; want %q", got, want)
+	}
+}
+
+func TestRevealAccountError(t *testing.T) {
+	wantErr := errors.New("answer error")
+	h := tg.RevealHandler{Store: &revealStoreStub{
+		accountErr: wantErr,
+	}}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %q; want %q", got, want)
+	}
+}
+
+type revealStoreStub struct {
+	isRight               bool
+	lastClosedQuestionErr error
+	answerErr             error
+	accountErr            error
+}
 
 func (s *revealStoreStub) LastClosedQuestion(context.Context) (store.Question, error) {
 	return store.Question{
 		Q:    "Да или Нет?",
 		A:    0,
 		Opts: []string{"Да", "Нет"},
-	}, nil
+	}, s.lastClosedQuestionErr
 }
 
 func (s *revealStoreStub) Answer(context.Context, int, string) (store.Answer, error) {
 	return store.Answer{
-		IsRight: true,
-	}, nil
+		IsRight: s.isRight,
+	}, s.answerErr
 }
 
 func (s *revealStoreStub) Account(context.Context) (int, error) {
-	return 500, nil
+	return 500, s.accountErr
 }

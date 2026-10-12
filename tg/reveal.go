@@ -22,14 +22,25 @@ func (r RevealHandler) Condition(upd Update) bool {
 }
 
 func (r RevealHandler) Handle(ctx context.Context, upd Update) (data URLer, err error) {
-	q, _ := r.Store.LastClosedQuestion(ctx)
-	// a, _ := r.Store.Answer(ctx, upd.Message.Chat.ID, q.ID)
-	acc, _ := r.Store.Account(ctx)
+	q, err := r.Store.LastClosedQuestion(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("last closed question: %w", err)
+	}
+
+	a, err := r.Store.Answer(ctx, upd.Message.Chat.ID, q.ID)
+	if err != nil {
+		return nil, fmt.Errorf("answer: %w", err)
+	}
+
+	acc, err := r.Store.Account(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("account: %w", err)
+	}
 
 	rightMsg := "Вы ответили правильно!"
-	// if !a.IsRight {
-	// 	rightMsg = "Вы ответили неправильно."
-	// }
+	if !a.IsRight {
+		rightMsg = "Вы ответили неправильно."
+	}
 
 	msg := SendRichMessage{
 		ChatID: upd.Message.Chat.ID,

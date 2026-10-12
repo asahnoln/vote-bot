@@ -3,6 +3,8 @@ package tg_test
 import (
 	"context"
 	"errors"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -12,6 +14,10 @@ import (
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
 )
+
+func init() {
+	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
+}
 
 // TODO: Check if update is correct for every type of action, have a default action as well
 func TestDefaultNotFound(t *testing.T) {
@@ -54,13 +60,11 @@ func TestBotDestError(t *testing.T) {
 }
 
 type storeSpy struct {
-	err                error
-	userID             int
-	questionID         string
-	answer             string
-	bet                int
-	lastClosedQuestion string
-	account            int
+	err        error
+	userID     int
+	questionID string
+	answer     string
+	bet        int
 }
 
 func (s *storeSpy) CurrentQuestion(context.Context) (store.Question, error) {
