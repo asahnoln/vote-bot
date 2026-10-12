@@ -150,63 +150,33 @@ func TestBet(t *testing.T) {
 }
 
 func TestBetSaveError(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(betCallbackUpdate))
-		w := httptest.NewRecorder()
-
-		wantErr := errors.New("save error")
-		errCh := make(chan error)
-		go func() {
-			err := <-errCh
-			if got, want := err, wantErr; !errors.Is(got, want) {
-				t.Fatalf("got err %v; want %v", got, want)
-			}
-		}()
-
-		storeSpy := &storeSpy{
-			err: wantErr,
-		}
-		b := tg.Bot{
-			Store:     storeSpy,
-			ErrorChan: errCh,
-		}
-		b.ServeHTTP(w, r)
-
-		if got, want := w.Code, http.StatusInternalServerError; got != want {
-			t.Errorf("bet status: got %v; want %v", got, want)
-		}
+	wantErr := errors.New("save error")
+	h := tg.BetHandler{
+		Store: &storeSpy{err: wantErr},
+	}
+	_, err := h.Handle(context.Background(), tg.Update{
+		CallbackQuery: &tg.CallbackQuery{
+			Data: "bet:save-q-2:999",
+		},
 	})
-}
 
-//go:embed testdata/bet_callback_update_wrong_bet.json
-var betCallbackUpdateWrongBet []byte
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
+}
 
 func TestBetWrongBetFormatError(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(betCallbackUpdateWrongBet))
-		w := httptest.NewRecorder()
+	h := tg.BetHandler{}
 
-		errCh := make(chan error)
-		go func() {
-			err := <-errCh
-			if got, want := err, tg.ErrBetIsNotANumber; !errors.Is(got, want) {
-				t.Fatalf("got err %v; want %v", got, want)
-			}
-		}()
-
-		b := tg.Bot{
-			ErrorChan: errCh,
-		}
-		b.ServeHTTP(w, r)
-
-		if got, want := w.Code, http.StatusInternalServerError; got != want {
-			t.Errorf("bet status: got %v; want %v", got, want)
-		}
+	_, err := h.Handle(context.Background(), tg.Update{
+		CallbackQuery: &tg.CallbackQuery{
+			Data: "bet:wrong-format-bet-q-12:wrongFormatBet",
+		},
 	})
+	if got, want := err, tg.ErrBetIsNotANumber; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
 }
-
-//go:embed testdata/bet_callback_update_wrong_data.json
-var betCallbackUpdateWrongData []byte
 
 func TestBetWrongDataFormatError(t *testing.T) {
 	h := tg.BetHandler{}
