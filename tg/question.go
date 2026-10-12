@@ -31,7 +31,7 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data []URLer,
 		return nil, ErrStoreNil
 	}
 
-	_, _ = h.Store.Users(ctx)
+	uIDs, _ := h.Store.Users(ctx)
 
 	q, err := h.Store.CurrentQuestion(ctx)
 	if err != nil {
@@ -39,7 +39,6 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data []URLer,
 	}
 
 	msg := SendRichMessage{
-		ChatID: upd.Message.Chat.ID,
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{
 				{
@@ -64,6 +63,9 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data []URLer,
 		)
 	}
 
-	data = append(data, msg)
+	for _, u := range uIDs {
+		msg.ChatID = u
+		data = append(data, msg)
+	}
 	return data, nil
 }

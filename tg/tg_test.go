@@ -48,7 +48,7 @@ func TestBotDestError(t *testing.T) {
 
 		b := tg.Bot{
 			Dest:      &destSpy{err: wantErr},
-			Store:     &storeSpy{},
+			Store:     &storeSpy{users: []int{1}},
 			ErrorChan: errCh,
 		}
 		b.ServeHTTP(w, r)

@@ -50,7 +50,7 @@ func TestQuestion(t *testing.T) {
 		t.Fatalf("dest requests count got %d; want %d", got, want)
 	}
 	want := tg.SendRichMessage{
-		ChatID: 123,
+		ChatID: 501,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
 				{
@@ -76,6 +76,10 @@ func TestQuestion(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, destSpy.got[0]); diff != "" {
 		t.Errorf("request mismatch (-want +got):%s", diff)
+	}
+
+	if got, want := destSpy.got[1].(tg.SendRichMessage).ChatID, 602; got != want {
+		t.Errorf("request 2nd user id: got %v; want %v", got, want)
 	}
 }
 

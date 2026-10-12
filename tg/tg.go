@@ -131,16 +131,17 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 
-	msg, err := handler.Handle(r.Context(), upd)
+	msgs, err := handler.Handle(r.Context(), upd)
 	if err != nil {
 		b.error(fmt.Errorf("proc %q: %w", handler.Name(), err), w, http.StatusInternalServerError)
 		return
 	}
 
-	err = b.Dest.Send(r.Context(), msg[0])
-	if err != nil {
-		b.error(fmt.Errorf("dest send: %w", err), w, http.StatusInternalServerError)
-		return
+	for _, m := range msgs {
+		err = b.Dest.Send(r.Context(), m)
+		if err != nil {
+			b.error(fmt.Errorf("dest send: %w", err), w, http.StatusInternalServerError)
+		}
 	}
 }
 
