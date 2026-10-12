@@ -74,12 +74,13 @@ Each user has an account. (At the start they have 1000$)
 - [x] Store for questions
 - [x] Ask Alina about bets - are they different for questions?
 - [x] Use firebase emulator?
+- [x] Receive and save answer and then send bets
+- [x] Receive and save bet
+- [x] Send question ID with answers
 - [ ] Remove redundant bot
 - [ ] Auto register webhook?
-- [x] Receive and save answer and then send bets
-- [ ] Receive and save bet
-- [ ] Send question ID with answers
-- [ ] Check unhappy cases for fstore answer save
+- [ ] Check unhappy cases for answer http and store
+- [ ] Check unhappy cases for bet http and store
 - [ ] Save users who join the bot
 - [ ] Send question to those who joined (and didn't stop?)
 - [ ] Admin closes question - update latest message to stop accepting answers

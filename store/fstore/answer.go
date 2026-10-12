@@ -8,7 +8,8 @@ import (
 	"github.com/asahnoln/vote-bot/store"
 )
 
-// TODO: Don't use questionID as we want current one
+const AnswersCollection = "answers"
+
 func (f *Firestore) SaveAnswer(ctx context.Context, userID int, questionID string, answer string) error {
 	// TODO: Case for not existing question
 	q, err := f.question(ctx, questionID)
@@ -50,7 +51,7 @@ func (f *Firestore) question(ctx context.Context, questionID string) (store.Ques
 }
 
 func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, bet int) error {
-	_, err := f.c.Collection("answers").
+	_, err := f.c.Collection(AnswersCollection).
 		Doc(answerDocID(userID, questionID)).
 		Set(ctx,
 			map[string]any{

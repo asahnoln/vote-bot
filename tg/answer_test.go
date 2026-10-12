@@ -132,7 +132,7 @@ func TestBet(t *testing.T) {
 				{
 					Type: "paragraph",
 					// TODO: Подумать над ответом
-					Text: "Ваш ответ и ваша ставка!",
+					Text: "Ваш ответ и ваша ставка приняты!",
 				},
 			},
 		},
@@ -147,6 +147,89 @@ func TestBet(t *testing.T) {
 	if got, want := storeSpy.bet, 500; got != want {
 		t.Errorf("save bet: got %v; want %v", got, want)
 	}
+}
+
+func TestBetSaveError(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(betCallbackUpdate))
+		w := httptest.NewRecorder()
+
+		wantErr := errors.New("save error")
+		errCh := make(chan error)
+		go func() {
+			err := <-errCh
+			if got, want := err, wantErr; !errors.Is(got, want) {
+				t.Fatalf("got err %v; want %v", got, want)
+			}
+		}()
+
+		storeSpy := &storeSpy{
+			err: wantErr,
+		}
+		b := tg.Bot{
+			Store:     storeSpy,
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusInternalServerError; got != want {
+			t.Errorf("bet status: got %v; want %v", got, want)
+		}
+	})
+}
+
+//go:embed testdata/bet_callback_update_wrong_bet.json
+var betCallbackUpdateWrongBet []byte
+
+func TestBetWrongBetFormatError(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(betCallbackUpdateWrongBet))
+		w := httptest.NewRecorder()
+
+		errCh := make(chan error)
+		go func() {
+			err := <-errCh
+			if got, want := err, tg.ErrBetIsNotANumber; !errors.Is(got, want) {
+				t.Fatalf("got err %v; want %v", got, want)
+			}
+		}()
+
+		b := tg.Bot{
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusInternalServerError; got != want {
+			t.Errorf("bet status: got %v; want %v", got, want)
+		}
+	})
+}
+
+//go:embed testdata/bet_callback_update_wrong_data.json
+var betCallbackUpdateWrongData []byte
+
+func TestBetWrongDataFormatError(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(betCallbackUpdateWrongData))
+		w := httptest.NewRecorder()
+
+		errCh := make(chan error)
+		go func() {
+			err := <-errCh
+			if got, want := err, tg.ErrWrongCallbackData; !errors.Is(got, want) {
+				t.Fatalf("got err %v; want %v", got, want)
+			}
+		}()
+
+		b := tg.Bot{
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusInternalServerError; got != want {
+			t.Errorf("bet status: got %v; want %v", got, want)
+		}
+	})
 }
 
 type destSpy struct {

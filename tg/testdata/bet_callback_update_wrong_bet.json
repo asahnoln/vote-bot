@@ -1,0 +1,5 @@
+{
+  "callback_query": {
+    "data": "bet:wrong-bet-q:wrongBet"
+  }
+}

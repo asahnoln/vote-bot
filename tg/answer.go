@@ -1,6 +1,7 @@
 package tg
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,7 +11,8 @@ import (
 const BetCallbackDataPrefix = "bet:"
 
 func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
-	qID, answer := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
+	// TODO: Test for wrong data format
+	qID, answer, _ := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
 
 	prefix := BetCallbackDataPrefix + qID + ":"
 	msg := EditMessageText{
@@ -56,6 +58,11 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data U
 	return msg, nil
 }
 
+var (
+	ErrBetIsNotANumber   = errors.New("bet is not a number")
+	ErrWrongCallbackData = errors.New("wrong callback data")
+)
+
 func (b *Bot) bet(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
@@ -65,16 +72,21 @@ func (b *Bot) bet(w http.ResponseWriter, r *http.Request, upd Update) (data URLe
 				{
 					Type: InputRichBlockParagraphType,
 					// TODO: Подумать над ответом
-					Text: "Ваш ответ и ваша ставка!",
+					Text: "Ваш ответ и ваша ставка приняты!",
 				},
 			},
 		},
 	}
 
-	qID, betStr := qIDAndData(BetCallbackDataPrefix, upd.CallbackQuery.Data)
+	qID, betStr, err := qIDAndData(BetCallbackDataPrefix, upd.CallbackQuery.Data)
+	if err != nil {
+		return nil, err
+	}
 
-	// TODO: Case for wrong bet string
-	bet, _ := strconv.Atoi(betStr)
+	bet, err := strconv.Atoi(betStr)
+	if err != nil {
+		return nil, errors.Join(ErrBetIsNotANumber, err)
+	}
 
 	err = b.Store.SaveBet(r.Context(),
 		upd.CallbackQuery.Message.Chat.ID,
@@ -88,11 +100,14 @@ func (b *Bot) bet(w http.ResponseWriter, r *http.Request, upd Update) (data URLe
 	return msg, nil
 }
 
-func qIDAndData(prefix Prefix, s string) (qID string, data string) {
+func qIDAndData(prefix Prefix, s string) (qID string, data string, err error) {
 	qIDandDataStr := strings.TrimPrefix(s, string(prefix))
 
-	// TODO: Case for wrong format
 	colPos := strings.IndexRune(qIDandDataStr, ':')
+	if colPos == -1 {
+		return "", "", ErrWrongCallbackData
+	}
+
 	qID = qIDandDataStr[:colPos]
 	data = qIDandDataStr[colPos+1:]
 
