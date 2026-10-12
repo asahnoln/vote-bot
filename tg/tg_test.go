@@ -54,11 +54,13 @@ func TestBotDestError(t *testing.T) {
 }
 
 type storeSpy struct {
-	err        error
-	userID     int
-	questionID string
-	answer     string
-	bet        int
+	err                error
+	userID             int
+	questionID         string
+	answer             string
+	bet                int
+	lastClosedQuestion string
+	account            int
 }
 
 func (s *storeSpy) CurrentQuestion(context.Context) (store.Question, error) {

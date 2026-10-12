@@ -31,11 +31,13 @@ func main() {
 		}
 	}()
 
+	store := fstore.New(fc)
 	b := &tg.Bot{
 		Dest:      tg.NewDest(os.Getenv("BOT_URL")),
-		Store:     fstore.New(fc),
+		Store:     store,
 		ErrorChan: errCh,
 	}
+	b.Handle(tg.RevealHandler{Store: store})
 
 	// TODO: Create http server for context
 	err = http.ListenAndServe(":8080", b)

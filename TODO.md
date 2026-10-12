@@ -77,15 +77,15 @@ Each user has an account. (At the start they have 1000$)
 - [x] Receive and save answer and then send bets
 - [x] Receive and save bet
 - [x] Send question ID with answers
-- [ ] Remove redundant bot
+- [x] Remove redundant bot
 - [ ] Auto register webhook?
 - [ ] Check unhappy cases for answer http and store
 - [ ] Check unhappy cases for bet http and store
-- [ ] Save users who join the bot
-- [ ] Send question to those who joined (and didn't stop?)
 - [ ] Admin closes question - update latest message to stop accepting answers
-- [ ] What if someone didn't answer?
 - [ ] Admin sends answer and account status to all
+- [ ] Save users who join the bot
+- [ ] Send question, closing and answers to those who joined (and didn't stop?)
+- [ ] What if someone didn't answer?
 - [ ] Check if question was delivered and if the command was repeated - send it if it was not delivered
 
 ## Stats

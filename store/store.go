@@ -12,4 +12,8 @@ type Question struct {
 	Order  int      `firestore:"order"`
 }
 
+type Answer struct {
+	IsRight bool `firestore:"is_right"`
+}
+
 var ErrNoQuestionsFound = errors.New("no questions found")

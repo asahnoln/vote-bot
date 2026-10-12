@@ -1,0 +1,31 @@
+{
+  "update_id": 193123851,
+  "message": {
+    "message_id": 140,
+    "from": {
+      "id": 876,
+      "is_bot": false,
+      "first_name": "Артур",
+      "last_name": "Асланян",
+      "username": "asahnoln",
+      "language_code": "ru",
+      "is_premium": true
+    },
+    "chat": {
+      "id": 876,
+      "first_name": "Артур",
+      "last_name": "Асланян",
+      "username": "asahnoln",
+      "type": "private"
+    },
+    "date": 1791805785,
+    "text": "/sendanswer",
+    "entities": [
+      {
+        "offset": 0,
+        "length": 11,
+        "type": "bot_command"
+      }
+    ]
+  }
+}

@@ -82,6 +82,7 @@ type Bot struct {
 	Store     Store
 	Dest      Sender
 	ErrorChan chan<- error
+	hs        []Handler
 }
 
 var ErrStoreNil = errors.New("store is nil")
@@ -105,6 +106,10 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	srv.ServeHTTP(w, r)
 }
 
+func (b *Bot) Handle(h Handler) {
+	b.hs = append(b.hs, h)
+}
+
 func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 	upd, err := parseUpdate(w, r)
 	if err != nil {
@@ -112,14 +117,12 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hs := []Handler{
-		&QuestionHandler{Store: b.Store},
-		&AnswerHandler{Store: b.Store},
-		&BetHandler{Store: b.Store},
-	}
+	b.Handle(&QuestionHandler{Store: b.Store})
+	b.Handle(&AnswerHandler{Store: b.Store})
+	b.Handle(&BetHandler{Store: b.Store})
 
 	var handler Handler
-	for _, h := range hs {
+	for _, h := range b.hs {
 		if !h.Condition(upd) {
 			continue
 		}
