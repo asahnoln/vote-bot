@@ -19,6 +19,7 @@ func TestQuestion(t *testing.T) {
 	upd := tg.Update{
 		Message: tg.Message{
 			Chat: tg.Chat{
+				// TODO: Check command scope
 				ID: 123,
 			},
 			Text: "/sendcurrentquestion",
@@ -34,8 +35,10 @@ func TestQuestion(t *testing.T) {
 
 	destSpy := &destSpy{}
 	b := tg.Bot{
-		Store: &storeSpy{},
-		Dest:  destSpy,
+		Store: &storeSpy{
+			users: []int{501, 602, 703},
+		},
+		Dest: destSpy,
 	}
 	b.ServeHTTP(w, r)
 
@@ -43,6 +46,9 @@ func TestQuestion(t *testing.T) {
 		t.Errorf("bot response code: got %v; want %v", got, want)
 	}
 
+	if got, want := len(destSpy.got), 3; got != want {
+		t.Fatalf("dest requests count got %d; want %d", got, want)
+	}
 	want := tg.SendRichMessage{
 		ChatID: 123,
 		RichMessage: tg.InputRichMessage{
@@ -68,7 +74,7 @@ func TestQuestion(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(want, destSpy.got); diff != "" {
+	if diff := cmp.Diff(want, destSpy.got[0]); diff != "" {
 		t.Errorf("request mismatch (-want +got):%s", diff)
 	}
 }

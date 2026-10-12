@@ -11,7 +11,6 @@ import (
 const AnswersCollection = "answers"
 
 func (f *Firestore) SaveAnswer(ctx context.Context, userID int, questionID string, answer string) error {
-	// TODO: Case for not existing question
 	q, err := f.question(ctx, questionID)
 	if err != nil {
 		return fmt.Errorf("question: %w", err)

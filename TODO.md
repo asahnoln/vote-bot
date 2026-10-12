@@ -79,8 +79,8 @@ Each user has an account. (At the start they have 1000$)
 - [x] Send question ID with answers
 - [x] Remove redundant bot
 - [ ] Auto register webhook?
-- [ ] Check unhappy cases for answer http and store
-- [ ] Check unhappy cases for bet http and store
+- [x] Check unhappy cases for answer http and store
+- [x] Check unhappy cases for bet http and store
 - [ ] Admin closes question - update latest message to stop accepting answers
 - [ ] Admin sends answer and account status to all
 - [ ] Save users who join the bot

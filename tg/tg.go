@@ -64,7 +64,7 @@ type Chat struct {
 }
 
 type Store interface {
-	CurrentQuestioner
+	QuestionStore
 	AnswerSaver
 	BetSaver
 }
@@ -89,7 +89,7 @@ var ErrStoreNil = errors.New("store is nil")
 
 type Handler interface {
 	Condition(Update) bool
-	Handle(context.Context, Update) (data URLer, err error)
+	Handle(context.Context, Update) (data []URLer, err error)
 	Name() string
 }
 
@@ -137,7 +137,7 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = b.Dest.Send(r.Context(), msg)
+	err = b.Dest.Send(r.Context(), msg[0])
 	if err != nil {
 		b.error(fmt.Errorf("dest send: %w", err), w, http.StatusInternalServerError)
 		return

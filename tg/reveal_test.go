@@ -54,7 +54,7 @@ func TestReveal(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(want, destSpy.got); diff != "" {
+	if diff := cmp.Diff(want, destSpy.got[0]); diff != "" {
 		t.Errorf("edit message text mismatch (-want +got):%s", diff)
 	}
 }
@@ -68,7 +68,7 @@ func TestRevealWrongAnswer(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := data.(tg.SendRichMessage).RichMessage.Blocks[1].Text, "Вы ответили неправильно."; got != want {
+	if got, want := data[0].(tg.SendRichMessage).RichMessage.Blocks[1].Text, "Вы ответили неправильно."; got != want {
 		t.Errorf("got %q; want %q", got, want)
 	}
 }

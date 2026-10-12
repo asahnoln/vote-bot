@@ -63,7 +63,7 @@ func TestAnswer(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(want, destSpy.got); diff != "" {
+	if diff := cmp.Diff(want, destSpy.got[0]); diff != "" {
 		t.Errorf("edit message text mismatch (-want +got):%s", diff)
 	}
 
@@ -150,7 +150,7 @@ func TestBet(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(want, destSpy.got); diff != "" {
+	if diff := cmp.Diff(want, destSpy.got[0]); diff != "" {
 		t.Errorf("edit message text mismatch (-want +got):%s", diff)
 	}
 
@@ -205,11 +205,11 @@ func TestBetWrongDataFormatError(t *testing.T) {
 }
 
 type destSpy struct {
-	got any
+	got []any
 	err error
 }
 
 func (d *destSpy) Send(ctx context.Context, data tg.URLer) error {
-	d.got = data
+	d.got = append(d.got, data)
 	return d.err
 }

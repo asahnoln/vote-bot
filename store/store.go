@@ -1,4 +1,4 @@
-// package store provides common structs and errors for store implementations
+// Package store provides common structs and errors for store implementations
 package store
 
 import "errors"

@@ -9,12 +9,13 @@ import (
 
 type Prefix string
 
-type CurrentQuestioner interface {
+type QuestionStore interface {
+	Users(context.Context) (userIDs []int, err error)
 	CurrentQuestion(context.Context) (store.Question, error)
 }
 
 type QuestionHandler struct {
-	Store CurrentQuestioner
+	Store QuestionStore
 }
 
 func (h *QuestionHandler) Condition(upd Update) bool {
@@ -25,10 +26,12 @@ func (h *QuestionHandler) Name() string {
 	return "question"
 }
 
-func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data URLer, err error) {
+func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data []URLer, err error) {
 	if h.Store == nil {
 		return nil, ErrStoreNil
 	}
+
+	_, _ = h.Store.Users(ctx)
 
 	q, err := h.Store.CurrentQuestion(ctx)
 	if err != nil {
@@ -61,5 +64,6 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data URLer, e
 		)
 	}
 
-	return msg, nil
+	data = append(data, msg)
+	return data, nil
 }

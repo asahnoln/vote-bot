@@ -61,10 +61,15 @@ func TestBotDestError(t *testing.T) {
 
 type storeSpy struct {
 	err        error
+	users      []int
 	userID     int
 	questionID string
 	answer     string
 	bet        int
+}
+
+func (s *storeSpy) Users(context.Context) ([]int, error) {
+	return s.users, nil
 }
 
 func (s *storeSpy) CurrentQuestion(context.Context) (store.Question, error) {
