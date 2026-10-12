@@ -14,6 +14,6 @@ func (f *Firestore) Answer(context.Context, int, string) (store.Answer, error) {
 	return store.Answer{}, nil
 }
 
-func (f *Firestore) Account(context.Context) (int, error) {
+func (f *Firestore) Account(ctx context.Context, userID int) (int, error) {
 	return 0, nil
 }
