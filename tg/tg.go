@@ -68,7 +68,7 @@ type Chat struct {
 
 type Store interface {
 	CurrentQuestion(context.Context) (store.Question, error)
-	SaveAnswer(ctx context.Context, userID int, answer string) error
+	SaveAnswer(ctx context.Context, userID int, questionID string, answer string) error
 	SaveBet(ctx context.Context, userID int, questionID string, bet int) error
 }
 

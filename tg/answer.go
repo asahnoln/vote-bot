@@ -10,6 +10,9 @@ import (
 const BetCallbackDataPrefix = "bet:"
 
 func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
+	qID, answer := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
+
+	prefix := BetCallbackDataPrefix + qID + ":"
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,
@@ -25,15 +28,15 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data U
 					Buttons: []RichMessageButton{
 						{
 							Text:         "100",
-							CallbackData: BetCallbackDataPrefix + "100",
+							CallbackData: prefix + "100",
 						},
 						{
 							Text:         "200",
-							CallbackData: BetCallbackDataPrefix + "200",
+							CallbackData: prefix + "200",
 						},
 						{
 							Text:         "500",
-							CallbackData: BetCallbackDataPrefix + "500",
+							CallbackData: prefix + "500",
 						},
 					},
 				},
@@ -41,10 +44,9 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data U
 		},
 	}
 
-	_, answer := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
-
 	err = b.Store.SaveAnswer(r.Context(),
 		upd.CallbackQuery.Message.Chat.ID,
+		qID,
 		answer,
 	)
 	if err != nil {

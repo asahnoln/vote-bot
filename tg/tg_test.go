@@ -69,8 +69,9 @@ func (s *storeSpy) CurrentQuestion(context.Context) (store.Question, error) {
 	}, s.err
 }
 
-func (s *storeSpy) SaveAnswer(ctx context.Context, userID int, answer string) error {
+func (s *storeSpy) SaveAnswer(ctx context.Context, userID int, questiongID string, answer string) error {
 	s.userID = userID
+	s.questionID = questiongID
 	s.answer = answer
 	return s.err
 }

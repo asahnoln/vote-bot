@@ -36,7 +36,7 @@ func TestSaveAnswer(t *testing.T) {
 
 	f := fstore.New(c)
 
-	err = f.SaveAnswer(ctx, 52, "right")
+	err = f.SaveAnswer(ctx, 52, "test-q-67", "right")
 	if err != nil {
 		t.Fatalf("fstore save answer: got err %q; want nil", err)
 	}

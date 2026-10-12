@@ -7,7 +7,7 @@ import (
 	"cloud.google.com/go/firestore"
 )
 
-func (f *Firestore) SaveAnswer(ctx context.Context, userID int, answer string) error {
+func (f *Firestore) SaveAnswer(ctx context.Context, userID int, questionID string, answer string) error {
 	q, err := f.CurrentQuestion(ctx)
 	if err != nil {
 		return fmt.Errorf("current question: %w", err)
