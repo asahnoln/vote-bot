@@ -2,6 +2,7 @@ package tg_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -159,4 +160,16 @@ func TestQuestionStoreError(t *testing.T) {
 			t.Errorf("bot response code: got %v; want %v", got, want)
 		}
 	})
+}
+
+func TestQuestionUsersError(t *testing.T) {
+	wantErr := errors.New("users error")
+	h := tg.QuestionHandler{
+		Store: &storeSpy{usersErr: wantErr},
+	}
+	_, err := h.Handle(context.Background(), tg.Update{})
+
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
 }

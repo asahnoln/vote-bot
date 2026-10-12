@@ -31,7 +31,10 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data []URLer,
 		return nil, ErrStoreNil
 	}
 
-	uIDs, _ := h.Store.Users(ctx)
+	uIDs, err := h.Store.Users(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("users: %w", err)
+	}
 
 	q, err := h.Store.CurrentQuestion(ctx)
 	if err != nil {

@@ -61,6 +61,7 @@ func TestBotDestError(t *testing.T) {
 
 type storeSpy struct {
 	err        error
+	usersErr   error
 	users      []int
 	userID     int
 	questionID string
@@ -69,7 +70,7 @@ type storeSpy struct {
 }
 
 func (s *storeSpy) Users(context.Context) ([]int, error) {
-	return s.users, nil
+	return s.users, s.usersErr
 }
 
 func (s *storeSpy) CurrentQuestion(context.Context) (store.Question, error) {
