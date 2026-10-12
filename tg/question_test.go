@@ -53,7 +53,7 @@ func TestQuestion(t *testing.T) {
 				},
 				{
 					Type:  "buttons",
-					Align: "center",
+					Align: "left",
 					Buttons: []tg.RichMessageButton{
 						{
 							Text:         "X",

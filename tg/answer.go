@@ -16,7 +16,7 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data U
 			RichMessage: InputRichMessage{
 				Blocks: []InputRichBlock{
 					{
-						Type: "paragraph",
+						Type: InputRichBlockParagraphType,
 						// TODO: Подумать над ответом
 						Text: "Ваш ответ и ваша ставка!",
 					},
@@ -42,12 +42,12 @@ func (b *Bot) answer(w http.ResponseWriter, r *http.Request, upd Update) (data U
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{
 				{
-					Type: "paragraph",
+					Type: InputRichBlockParagraphType,
 					Text: "Выберите ставку:",
 				},
 				{
-					Type:  "buttons",
-					Align: "left",
+					Type:  InputRichBlockButtonsType,
+					Align: AlignLeft,
 					Buttons: []RichMessageButton{
 						{
 							Text:         "100",

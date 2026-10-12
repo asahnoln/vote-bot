@@ -27,7 +27,7 @@ func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) (data
 				},
 				{
 					Type:  InputRichBlockButtonsType,
-					Align: InputRichBlockButtonsAlignCenter,
+					Align: AlignLeft,
 				},
 			},
 		},

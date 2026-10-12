@@ -18,21 +18,27 @@ type InputRichMessage struct {
 	Blocks []InputRichBlock `json:"blocks"`
 }
 
+type (
+	InputRichBlockType string
+	Align              string
+)
+
+const (
+	InputRichBlockParagraphType InputRichBlockType = "paragraph"
+	InputRichBlockButtonsType   InputRichBlockType = "buttons"
+)
+
+const (
+	AlignCenter Align = "center"
+	AlignLeft   Align = "left"
+)
+
 type InputRichBlock struct {
-	Type    string              `json:"type"`
+	Type    InputRichBlockType  `json:"type"`
 	Text    string              `json:"text"`
-	Align   string              `json:"align"`
+	Align   Align               `json:"align"`
 	Buttons []RichMessageButton `json:"buttons"`
 }
-
-const (
-	InputRichBlockParagraphType = "paragraph"
-	InputRichBlockButtonsType   = "buttons"
-)
-
-const (
-	InputRichBlockButtonsAlignCenter = "center"
-)
 
 type RichMessageButton struct {
 	Text         string `json:"text"`
