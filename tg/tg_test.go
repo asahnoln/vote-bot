@@ -63,6 +63,7 @@ type storeSpy struct {
 
 func (s *storeSpy) CurrentQuestion(context.Context) (store.Question, error) {
 	return store.Question{
+		ID:   "opt-q-99",
 		Q:    "X or Y?",
 		Opts: []string{"X", "Y"},
 	}, s.err

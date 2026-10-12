@@ -5,7 +5,9 @@ import (
 	"net/http"
 )
 
-const OptCallbackDataPrefix = "opt:"
+type Prefix string
+
+const OptCallbackDataPrefix Prefix = "opt:"
 
 func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) (data URLer, err error) {
 	if b.Store == nil {
@@ -36,7 +38,10 @@ func (b *Bot) question(w http.ResponseWriter, r *http.Request, upd Update) (data
 		// TODO: TDD utility for button auto row placement
 		msg.RichMessage.Blocks[1].Buttons = append(
 			msg.RichMessage.Blocks[1].Buttons,
-			RichMessageButton{Text: o, CallbackData: OptCallbackDataPrefix + o},
+			RichMessageButton{
+				Text:         o,
+				CallbackData: fmt.Sprintf("%s%s:%s", OptCallbackDataPrefix, q.ID, o),
+			},
 		)
 	}
 

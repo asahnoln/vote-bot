@@ -57,11 +57,11 @@ func TestQuestion(t *testing.T) {
 					Buttons: []tg.RichMessageButton{
 						{
 							Text:         "X",
-							CallbackData: "opt:X",
+							CallbackData: "opt:opt-q-99:X",
 						},
 						{
 							Text:         "Y",
-							CallbackData: "opt:Y",
+							CallbackData: "opt:opt-q-99:Y",
 						},
 					},
 				},

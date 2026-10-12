@@ -39,15 +39,15 @@
             "buttons": [
               {
                 "text": "100",
-                "callback_data": "bet:100"
+                "callback_data": "bet:bet-q-1:100"
               },
               {
                 "text": "200",
-                "callback_data": "bet:200"
+                "callback_data": "bet:bet-q-1:200"
               },
               {
                 "text": "500",
-                "callback_data": "bet:500"
+                "callback_data": "bet:bet-q-1:500"
               }
             ],
             "align": "left"
