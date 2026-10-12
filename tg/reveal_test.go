@@ -110,6 +110,7 @@ func TestRevealAccountError(t *testing.T) {
 }
 
 type revealStoreStub struct {
+	userID                int
 	isRight               bool
 	lastClosedQuestionErr error
 	answerErr             error
@@ -130,6 +131,7 @@ func (s *revealStoreStub) Answer(context.Context, int, string) (store.Answer, er
 	}, s.answerErr
 }
 
-func (s *revealStoreStub) Account(context.Context) (int, error) {
+func (s *revealStoreStub) Account(ctx context.Context, userID int) (int, error) {
+	s.userID = userID
 	return 500, s.accountErr
 }

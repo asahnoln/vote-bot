@@ -24,16 +24,24 @@ func TestAccount(t *testing.T) {
 
 	col := c.Collection("answers")
 	col.Doc("634:test-q-0").Set(ctx, store.Answer{
+		UserID:  634,
 		IsRight: true,
 		Bet:     200,
 	})
 	col.Doc("634:test-q-1").Set(ctx, store.Answer{
+		UserID:  634,
 		IsRight: false,
 		Bet:     100,
 	})
 	col.Doc("634:test-q-2").Set(ctx, store.Answer{
+		UserID:  634,
 		IsRight: true,
 		Bet:     500,
+	})
+	col.Doc("101:test-q-2").Set(ctx, store.Answer{
+		UserID:  101,
+		IsRight: true,
+		Bet:     9999,
 	})
 
 	f := fstore.New(c)

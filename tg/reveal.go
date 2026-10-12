@@ -10,7 +10,7 @@ import (
 type RevealStore interface {
 	LastClosedQuestion(context.Context) (store.Question, error)
 	Answer(ctx context.Context, userID int, questionID string) (store.Answer, error)
-	Account(context.Context) (int, error)
+	Account(ctx context.Context, userID int) (int, error)
 }
 
 type RevealHandler struct {
@@ -32,7 +32,7 @@ func (r RevealHandler) Handle(ctx context.Context, upd Update) (data URLer, err 
 		return nil, fmt.Errorf("answer: %w", err)
 	}
 
-	acc, err := r.Store.Account(ctx)
+	acc, err := r.Store.Account(ctx, upd.Message.Chat.ID)
 	if err != nil {
 		return nil, fmt.Errorf("account: %w", err)
 	}

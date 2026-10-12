@@ -13,7 +13,9 @@ type Question struct {
 }
 
 type Answer struct {
+	UserID  int  `firestore:"user_id"`
 	IsRight bool `firestore:"is_right"`
+	Bet     int  `firestore:"bet"`
 }
 
 var ErrNoQuestionsFound = errors.New("no questions found")
