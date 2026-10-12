@@ -13,6 +13,7 @@ func (f *Firestore) Users(ctx context.Context) (userIDs []int, err error) {
 		return nil, fmt.Errorf("users get all: %w", err)
 	}
 
+	// TODO: Handle errors from type casting
 	for _, d := range docs {
 		userIDs = append(userIDs, int(d.Data()["user_id"].(int64)))
 	}
