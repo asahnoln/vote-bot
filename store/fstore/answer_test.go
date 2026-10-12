@@ -2,11 +2,9 @@ package fstore_test
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
-	"cloud.google.com/go/firestore"
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/store/fstore"
 	"github.com/google/go-cmp/cmp"
@@ -14,15 +12,8 @@ import (
 )
 
 func TestSaveAnswer(t *testing.T) {
-	os.Setenv("FIRESTORE_EMULATOR_HOST", "[::1]:8711")
-
 	ctx := context.Background()
-
-	c, err := firestore.NewClient(ctx, "test")
-	if err != nil {
-		t.Fatalf("app firestore: got err %v; want nil", err)
-	}
-
+	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
 	c.Collection("answers").Doc("52:test-q-67").Delete(ctx)
@@ -36,7 +27,7 @@ func TestSaveAnswer(t *testing.T) {
 
 	f := fstore.New(c)
 
-	err = f.SaveAnswer(ctx, 52, "test-q-67", "right")
+	err := f.SaveAnswer(ctx, 52, "test-q-67", "right")
 	if err != nil {
 		t.Fatalf("fstore save answer: got err %q; want nil", err)
 	}
@@ -59,16 +50,23 @@ func TestSaveAnswer(t *testing.T) {
 	}
 }
 
-func TestSaveBet(t *testing.T) {
-	os.Setenv("FIRESTORE_EMULATOR_HOST", "[::1]:8711")
+func TestSaveAnswerNoQuestion(t *testing.T) {
+	ctx := context.Background()
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
 
+	f := fstore.New(c)
+
+	err := f.SaveAnswer(ctx, 999, "test-q-9999", "")
+	if err == nil {
+		t.Fatal("fstore save answer: got err nil; want not nil")
+	}
+}
+
+func TestSaveBet(t *testing.T) {
 	ctx := context.Background()
 
-	c, err := firestore.NewClient(ctx, "test")
-	if err != nil {
-		t.Fatalf("app firestore: got err %v; want nil", err)
-	}
-
+	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
 	c.Collection("answers").Doc("234:test-q-111").Set(ctx, map[string]any{
@@ -77,7 +75,7 @@ func TestSaveBet(t *testing.T) {
 
 	f := fstore.New(c)
 
-	err = f.SaveBet(ctx, 234, "test-q-111", 500)
+	err := f.SaveBet(ctx, 234, "test-q-111", 500)
 	if err != nil {
 		t.Fatalf("fstore save answer: got err %q; want nil", err)
 	}

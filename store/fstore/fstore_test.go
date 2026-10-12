@@ -2,6 +2,7 @@ package fstore_test
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	firestore "cloud.google.com/go/firestore"
@@ -19,6 +20,18 @@ func firestoreIntegrationClient(t testing.T, ctx context.Context) *firestore.Cli
 	}
 
 	c, err := app.Firestore(ctx)
+	if err != nil {
+		t.Fatalf("app firestore: got err %v; want nil", err)
+	}
+
+	return c
+}
+
+func firestoreMemoryEmulatorClient(t *testing.T, ctx context.Context) *firestore.Client {
+	t.Helper()
+	os.Setenv("FIRESTORE_EMULATOR_HOST", "[::1]:8711")
+
+	c, err := firestore.NewClient(ctx, "test")
 	if err != nil {
 		t.Fatalf("app firestore: got err %v; want nil", err)
 	}

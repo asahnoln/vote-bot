@@ -9,8 +9,6 @@ import (
 
 type Prefix string
 
-const OptCallbackDataPrefix Prefix = "opt:"
-
 type CurrentQuestioner interface {
 	CurrentQuestion(context.Context) (store.Question, error)
 }

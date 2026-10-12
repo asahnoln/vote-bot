@@ -105,6 +105,19 @@ func TestAnswerSaveError(t *testing.T) {
 	})
 }
 
+func TestAnswerWrongDataFormatError(t *testing.T) {
+	h := tg.AnswerHandler{}
+
+	_, err := h.Handle(context.Background(), tg.Update{
+		CallbackQuery: &tg.CallbackQuery{
+			Data: "opt: wrong data ",
+		},
+	})
+	if got, want := err, tg.ErrWrongCallbackData; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
+}
+
 //go:embed testdata/bet_callback_update.json
 var betCallbackUpdate []byte
 

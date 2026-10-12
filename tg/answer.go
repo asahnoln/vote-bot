@@ -8,7 +8,15 @@ import (
 	"strings"
 )
 
-const BetCallbackDataPrefix = "bet:"
+const (
+	OptCallbackDataPrefix Prefix = "opt:"
+	BetCallbackDataPrefix Prefix = "bet:"
+)
+
+var (
+	ErrBetIsNotANumber   = errors.New("bet is not a number")
+	ErrWrongCallbackData = errors.New("wrong callback data")
+)
 
 type AnswerSaver interface {
 	SaveAnswer(ctx context.Context, userID int, questionID string, answer string) error
@@ -27,10 +35,12 @@ func (h *AnswerHandler) Name() string {
 }
 
 func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (data URLer, err error) {
-	// TODO: Test for wrong data format
-	qID, answer, _ := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
+	qID, answer, err := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
+	if err != nil {
+		return nil, errors.Join(ErrWrongCallbackData, err)
+	}
 
-	prefix := BetCallbackDataPrefix + qID + ":"
+	prefix := string(BetCallbackDataPrefix) + qID + ":"
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,
@@ -74,11 +84,6 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (data URLer, err
 	return msg, nil
 }
 
-var (
-	ErrBetIsNotANumber   = errors.New("bet is not a number")
-	ErrWrongCallbackData = errors.New("wrong callback data")
-)
-
 type BetSaver interface {
 	SaveBet(ctx context.Context, userID int, questionID string, bet int) error
 }
@@ -88,7 +93,7 @@ type BetHandler struct {
 }
 
 func (h *BetHandler) Condition(upd Update) bool {
-	return upd.CallbackQuery != nil && strings.HasPrefix(upd.CallbackQuery.Data, BetCallbackDataPrefix)
+	return upd.CallbackQuery != nil && strings.HasPrefix(upd.CallbackQuery.Data, string(BetCallbackDataPrefix))
 }
 
 func (h *BetHandler) Name() string {

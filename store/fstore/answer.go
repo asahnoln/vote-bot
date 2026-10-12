@@ -14,7 +14,7 @@ func (f *Firestore) SaveAnswer(ctx context.Context, userID int, questionID strin
 	// TODO: Case for not existing question
 	q, err := f.question(ctx, questionID)
 	if err != nil {
-		return err
+		return fmt.Errorf("question: %w", err)
 	}
 
 	_, err = f.c.Collection("answers").
@@ -33,16 +33,15 @@ func (f *Firestore) SaveAnswer(ctx context.Context, userID int, questionID strin
 	return nil
 }
 
-func (f *Firestore) question(ctx context.Context, questionID string) (store.Question, error) {
-	q := store.Question{}
+func (f *Firestore) question(ctx context.Context, questionID string) (q store.Question, err error) {
 	doc, err := f.c.Collection(QuestionsCollection).Doc(questionID).Get(ctx)
 	if err != nil {
-		return store.Question{}, fmt.Errorf("question get: %w", err)
+		return q, fmt.Errorf("get: %w", err)
 	}
 
 	err = doc.DataTo(&q)
 	if err != nil {
-		return store.Question{}, fmt.Errorf("data to: %w", err)
+		return q, fmt.Errorf("data to: %w", err)
 	}
 
 	q.ID = doc.Ref.ID
