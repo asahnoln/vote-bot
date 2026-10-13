@@ -83,8 +83,10 @@ Each user has an account. (At the start they have 1000$)
 - [x] Send question to those who joined
 - [ ] Auto register webhook?
 - [x] Save users who join the bot
-- [ ] Admin closes question - update latest message to stop accepting answers
+- [x] Admin closes question - update latest message to stop accepting answers
 - [ ] Admin sends answer and account status to all
+- [ ] Robust messages (what question, answer and bet was chosen at each step and after question closing)
+- [ ] If bet was not chosen before question close - what do???
 - [ ] What if someone didn't answer?
 - [ ] Check if question was delivered and if the command was repeated - send it if it was not delivered
 - [ ] Stop sending questions to those who lost the game
