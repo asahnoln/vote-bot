@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"cloud.google.com/go/firestore"
 	"github.com/asahnoln/vote-bot/store"
 )
 
@@ -43,5 +44,14 @@ func (f *Firestore) SaveUser(ctx context.Context, userID int) error {
 }
 
 func (f *Firestore) SaveLastMessageID(ctx context.Context, userID int, msgID int) error {
+	_, err := f.c.Collection(UsersCollection).
+		Doc(strconv.Itoa(userID)).
+		Set(ctx, map[string]any{
+			"last_message_id": msgID,
+		}, firestore.MergeAll)
+	if err != nil {
+		return fmt.Errorf("user %d doc with msgID %d: %w", userID, msgID, err)
+	}
+
 	return nil
 }

@@ -81,3 +81,36 @@ func TestSaveUser(t *testing.T) {
 		t.Errorf("got doc user id %v; want %v", got, want)
 	}
 }
+
+func TestSaveLastMessageID(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("users").Doc("101101").Set(ctx, map[string]any{
+		"user_id": 101101,
+	})
+
+	f := fstore.New(c)
+
+	err := f.SaveLastMessageID(ctx, 101101, 55)
+	if err != nil {
+		t.Fatalf("fstore save user: got err %v; want nil", err)
+	}
+
+	d, err := c.Collection("users").Doc("101101").Get(ctx)
+	if err != nil {
+		t.Fatalf("fstore user get: got err %v; want nil", err)
+	}
+
+	got := store.User{}
+	d.DataTo(&got)
+	want := store.User{
+		UserID:        101101,
+		LastMessageID: 55,
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("user mismatch (-want +got):\n%s", diff)
+	}
+}
