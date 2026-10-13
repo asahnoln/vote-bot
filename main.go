@@ -37,7 +37,7 @@ func main() {
 		Store:     store,
 		ErrorChan: errCh,
 	}
-	b.Handle(tg.RevealHandler{Store: store})
+	b.Handle(&tg.RevealHandler{Store: store})
 	b.Handle(&tg.StartHandler{Store: store})
 
 	// TODO: Create http server for context

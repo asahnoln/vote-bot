@@ -26,7 +26,7 @@ func TestReveal(t *testing.T) {
 	b := tg.Bot{
 		Dest: destSpy,
 	}
-	b.Handle(tg.RevealHandler{Store: &revealStoreStub{
+	b.Handle(&tg.RevealHandler{Store: &revealStoreStub{
 		isRight: true,
 	}})
 	b.ServeHTTP(w, r)

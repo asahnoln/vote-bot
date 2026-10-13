@@ -80,9 +80,9 @@ Each user has an account. (At the start they have 1000$)
 - [x] Remove redundant bot
 - [x] Check unhappy cases for answer http and store
 - [x] Check unhappy cases for bet http and store
+- [x] Send question to those who joined
 - [ ] Auto register webhook?
-- [x] Send question, closing and answers to those who joined (and didn't stop?)
-- [ ] Save users who join the bot
+- [x] Save users who join the bot
 - [ ] Admin closes question - update latest message to stop accepting answers
 - [ ] Admin sends answer and account status to all
 - [ ] What if someone didn't answer?
