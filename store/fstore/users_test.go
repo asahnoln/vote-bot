@@ -26,7 +26,7 @@ func TestUsers(t *testing.T) {
 
 	uIDs, err := f.Users(ctx)
 	if err != nil {
-		t.Fatalf("fstore question: got err %v; want nil", err)
+		t.Fatalf("fstore users: got err %v; want nil", err)
 	}
 
 	if diff := cmp.Diff([]int{390, 7829}, uIDs); diff != "" {
@@ -44,10 +44,33 @@ func TestUsersNoData(t *testing.T) {
 
 	uIDs, err := f.Users(ctx)
 	if err != nil {
-		t.Fatalf("fstore question: got err %v; want nil", err)
+		t.Fatalf("fstore users: got err %v; want nil", err)
 	}
 
 	if got, want := len(uIDs), 0; got != want {
 		t.Errorf("user count: got %d; want %d", got, want)
+	}
+}
+
+func TestSaveUser(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	f := fstore.New(c)
+
+	err := f.SaveUser(ctx, 67)
+	if err != nil {
+		t.Fatalf("fstore save user: got err %v; want nil", err)
+	}
+
+	d, err := c.Collection("users").Doc("67").Get(ctx)
+	if err != nil {
+		t.Fatalf("fstore user get: got err %v; want nil", err)
+	}
+
+	if got, want := d.Data()["user_id"].(int64), int64(67); got != want {
+		t.Errorf("got doc user id %v; want %v", got, want)
 	}
 }
