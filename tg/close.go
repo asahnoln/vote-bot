@@ -1,6 +1,9 @@
 package tg
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 type CloseStore interface {
 	Userser
@@ -11,9 +14,24 @@ type CloseHandler struct {
 	Store CloseStore
 }
 
+func (h *CloseHandler) Name() string {
+	return "close"
+}
+
+func (h *CloseHandler) Condition(upd Update) bool {
+	return upd.Message.Text == "/closequestion"
+}
+
 func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
-	users, _ := h.Store.Users(ctx)
-	h.Store.CloseCurrentQuestion(ctx)
+	users, err := h.Store.Users(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("users: %w", err)
+	}
+
+	err = h.Store.CloseCurrentQuestion(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("close current question: %w", err)
+	}
 
 	msg := EditMessageText{
 		RichMessage: InputRichMessage{
