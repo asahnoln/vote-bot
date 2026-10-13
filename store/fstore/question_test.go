@@ -126,3 +126,68 @@ func TestSomeQuestionAnswerIndexIsLarger(t *testing.T) {
 		})
 	}
 }
+
+func TestCloseCurrentQuestion(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	col := c.Collection("questions")
+	col.Doc("test-q-0").Set(ctx, store.Question{
+		Q:      "Should not be used?",
+		Closed: true,
+		A:      1,
+		Opts:   []string{"skip", "avoid"},
+		Order:  0,
+	})
+	col.Doc("test-q-1").Set(ctx, store.Question{
+		Q:      "SaaaS or SoooS?",
+		Closed: false,
+		A:      2,
+		Opts:   []string{"jej", "joj", "sas", "sos"},
+		Order:  1,
+	})
+	col.Doc("test-q-2").Set(ctx, store.Question{
+		Q:      "Should skip in future?",
+		Closed: false,
+		A:      1,
+		Opts:   []string{"SKIP", "FUTURE"},
+		Order:  2,
+	})
+
+	f := fstore.New(c)
+
+	err := f.CloseCurrentQuestion(ctx)
+	if err != nil {
+		t.Fatalf("fstore close question: got err %v; want nil", err)
+	}
+
+	d, _ := c.Collection("questions").Doc("test-q-1").Get(ctx)
+	got := store.Question{}
+	d.DataTo(&got)
+	want := store.Question{
+		Q:      "SaaaS or SoooS?",
+		Closed: true,
+		A:      2,
+		Opts:   []string{"jej", "joj", "sas", "sos"},
+		Order:  1,
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("close question mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestCloseCurrentQuestionNoQuestionsError(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	f := fstore.New(c)
+
+	err := f.CloseCurrentQuestion(ctx)
+	if got, want := err, store.ErrNoQuestionsFound; !errors.Is(got, want) {
+		t.Fatalf("fstore no questions: got err %v; want %v", got, want)
+	}
+}

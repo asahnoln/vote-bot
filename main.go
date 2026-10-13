@@ -37,8 +37,9 @@ func main() {
 		Store:     store,
 		ErrorChan: errCh,
 	}
-	b.Handle(&tg.RevealHandler{Store: store})
 	b.Handle(&tg.StartHandler{Store: store})
+	b.Handle(&tg.CloseHandler{Store: store})
+	b.Handle(&tg.RevealHandler{Store: store})
 
 	// TODO: Create http server for context
 	err = http.ListenAndServe(":8080", b)

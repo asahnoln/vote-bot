@@ -16,6 +16,40 @@ const (
 )
 
 func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err error) {
+	q, err = f.currentQuestion(ctx)
+	if err != nil {
+		return q, fmt.Errorf("current question: %w", err)
+	}
+
+	if len(q.Opts) == 0 {
+		return q, store.ErrQuestionHasNoOpts
+	}
+
+	if q.A < 0 || q.A >= len(q.Opts) {
+		return q, store.ErrQuestionAnswerIndexIsOutOfBounds
+	}
+
+	return q, nil
+}
+
+func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
+	q, err := f.currentQuestion(ctx)
+	if err != nil {
+		return fmt.Errorf("current question: %w", err)
+	}
+
+	_, err = f.c.Collection(QuestionsCollection).
+		Doc(q.ID).Set(ctx, map[string]any{
+		"closed": true,
+	}, firestore.MergeAll)
+	if err != nil {
+		return fmt.Errorf("current question set: %w", err)
+	}
+
+	return nil
+}
+
+func (f *Firestore) currentQuestion(ctx context.Context) (q store.Question, err error) {
 	docs, err := f.c.Collection(QuestionsCollection).
 		WhereEntity(firestore.PropertyFilter{
 			Path:     ClosedPath,
@@ -27,7 +61,7 @@ func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err 
 		Documents(ctx).
 		GetAll()
 	if err != nil {
-		return q, fmt.Errorf("questions iterator: %w", err)
+		return q, fmt.Errorf("get: %w", err)
 	}
 
 	if len(docs) == 0 {
@@ -37,14 +71,6 @@ func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err 
 	err = docs[0].DataTo(&q)
 	if err != nil {
 		return q, fmt.Errorf("data to: %w", err)
-	}
-
-	if len(q.Opts) == 0 {
-		return q, store.ErrQuestionHasNoOpts
-	}
-
-	if q.A < 0 || q.A >= len(q.Opts) {
-		return q, store.ErrQuestionAnswerIndexIsOutOfBounds
 	}
 
 	q.ID = docs[0].Ref.ID
