@@ -17,10 +17,12 @@ func TestUsers(t *testing.T) {
 
 	col := c.Collection("users")
 	col.Doc("7829").Set(ctx, map[string]any{
-		"user_id": 7829,
+		"user_id":         7829,
+		"last_message_id": 101,
 	})
 	col.Doc("390").Set(ctx, map[string]any{
-		"user_id": 390,
+		"user_id":         390,
+		"last_message_id": 201,
 	})
 
 	f := fstore.New(c)
@@ -31,8 +33,8 @@ func TestUsers(t *testing.T) {
 	}
 
 	want := []store.User{
-		{UserID: 390},
-		{UserID: 7829},
+		{UserID: 390, LastMessageID: 201},
+		{UserID: 7829, LastMessageID: 101},
 	}
 	if diff := cmp.Diff(want, uIDs); diff != "" {
 		t.Errorf("user IDs mismatch (-want +got):\n%s", diff)
