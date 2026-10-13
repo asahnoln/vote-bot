@@ -87,6 +87,7 @@ Each user has an account. (At the start they have 1000$)
 - [ ] Admin sends answer and account status to all
 - [ ] What if someone didn't answer?
 - [ ] Check if question was delivered and if the command was repeated - send it if it was not delivered
+- [ ] Stop sending questions to those who lost the game
 
 ## Stats
 

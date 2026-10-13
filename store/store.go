@@ -18,6 +18,11 @@ type Answer struct {
 	Bet     int  `firestore:"bet"`
 }
 
+type User struct {
+	UserID        int `firestore:"user_id"`
+	LastMessageID int `firestore:"last_message_id"`
+}
+
 var (
 	ErrNoQuestionsFound                 = errors.New("no questions found")
 	ErrQuestionHasNoOpts                = errors.New("question has no opts")

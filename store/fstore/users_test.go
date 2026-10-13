@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/store/fstore"
 	"github.com/google/go-cmp/cmp"
 )
@@ -29,7 +30,11 @@ func TestUsers(t *testing.T) {
 		t.Fatalf("fstore users: got err %v; want nil", err)
 	}
 
-	if diff := cmp.Diff([]int{390, 7829}, uIDs); diff != "" {
+	want := []store.User{
+		{UserID: 390},
+		{UserID: 7829},
+	}
+	if diff := cmp.Diff(want, uIDs); diff != "" {
 		t.Errorf("user IDs mismatch (-want +got):\n%s", diff)
 	}
 }

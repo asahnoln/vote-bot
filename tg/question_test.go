@@ -11,6 +11,7 @@ import (
 	"testing"
 	"testing/synctest"
 
+	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
 	"github.com/google/go-cmp/cmp"
 )
@@ -37,7 +38,11 @@ func TestQuestion(t *testing.T) {
 	destSpy := &destSpy{}
 	b := tg.Bot{
 		Store: &storeSpy{
-			users: []int{501, 602, 703},
+			users: []store.User{
+				{UserID: 501},
+				{UserID: 602},
+				{UserID: 703},
+			},
 		},
 		Dest: destSpy,
 	}

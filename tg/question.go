@@ -9,8 +9,12 @@ import (
 
 type Prefix string
 
+type Userser interface {
+	Users(context.Context) (userIDs []store.User, err error)
+}
+
 type QuestionStore interface {
-	Users(context.Context) (userIDs []int, err error)
+	Userser
 	CurrentQuestion(context.Context) (store.Question, error)
 }
 
@@ -67,7 +71,7 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []URLer,
 	}
 
 	for _, u := range uIDs {
-		msg.ChatID = u
+		msg.ChatID = u.UserID
 		msgs = append(msgs, msg)
 	}
 	return msgs, nil

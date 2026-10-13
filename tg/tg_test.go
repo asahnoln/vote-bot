@@ -48,7 +48,7 @@ func TestBotDestError(t *testing.T) {
 
 		b := tg.Bot{
 			Dest:      &destSpy{err: wantErr},
-			Store:     &storeSpy{users: []int{1}},
+			Store:     &storeSpy{users: []store.User{{}}},
 			ErrorChan: errCh,
 		}
 		b.ServeHTTP(w, r)
@@ -62,14 +62,14 @@ func TestBotDestError(t *testing.T) {
 type storeSpy struct {
 	err        error
 	usersErr   error
-	users      []int
+	users      []store.User
 	userID     int
 	questionID string
 	answer     string
 	bet        int
 }
 
-func (s *storeSpy) Users(context.Context) ([]int, error) {
+func (s *storeSpy) Users(context.Context) ([]store.User, error) {
 	return s.users, s.usersErr
 }
 

@@ -4,22 +4,29 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+
+	"github.com/asahnoln/vote-bot/store"
 )
 
 const UsersCollection = "users"
 
-func (f *Firestore) Users(ctx context.Context) (userIDs []int, err error) {
+func (f *Firestore) Users(ctx context.Context) (users []store.User, err error) {
 	docs, err := f.c.Collection(UsersCollection).Documents(ctx).GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("users get all: %w", err)
 	}
 
-	// TODO: Handle errors from type casting
 	for _, d := range docs {
-		userIDs = append(userIDs, int(d.Data()["user_id"].(int64)))
+		u := store.User{}
+		err := d.DataTo(&u)
+		if err != nil {
+			return nil, fmt.Errorf("doc data to user: %w", err)
+		}
+
+		users = append(users, u)
 	}
 
-	return userIDs, nil
+	return users, nil
 }
 
 func (f *Firestore) SaveUser(ctx context.Context, userID int) error {
