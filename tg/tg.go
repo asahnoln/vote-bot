@@ -89,7 +89,7 @@ var ErrStoreNil = errors.New("store is nil")
 
 type Handler interface {
 	Condition(Update) bool
-	Handle(context.Context, Update) (data []URLer, err error)
+	Handle(context.Context, Update) (msgs []URLer, err error)
 	Name() string
 }
 

@@ -21,7 +21,7 @@ func (r RevealHandler) Condition(upd Update) bool {
 	return upd.Message.Text == "/sendanswer"
 }
 
-func (r RevealHandler) Handle(ctx context.Context, upd Update) (data []URLer, err error) {
+func (r RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
 	q, err := r.Store.LastClosedQuestion(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("last closed question: %w", err)
@@ -62,8 +62,8 @@ func (r RevealHandler) Handle(ctx context.Context, upd Update) (data []URLer, er
 		},
 	}
 
-	data = append(data, msg)
-	return data, nil
+	msgs = append(msgs, msg)
+	return msgs, nil
 }
 
 func (r RevealHandler) Name() string {

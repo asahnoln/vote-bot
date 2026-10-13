@@ -34,7 +34,7 @@ func (h *AnswerHandler) Name() string {
 	return "answer"
 }
 
-func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (data []URLer, err error) {
+func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
 	qID, answer, err := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
 	if err != nil {
 		return nil, errors.Join(ErrWrongCallbackData, err)
@@ -81,8 +81,8 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (data []URLer, e
 		return nil, fmt.Errorf("save answer: %w", err)
 	}
 
-	data = append(data, msg)
-	return data, nil
+	msgs = append(msgs, msg)
+	return msgs, nil
 }
 
 type BetSaver interface {
@@ -101,7 +101,7 @@ func (h *BetHandler) Name() string {
 	return "bet"
 }
 
-func (h *BetHandler) Handle(ctx context.Context, upd Update) (data []URLer, err error) {
+func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,
@@ -135,8 +135,8 @@ func (h *BetHandler) Handle(ctx context.Context, upd Update) (data []URLer, err 
 		return nil, fmt.Errorf("save bet: %w", err)
 	}
 
-	data = append(data, msg)
-	return data, nil
+	msgs = append(msgs, msg)
+	return msgs, nil
 }
 
 func qIDAndData(prefix Prefix, s string) (qID string, data string, err error) {

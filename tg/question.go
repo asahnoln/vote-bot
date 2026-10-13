@@ -26,7 +26,7 @@ func (h *QuestionHandler) Name() string {
 	return "question"
 }
 
-func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data []URLer, err error) {
+func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
 	if h.Store == nil {
 		return nil, ErrStoreNil
 	}
@@ -68,7 +68,7 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (data []URLer,
 
 	for _, u := range uIDs {
 		msg.ChatID = u
-		data = append(data, msg)
+		msgs = append(msgs, msg)
 	}
-	return data, nil
+	return msgs, nil
 }
