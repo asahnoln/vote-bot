@@ -72,6 +72,7 @@ type Store interface {
 type Response struct {
 	OK          bool
 	Description string
+	Result      Message
 }
 
 type Sender interface {

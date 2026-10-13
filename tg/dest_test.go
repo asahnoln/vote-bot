@@ -40,6 +40,9 @@ func TestDestination(t *testing.T) {
 
 		resp := tg.Response{
 			OK: true,
+			Result: tg.Message{
+				MessageID: 234,
+			},
 		}
 
 		err = json.NewEncoder(w).Encode(resp)
@@ -54,7 +57,7 @@ func TestDestination(t *testing.T) {
 	want := tg.SendRichMessage{
 		ChatID: 52,
 	}
-	_, err := d.Send(context.Background(), want)
+	m, err := d.Send(context.Background(), want)
 	if err != nil {
 		t.Fatalf("send err: got %v; want nil", err)
 	}
@@ -65,6 +68,10 @@ func TestDestination(t *testing.T) {
 
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("request mismatch (-want +got):%s", diff)
+	}
+
+	if got, want := m.MessageID, 234; got != want {
+		t.Errorf("response message id: got %v; want %v", got, want)
 	}
 }
 

@@ -82,5 +82,5 @@ func (d Dest) Send(ctx context.Context, data URLer) (m Message, err error) {
 		return m, fmt.Errorf("tg srv not ok: %s", resp.Description)
 	}
 
-	return m, nil
+	return resp.Result, nil
 }
