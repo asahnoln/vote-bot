@@ -94,3 +94,14 @@ func (s *storeSpy) SaveBet(ctx context.Context, userID int, questionID string, b
 	s.bet = bet
 	return s.err
 }
+
+func (s *storeSpy) SaveLastMessageID(ctx context.Context, userID int, msgID int) error {
+	for i, u := range s.users {
+		if u.UserID == userID {
+			s.users[i].LastMessageID = msgID
+			break
+		}
+	}
+
+	return s.err
+}

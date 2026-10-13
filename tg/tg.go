@@ -75,7 +75,7 @@ type Response struct {
 }
 
 type Sender interface {
-	Send(ctx context.Context, data URLer) error
+	Send(ctx context.Context, data URLer) (Message, error)
 }
 
 type Bot struct {
@@ -88,9 +88,10 @@ type Bot struct {
 var ErrStoreNil = errors.New("store is nil")
 
 type Handler interface {
+	Name() string
 	Condition(Update) bool
 	Handle(context.Context, Update) (msgs []URLer, err error)
-	Name() string
+	HandleResponse(context.Context, Message) error
 }
 
 func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -138,9 +139,17 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, m := range msgs {
-		err = b.Dest.Send(r.Context(), m)
+		ctx := r.Context()
+		resp, err := b.Dest.Send(ctx, m)
 		if err != nil {
 			b.error(fmt.Errorf("dest send: %w", err), w, http.StatusInternalServerError)
+			break
+		}
+
+		err = handler.HandleResponse(ctx, resp)
+		if err != nil {
+			b.error(fmt.Errorf("dest resp save: %w", err), w, http.StatusInternalServerError)
+			break
 		}
 	}
 }

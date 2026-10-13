@@ -205,11 +205,12 @@ func TestBetWrongDataFormatError(t *testing.T) {
 }
 
 type destSpy struct {
-	got []any
-	err error
+	got       []any
+	err       error
+	returnMsg tg.Message
 }
 
-func (d *destSpy) Send(ctx context.Context, data tg.URLer) error {
+func (d *destSpy) Send(ctx context.Context, data tg.URLer) (m tg.Message, err error) {
 	d.got = append(d.got, data)
-	return d.err
+	return d.returnMsg, d.err
 }

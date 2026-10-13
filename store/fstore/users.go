@@ -41,3 +41,7 @@ func (f *Firestore) SaveUser(ctx context.Context, userID int) error {
 
 	return nil
 }
+
+func (f *Firestore) SaveLastMessageID(ctx context.Context, userID int, msgID int) error {
+	return nil
+}

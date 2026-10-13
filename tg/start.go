@@ -13,6 +13,11 @@ type StartHandler struct {
 	Store UserSaver
 }
 
+// HandleResponse implements [Handler].
+func (h *StartHandler) HandleResponse(context.Context, Message) error {
+	return nil
+}
+
 func (h *StartHandler) Name() string {
 	return "start"
 }

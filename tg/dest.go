@@ -44,9 +44,9 @@ func (EditMessageText) URL() string {
 	return "editMessageText"
 }
 
-func (d Dest) Send(ctx context.Context, data URLer) error {
+func (d Dest) Send(ctx context.Context, data URLer) (m Message, err error) {
 	if data == nil {
-		return nil
+		return
 	}
 
 	methodURL := data.URL()
@@ -55,32 +55,32 @@ func (d Dest) Send(ctx context.Context, data URLer) error {
 
 	body, err := json.Marshal(&data)
 	if err != nil {
-		return fmt.Errorf("message marshal: %w", err)
+		return m, fmt.Errorf("message marshal: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx,
 		http.MethodPost, d.URL+"/"+methodURL, bytes.NewReader(body))
 	req.Header.Set("Content-Type", ApplicationJSONContentType)
 	if err != nil {
-		return fmt.Errorf("request creation: %w", err)
+		return m, fmt.Errorf("request creation: %w", err)
 	}
 
 	// TODO: Test for this err
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("http client do: %w", err)
+		return m, fmt.Errorf("http client do: %w", err)
 	}
 	defer response.Body.Close()
 
 	resp := Response{}
 	err = json.NewDecoder(response.Body).Decode(&resp)
 	if err != nil {
-		return fmt.Errorf("tg srv response decode: %w", err)
+		return m, fmt.Errorf("tg srv response decode: %w", err)
 	}
 
 	if !resp.OK {
-		return fmt.Errorf("tg srv not ok: %s", resp.Description)
+		return m, fmt.Errorf("tg srv not ok: %s", resp.Description)
 	}
 
-	return nil
+	return m, nil
 }

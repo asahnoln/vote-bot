@@ -14,6 +14,10 @@ type CloseHandler struct {
 	Store CloseStore
 }
 
+func (h *CloseHandler) HandleResponse(context.Context, Message) error {
+	return nil
+}
+
 func (h *CloseHandler) Name() string {
 	return "close"
 }

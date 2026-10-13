@@ -85,6 +85,10 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 	return msgs, nil
 }
 
+func (h *AnswerHandler) HandleResponse(ctx context.Context, resp Message) error {
+	return nil
+}
+
 type BetSaver interface {
 	SaveBet(ctx context.Context, userID int, questionID string, bet int) error
 }
@@ -137,6 +141,10 @@ func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err 
 
 	msgs = append(msgs, msg)
 	return msgs, nil
+}
+
+func (h *BetHandler) HandleResponse(ctx context.Context, resp Message) error {
+	return nil
 }
 
 func qIDAndData(prefix Prefix, s string) (qID string, data string, err error) {

@@ -16,6 +16,7 @@ type Userser interface {
 type QuestionStore interface {
 	Userser
 	CurrentQuestion(context.Context) (store.Question, error)
+	SaveLastMessageID(ctx context.Context, userID int, msgID int) error
 }
 
 type QuestionHandler struct {
@@ -75,4 +76,9 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []URLer,
 		msgs = append(msgs, msg)
 	}
 	return msgs, nil
+}
+
+func (h *QuestionHandler) HandleResponse(ctx context.Context, resp Message) error {
+	h.Store.SaveLastMessageID(ctx, resp.Chat.ID, resp.MessageID)
+	return nil
 }

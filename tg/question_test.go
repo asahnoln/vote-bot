@@ -35,16 +35,24 @@ func TestQuestion(t *testing.T) {
 	r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
-	destSpy := &destSpy{}
-	b := tg.Bot{
-		Store: &storeSpy{
-			users: []store.User{
-				{UserID: 501},
-				{UserID: 602},
-				{UserID: 703},
-			},
+	storeSpy := &storeSpy{
+		users: []store.User{
+			{UserID: 501},
+			{UserID: 602},
+			{UserID: 703},
 		},
-		Dest: destSpy,
+	}
+
+	destSpy := &destSpy{
+		returnMsg: tg.Message{
+			Chat: tg.Chat{
+				ID: 501,
+			},
+			MessageID: 1853,
+		},
+	}
+	b := tg.Bot{
+		Store: storeSpy, Dest: destSpy,
 	}
 	b.ServeHTTP(w, r)
 
@@ -86,6 +94,10 @@ func TestQuestion(t *testing.T) {
 
 	if got, want := destSpy.got[1].(tg.SendRichMessage).ChatID, 602; got != want {
 		t.Errorf("request 2nd user id: got %v; want %v", got, want)
+	}
+
+	if got, want := storeSpy.users[0].LastMessageID, 1853; got != want {
+		t.Errorf("last message ID saved: got %v; want %v", got, want)
 	}
 }
 

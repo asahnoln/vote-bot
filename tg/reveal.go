@@ -17,6 +17,10 @@ type RevealHandler struct {
 	Store RevealStore
 }
 
+func (r *RevealHandler) HandleResponse(context.Context, Message) error {
+	return nil
+}
+
 func (r *RevealHandler) Name() string {
 	return "reveal"
 }
