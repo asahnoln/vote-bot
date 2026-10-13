@@ -16,11 +16,10 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, er
 	h.Store.CloseCurrentQuestion(ctx)
 
 	msg := EditMessageText{
-		MessageID: 67521,
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{
 				{
-					Type: "paragraph",
+					Type: InputRichBlockParagraphType,
 					Text: "Вопрос закрыт!",
 				},
 			},
@@ -29,6 +28,7 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, er
 
 	for _, u := range users {
 		msg.ChatID = u.UserID
+		msg.MessageID = u.LastMessageID
 		msgs = append(msgs, msg)
 	}
 	return msgs, nil

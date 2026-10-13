@@ -57,6 +57,9 @@ func TestCloseHandler(t *testing.T) {
 	if got, want := msgs[1].(tg.EditMessageText).ChatID, 56; got != want {
 		t.Errorf("request 2nd user id: got %v; want %v", got, want)
 	}
+	if got, want := msgs[1].(tg.EditMessageText).MessageID, 303; got != want {
+		t.Errorf("request 2nd user id: got %v; want %v", got, want)
+	}
 }
 
 type closeStoreSpy struct {
