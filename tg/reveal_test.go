@@ -29,12 +29,15 @@ func TestReveal(t *testing.T) {
 	}
 
 	storeSpy := &revealStoreSpy{
-		users: []store.User{
-			{UserID: 876},
-			{UserID: 2345},
-		},
-		answers: map[int]store.Answer{
-			876: {IsRight: true},
+		answers: []store.Answer{
+			{
+				UserID:  876,
+				IsRight: true,
+			},
+			{
+				UserID:  2345,
+				IsRight: false,
+			},
 		},
 		accounts: map[int]int{
 			876:  500,
@@ -106,7 +109,7 @@ func TestReveal(t *testing.T) {
 
 func TestRevealWrongAnswer(t *testing.T) {
 	h := tg.RevealHandler{Store: &revealStoreSpy{
-		users: []store.User{{}},
+		answers: []store.Answer{{}},
 	}}
 	data, err := h.Handle(context.Background(), tg.Update{})
 	if err != nil {
@@ -115,18 +118,6 @@ func TestRevealWrongAnswer(t *testing.T) {
 
 	if got, want := data[0].(tg.SendRichMessage).RichMessage.Blocks[1].Text, "Вы ответили неправильно."; got != want {
 		t.Errorf("got %q; want %q", got, want)
-	}
-}
-
-func TestRevealLastUsersError(t *testing.T) {
-	wantErr := errors.New("users error")
-	h := tg.RevealHandler{Store: &revealStoreSpy{
-		usersErr: wantErr,
-	}}
-
-	_, err := h.Handle(context.Background(), tg.Update{})
-	if got, want := err, wantErr; !errors.Is(got, want) {
-		t.Errorf("got err %q; want %q", got, want)
 	}
 }
 
@@ -145,7 +136,6 @@ func TestRevealLastClosedQuestionError(t *testing.T) {
 func TestRevealAnswerError(t *testing.T) {
 	wantErr := errors.New("answer error")
 	h := tg.RevealHandler{Store: &revealStoreSpy{
-		users:     []store.User{{}},
 		answerErr: wantErr,
 	}}
 
@@ -156,9 +146,9 @@ func TestRevealAnswerError(t *testing.T) {
 }
 
 func TestRevealAccountError(t *testing.T) {
-	wantErr := errors.New("answer error")
+	wantErr := errors.New("account error")
 	h := tg.RevealHandler{Store: &revealStoreSpy{
-		users:      []store.User{{}},
+		answers:    []store.Answer{{}},
 		accountErr: wantErr,
 	}}
 
@@ -169,18 +159,12 @@ func TestRevealAccountError(t *testing.T) {
 }
 
 type revealStoreSpy struct {
-	users                 []store.User
 	questionID            string
-	answers               map[int]store.Answer
+	answers               []store.Answer
 	accounts              map[int]int
 	lastClosedQuestionErr error
 	answerErr             error
 	accountErr            error
-	usersErr              error
-}
-
-func (s *revealStoreSpy) Users(ctx context.Context) ([]store.User, error) {
-	return s.users, s.usersErr
 }
 
 func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, error) {
@@ -192,9 +176,9 @@ func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, er
 	}, s.lastClosedQuestionErr
 }
 
-func (s *revealStoreSpy) Answer(ctx context.Context, userID int, questionID string) (store.Answer, error) {
+func (s *revealStoreSpy) Answers(ctx context.Context, questionID string) ([]store.Answer, error) {
 	s.questionID = questionID
-	return s.answers[userID], s.answerErr
+	return s.answers, s.answerErr
 }
 
 func (s *revealStoreSpy) Account(ctx context.Context, userID int) (int, error) {

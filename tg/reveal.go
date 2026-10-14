@@ -8,9 +8,8 @@ import (
 )
 
 type RevealStore interface {
-	Userser
 	LastClosedQuestion(context.Context) (store.Question, error)
-	Answer(ctx context.Context, userID int, questionID string) (store.Answer, error)
+	Answers(ctx context.Context, questionID string) ([]store.Answer, error)
 	Account(ctx context.Context, userID int) (int, error)
 }
 
@@ -31,23 +30,18 @@ func (r *RevealHandler) Condition(upd Update) bool {
 }
 
 func (r *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
-	users, err := r.Store.Users(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("users: %w", err)
-	}
-
 	q, err := r.Store.LastClosedQuestion(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("last closed question: %w", err)
 	}
 
-	for _, u := range users {
-		a, err := r.Store.Answer(ctx, u.UserID, q.ID)
-		if err != nil {
-			return nil, fmt.Errorf("answer: %w", err)
-		}
+	answers, err := r.Store.Answers(ctx, q.ID)
+	if err != nil {
+		return nil, fmt.Errorf("answers: %w", err)
+	}
 
-		acc, err := r.Store.Account(ctx, u.UserID)
+	for _, a := range answers {
+		acc, err := r.Store.Account(ctx, a.UserID)
 		if err != nil {
 			return nil, fmt.Errorf("account: %w", err)
 		}
@@ -76,7 +70,7 @@ func (r *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 			},
 		}
 
-		msg.ChatID = u.UserID
+		msg.ChatID = a.UserID
 		msgs = append(msgs, msg)
 	}
 
