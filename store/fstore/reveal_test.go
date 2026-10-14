@@ -107,25 +107,25 @@ func TestAccount(t *testing.T) {
 	resetDB(ctx, c)
 
 	col := c.Collection("answers")
-	col.Doc("634:test-q-0").Set(ctx, store.Answer{
-		UserID:  634,
-		IsRight: true,
-		Bet:     200,
+	col.Doc("634:test-q-0").Set(ctx, map[string]any{
+		"user_id":  634,
+		"is_right": true,
+		"bet":      200,
 	})
-	col.Doc("634:test-q-1").Set(ctx, store.Answer{
-		UserID:  634,
-		IsRight: false,
-		Bet:     100,
+	col.Doc("634:test-q-1").Set(ctx, map[string]any{
+		"user_id":  634,
+		"is_right": false,
+		"bet":      100,
 	})
-	col.Doc("634:test-q-2").Set(ctx, store.Answer{
-		UserID:  634,
-		IsRight: true,
-		Bet:     500,
+	col.Doc("634:test-q-2").Set(ctx, map[string]any{
+		"user_id":  634,
+		"is_right": true,
+		"bet":      500,
 	})
-	col.Doc("101:test-q-2").Set(ctx, store.Answer{
-		UserID:  101,
-		IsRight: true,
-		Bet:     9999,
+	col.Doc("101:test-q-2").Set(ctx, map[string]any{
+		"user_id":  101,
+		"is_right": true,
+		"bet":      9999,
 	})
 
 	f := fstore.New(c)
