@@ -47,35 +47,41 @@ loop:
 	return answers, nil
 }
 
-func (f *Firestore) Accounts(ctx context.Context, userIDs []int) (accs map[int]int, err error) {
-	return nil, nil
-}
-
 const ACCOUNT_START_MONEY = 1000
 
-func (f *Firestore) Account(ctx context.Context, userID int) (int, error) {
-	docs, err := f.c.Collection(AnswersCollection).WhereEntity(firestore.PropertyFilter{
+func (f *Firestore) Accounts(ctx context.Context, userIDs []int) (accs map[int]int, err error) {
+	iter := f.c.Collection(AnswersCollection).WhereEntity(firestore.PropertyFilter{
 		Path:     "user_id",
-		Operator: EqualOp,
-		Value:    userID,
-	}).Documents(ctx).GetAll()
-	if err != nil {
-		return 0, fmt.Errorf("answer docs: %w", err)
-	}
+		Operator: "in",
+		Value:    userIDs,
+	}).Documents(ctx)
 
-	sum := 0
-	for _, d := range docs {
+	accs = make(map[int]int)
+loop:
+	for {
+		d, err := iter.Next()
+		switch {
+		case err == iterator.Done:
+			break loop
+		case err != nil:
+			return nil, fmt.Errorf("answers iter: %w", err)
+		}
+
 		a := store.Answer{}
-		err := d.DataTo(&a)
+		err = d.DataTo(&a)
 		if err != nil {
-			return 0, fmt.Errorf("data %#v to answer: %w", d, err)
+			return nil, fmt.Errorf("data %#v to answer: %w", d, err)
 		}
 
 		if !a.IsRight {
 			a.Bet *= -1
 		}
-		sum += int(a.Bet)
+
+		accs[a.UserID] += int(a.Bet)
 	}
 
-	return ACCOUNT_START_MONEY + sum, nil
+	for u := range accs {
+		accs[u] += ACCOUNT_START_MONEY
+	}
+	return accs, nil
 }

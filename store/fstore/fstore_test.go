@@ -7,6 +7,7 @@ import (
 
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -40,21 +41,39 @@ func firestoreMemoryEmulatorClient(t *testing.T, ctx context.Context) *firestore
 }
 
 func resetDB(ctx context.Context, c *firestore.Client) {
-	col := c.Collection("questions")
-	// TODO: Make easier by loop
-	col.Doc("test-q-0").Delete(ctx)
-	col.Doc("test-q-1").Delete(ctx)
-	col.Doc("test-q-2").Delete(ctx)
-	col.Doc("test-q-67").Delete(ctx)
+	deleteCollection(ctx, c, "questions")
+	deleteCollection(ctx, c, "users")
+	deleteCollection(ctx, c, "answers")
+}
 
-	col = c.Collection("users")
-	col.Doc("7829").Delete(ctx)
-	col.Doc("390").Delete(ctx)
-	col.Doc("67").Delete(ctx)
-	col.Doc("101101").Delete(ctx)
+func deleteCollection(ctx context.Context, c *firestore.Client, name string) {
+	col := c.Collection(name)
+	bulkwriter := c.BulkWriter(ctx)
 
-	col = c.Collection("answers")
-	c.Doc("8292:answer-q-51").Delete(ctx)
-	c.Doc("156:answer-q-51").Delete(ctx)
-	c.Doc("928:skip-this-q-999").Delete(ctx)
+	for {
+		// Get a batch of documents
+		iter := col.Documents(ctx)
+		numDeleted := 0
+
+		// Iterate through the documents, adding
+		// a delete operation for each one to the BulkWriter.
+		for {
+			doc, err := iter.Next()
+			if err == iterator.Done {
+				break
+			}
+
+			bulkwriter.Delete(doc.Ref)
+			numDeleted++
+		}
+
+		// If there are no documents to delete,
+		// the process is over.
+		if numDeleted == 0 {
+			bulkwriter.End()
+			break
+		}
+
+		bulkwriter.Flush()
+	}
 }

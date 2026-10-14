@@ -97,7 +97,7 @@ func TestAnswers(t *testing.T) {
 	}
 }
 
-func TestAccount(t *testing.T) {
+func TestAccounts(t *testing.T) {
 	ctx := context.Background()
 
 	c := firestoreMemoryEmulatorClient(t, ctx)
@@ -114,25 +114,36 @@ func TestAccount(t *testing.T) {
 		"is_right": false,
 		"bet":      100,
 	})
-	col.Doc("634:test-q-2").Set(ctx, map[string]any{
-		"user_id":  634,
+
+	col.Doc("707:test-q-0").Set(ctx, map[string]any{
+		"user_id":  707,
 		"is_right": true,
 		"bet":      500,
 	})
-	col.Doc("101:test-q-2").Set(ctx, map[string]any{
-		"user_id":  101,
+	col.Doc("707:test-q-1").Set(ctx, map[string]any{
+		"user_id":  707,
+		"is_right": false,
+		"bet":      100,
+	})
+
+	col.Doc("404:skip-this-q-2").Set(ctx, map[string]any{
+		"user_id":  404,
 		"is_right": true,
 		"bet":      9999,
 	})
 
 	f := fstore.New(c)
 
-	acc, err := f.Account(ctx, 634)
+	accs, err := f.Accounts(ctx, []int{634, 707})
 	if err != nil {
 		t.Fatalf("fstore account: got err %v; want nil", err)
 	}
 
-	if got, want := acc, 1600; got != want {
-		t.Errorf("got acc %v; want %v", got, want)
+	want := map[int]int{
+		634: 1100,
+		707: 1400,
+	}
+	if diff := cmp.Diff(want, accs); diff != "" {
+		t.Errorf("accounts mismatch (-want +got):\n%s", diff)
 	}
 }
