@@ -6,6 +6,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/asahnoln/vote-bot/store"
+	"google.golang.org/api/iterator"
 )
 
 func (f *Firestore) LastClosedQuestion(ctx context.Context) (q store.Question, err error) {
@@ -18,25 +19,36 @@ func (f *Firestore) LastClosedQuestion(ctx context.Context) (q store.Question, e
 }
 
 func (f *Firestore) Answers(ctx context.Context, questionID string) (answers []store.Answer, err error) {
-	return nil, nil
+	iter := f.c.Collection(AnswersCollection).WhereEntity(firestore.PropertyFilter{
+		Path:     "question_id",
+		Operator: EqualOp,
+		Value:    questionID,
+	}).Documents(ctx)
+
+loop:
+	for {
+		d, err := iter.Next()
+		switch {
+		case err == iterator.Done:
+			break loop
+		case err != nil:
+			return nil, fmt.Errorf("answers iter: %w", err)
+		}
+
+		a := store.Answer{}
+		err = d.DataTo(&a)
+		if err != nil {
+			return nil, fmt.Errorf("data %#v to answer: %w", d, err)
+		}
+
+		answers = append(answers, a)
+	}
+
+	return answers, nil
 }
 
 func (f *Firestore) Accounts(ctx context.Context, userIDs []int) (accs map[int]int, err error) {
 	return nil, nil
-}
-
-func (f *Firestore) Answer(ctx context.Context, userID int, questionID string) (a store.Answer, err error) {
-	d, err := f.c.Collection(AnswersCollection).Doc(answerDocID(userID, questionID)).Get(ctx)
-	if err != nil {
-		return a, fmt.Errorf("answer doc: %w", err)
-	}
-
-	err = d.DataTo(&a)
-	if err != nil {
-		return a, fmt.Errorf("data to: %w", err)
-	}
-
-	return a, nil
 }
 
 const ACCOUNT_START_MONEY = 1000

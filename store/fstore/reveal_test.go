@@ -7,8 +7,6 @@ import (
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/store/fstore"
 	"github.com/google/go-cmp/cmp"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func TestLastClosedQuestion(t *testing.T) {
@@ -60,7 +58,7 @@ func TestLastClosedQuestion(t *testing.T) {
 	}
 }
 
-func TestAnswer(t *testing.T) {
+func TestAnswers(t *testing.T) {
 	ctx := context.Background()
 
 	c := firestoreMemoryEmulatorClient(t, ctx)
@@ -68,35 +66,34 @@ func TestAnswer(t *testing.T) {
 
 	col := c.Collection("answers")
 	col.Doc("8292:answer-q-51").Set(ctx, map[string]any{
-		"is_right": true,
+		"user_id":     8292,
+		"question_id": "answer-q-51",
+		"is_right":    true,
+	})
+	col.Doc("156:answer-q-51").Set(ctx, map[string]any{
+		"user_id":     156,
+		"question_id": "answer-q-51",
+		"is_right":    false,
+	})
+	col.Doc("928:skip-this-q-999").Set(ctx, map[string]any{
+		"user_id":     928,
+		"question_id": "skip-this-q-999",
+		"is_right":    true,
 	})
 
 	f := fstore.New(c)
 
-	a, err := f.Answer(ctx, 8292, "answer-q-51")
+	answers, err := f.Answers(ctx, "answer-q-51")
 	if err != nil {
-		t.Fatalf("fstore answer: got err %v; want nil", err)
+		t.Fatalf("fstore answers: got err %v; want nil", err)
 	}
 
-	want := store.Answer{
-		IsRight: true,
+	want := []store.Answer{
+		{UserID: 156, IsRight: false},
+		{UserID: 8292, IsRight: true},
 	}
-	if diff := cmp.Diff(want, a); diff != "" {
-		t.Errorf("answer mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestAnswerError(t *testing.T) {
-	ctx := context.Background()
-
-	c := firestoreMemoryEmulatorClient(t, ctx)
-	resetDB(ctx, c)
-
-	f := fstore.New(c)
-
-	_, err := f.Answer(ctx, 99999, "answer-q-99999")
-	if got, want := status.Code(err), codes.NotFound; got != want {
-		t.Errorf("got err code %v; want %v", got, want)
+	if diff := cmp.Diff(want, answers); diff != "" {
+		t.Errorf("answers mismatch (-want +got):\n%s", diff)
 	}
 }
 
