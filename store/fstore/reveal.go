@@ -8,12 +8,27 @@ import (
 	"github.com/asahnoln/vote-bot/store"
 )
 
-func (f *Firestore) LastClosedQuestion(context.Context) (store.Question, error) {
-	return store.Question{}, nil
+func (f *Firestore) LastClosedQuestion(ctx context.Context) (q store.Question, err error) {
+	q, err = f.getQuestion(ctx, true, firestore.Desc)
+	if err != nil {
+		return q, fmt.Errorf("get question: %w", err)
+	}
+
+	return q, nil
 }
 
-func (f *Firestore) Answer(context.Context, int, string) (store.Answer, error) {
-	return store.Answer{}, nil
+func (f *Firestore) Answer(ctx context.Context, userID int, questionID string) (a store.Answer, err error) {
+	d, err := f.c.Collection(AnswersCollection).Doc(answerDocID(userID, questionID)).Get(ctx)
+	if err != nil {
+		return a, fmt.Errorf("answer doc: %w", err)
+	}
+
+	err = d.DataTo(&a)
+	if err != nil {
+		return a, fmt.Errorf("data to: %w", err)
+	}
+
+	return a, nil
 }
 
 func (f *Firestore) Account(ctx context.Context, userID int) (int, error) {

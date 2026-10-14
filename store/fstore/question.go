@@ -49,14 +49,14 @@ func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
 	return nil
 }
 
-func (f *Firestore) currentQuestion(ctx context.Context) (q store.Question, err error) {
+func (f *Firestore) getQuestion(ctx context.Context, closed bool, orderDir firestore.Direction) (q store.Question, err error) {
 	docs, err := f.c.Collection(QuestionsCollection).
 		WhereEntity(firestore.PropertyFilter{
 			Path:     ClosedPath,
 			Operator: EqualOp,
-			Value:    false,
+			Value:    closed,
 		}).
-		OrderBy(OrderPath, firestore.Asc).
+		OrderBy(OrderPath, orderDir).
 		Limit(1).
 		Documents(ctx).
 		GetAll()
@@ -76,4 +76,8 @@ func (f *Firestore) currentQuestion(ctx context.Context) (q store.Question, err 
 	q.ID = docs[0].Ref.ID
 
 	return q, nil
+}
+
+func (f *Firestore) currentQuestion(ctx context.Context) (q store.Question, err error) {
+	return f.getQuestion(ctx, false, firestore.Asc)
 }

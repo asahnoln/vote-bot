@@ -52,4 +52,6 @@ func resetDB(ctx context.Context, c *firestore.Client) {
 	col.Doc("390").Delete(ctx)
 	col.Doc("67").Delete(ctx)
 	col.Doc("101101").Delete(ctx)
+
+	c.Collection("answers").Doc("8292:answer-q-51").Delete(ctx)
 }
