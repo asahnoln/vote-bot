@@ -27,7 +27,8 @@ func TestReveal(t *testing.T) {
 		Store: &storeSpy{},
 		Dest:  destSpy,
 	}
-	b.Handle(&tg.RevealHandler{Store: &revealStoreStub{
+
+	storeSpy := &revealStoreSpy{
 		users: []store.User{
 			{UserID: 876},
 			{UserID: 2345},
@@ -39,11 +40,16 @@ func TestReveal(t *testing.T) {
 			876:  500,
 			2345: 300,
 		},
-	}})
+	}
+	b.Handle(&tg.RevealHandler{Store: storeSpy})
 	b.ServeHTTP(w, r)
 
 	if got, want := w.Code, http.StatusOK; got != want {
 		t.Errorf("reveal status: got %v; want %v", got, want)
+	}
+
+	if got, want := storeSpy.questionID, "last-closed-q-99"; got != want {
+		t.Errorf("question id for answer: got %q; want %q", got, want)
 	}
 
 	if got, want := len(destSpy.got), 2; got != want {
@@ -99,7 +105,7 @@ func TestReveal(t *testing.T) {
 }
 
 func TestRevealWrongAnswer(t *testing.T) {
-	h := tg.RevealHandler{Store: &revealStoreStub{
+	h := tg.RevealHandler{Store: &revealStoreSpy{
 		users: []store.User{{}},
 	}}
 	data, err := h.Handle(context.Background(), tg.Update{})
@@ -114,7 +120,7 @@ func TestRevealWrongAnswer(t *testing.T) {
 
 func TestRevealLastUsersError(t *testing.T) {
 	wantErr := errors.New("users error")
-	h := tg.RevealHandler{Store: &revealStoreStub{
+	h := tg.RevealHandler{Store: &revealStoreSpy{
 		usersErr: wantErr,
 	}}
 
@@ -126,7 +132,7 @@ func TestRevealLastUsersError(t *testing.T) {
 
 func TestRevealLastClosedQuestionError(t *testing.T) {
 	wantErr := errors.New("last question error")
-	h := tg.RevealHandler{Store: &revealStoreStub{
+	h := tg.RevealHandler{Store: &revealStoreSpy{
 		lastClosedQuestionErr: wantErr,
 	}}
 
@@ -138,7 +144,7 @@ func TestRevealLastClosedQuestionError(t *testing.T) {
 
 func TestRevealAnswerError(t *testing.T) {
 	wantErr := errors.New("answer error")
-	h := tg.RevealHandler{Store: &revealStoreStub{
+	h := tg.RevealHandler{Store: &revealStoreSpy{
 		users:     []store.User{{}},
 		answerErr: wantErr,
 	}}
@@ -151,7 +157,7 @@ func TestRevealAnswerError(t *testing.T) {
 
 func TestRevealAccountError(t *testing.T) {
 	wantErr := errors.New("answer error")
-	h := tg.RevealHandler{Store: &revealStoreStub{
+	h := tg.RevealHandler{Store: &revealStoreSpy{
 		users:      []store.User{{}},
 		accountErr: wantErr,
 	}}
@@ -162,7 +168,7 @@ func TestRevealAccountError(t *testing.T) {
 	}
 }
 
-type revealStoreStub struct {
+type revealStoreSpy struct {
 	users                 []store.User
 	questionID            string
 	answers               map[int]store.Answer
@@ -173,23 +179,24 @@ type revealStoreStub struct {
 	usersErr              error
 }
 
-func (s *revealStoreStub) Users(ctx context.Context) ([]store.User, error) {
+func (s *revealStoreSpy) Users(ctx context.Context) ([]store.User, error) {
 	return s.users, s.usersErr
 }
 
-func (s *revealStoreStub) LastClosedQuestion(context.Context) (store.Question, error) {
+func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, error) {
 	return store.Question{
+		ID:   "last-closed-q-99",
 		Q:    "Да или Нет?",
 		A:    0,
 		Opts: []string{"Да", "Нет"},
 	}, s.lastClosedQuestionErr
 }
 
-func (s *revealStoreStub) Answer(ctx context.Context, userID int, questionID string) (store.Answer, error) {
+func (s *revealStoreSpy) Answer(ctx context.Context, userID int, questionID string) (store.Answer, error) {
 	s.questionID = questionID
 	return s.answers[userID], s.answerErr
 }
 
-func (s *revealStoreStub) Account(ctx context.Context, userID int) (int, error) {
+func (s *revealStoreSpy) Account(ctx context.Context, userID int) (int, error) {
 	return s.accounts[userID], s.accountErr
 }
