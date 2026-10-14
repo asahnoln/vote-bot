@@ -86,6 +86,8 @@ Each user has an account. (At the start they have 1000$)
 - [x] Admin closes question - update latest message to stop accepting answers
 - [x] Admin sends answer and account status to all
 - [ ] Check out whole code and refactor things if necessary
+- [ ] Fix condition on question handler
+- [ ] Check default behaviour of bot without handlers (no condition met)
 - [ ] Refactor tests
 - [ ] Bot commands must be scoped to admins
 - [ ] Robust messages (what question, answer and bet was chosen at each step and after question closing)
