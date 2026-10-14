@@ -24,10 +24,21 @@ func TestReveal(t *testing.T) {
 
 	destSpy := &destSpy{}
 	b := tg.Bot{
-		Dest: destSpy,
+		Store: &storeSpy{},
+		Dest:  destSpy,
 	}
 	b.Handle(&tg.RevealHandler{Store: &revealStoreStub{
-		isRight: true,
+		users: []store.User{
+			{UserID: 876},
+			{UserID: 2345},
+		},
+		answers: map[int]store.Answer{
+			876: {IsRight: true},
+		},
+		accounts: map[int]int{
+			876:  500,
+			2345: 300,
+		},
 	}})
 	b.ServeHTTP(w, r)
 
@@ -35,7 +46,11 @@ func TestReveal(t *testing.T) {
 		t.Errorf("reveal status: got %v; want %v", got, want)
 	}
 
-	want := tg.SendRichMessage{
+	if got, want := len(destSpy.got), 2; got != want {
+		t.Fatalf("request count: got %v; want %v", got, want)
+	}
+
+	want1 := tg.SendRichMessage{
 		ChatID: 876,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
@@ -54,14 +69,38 @@ func TestReveal(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(want, destSpy.got[0]); diff != "" {
-		t.Errorf("edit message text mismatch (-want +got):%s", diff)
+
+	if diff := cmp.Diff(want1, destSpy.got[0]); diff != "" {
+		t.Errorf("send message 1 mismatch (-want +got):%s", diff)
+	}
+
+	want2 := tg.SendRichMessage{
+		ChatID: 2345,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Да или Нет? Правильный ответ: Да!",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вы ответили неправильно.",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш текущий счет - 300.",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want2, destSpy.got[1]); diff != "" {
+		t.Errorf("send message 2 mismatch (-want +got):%s", diff)
 	}
 }
 
 func TestRevealWrongAnswer(t *testing.T) {
 	h := tg.RevealHandler{Store: &revealStoreStub{
-		isRight: false,
+		users: []store.User{{}},
 	}}
 	data, err := h.Handle(context.Background(), tg.Update{})
 	if err != nil {
@@ -70,6 +109,18 @@ func TestRevealWrongAnswer(t *testing.T) {
 
 	if got, want := data[0].(tg.SendRichMessage).RichMessage.Blocks[1].Text, "Вы ответили неправильно."; got != want {
 		t.Errorf("got %q; want %q", got, want)
+	}
+}
+
+func TestRevealLastUsersError(t *testing.T) {
+	wantErr := errors.New("users error")
+	h := tg.RevealHandler{Store: &revealStoreStub{
+		usersErr: wantErr,
+	}}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %q; want %q", got, want)
 	}
 }
 
@@ -88,6 +139,7 @@ func TestRevealLastClosedQuestionError(t *testing.T) {
 func TestRevealAnswerError(t *testing.T) {
 	wantErr := errors.New("answer error")
 	h := tg.RevealHandler{Store: &revealStoreStub{
+		users:     []store.User{{}},
 		answerErr: wantErr,
 	}}
 
@@ -100,6 +152,7 @@ func TestRevealAnswerError(t *testing.T) {
 func TestRevealAccountError(t *testing.T) {
 	wantErr := errors.New("answer error")
 	h := tg.RevealHandler{Store: &revealStoreStub{
+		users:      []store.User{{}},
 		accountErr: wantErr,
 	}}
 
@@ -110,11 +163,18 @@ func TestRevealAccountError(t *testing.T) {
 }
 
 type revealStoreStub struct {
-	userID                int
-	isRight               bool
+	users                 []store.User
+	questionID            string
+	answers               map[int]store.Answer
+	accounts              map[int]int
 	lastClosedQuestionErr error
 	answerErr             error
 	accountErr            error
+	usersErr              error
+}
+
+func (s *revealStoreStub) Users(ctx context.Context) ([]store.User, error) {
+	return s.users, s.usersErr
 }
 
 func (s *revealStoreStub) LastClosedQuestion(context.Context) (store.Question, error) {
@@ -125,13 +185,11 @@ func (s *revealStoreStub) LastClosedQuestion(context.Context) (store.Question, e
 	}, s.lastClosedQuestionErr
 }
 
-func (s *revealStoreStub) Answer(context.Context, int, string) (store.Answer, error) {
-	return store.Answer{
-		IsRight: s.isRight,
-	}, s.answerErr
+func (s *revealStoreStub) Answer(ctx context.Context, userID int, questionID string) (store.Answer, error) {
+	s.questionID = questionID
+	return s.answers[userID], s.answerErr
 }
 
 func (s *revealStoreStub) Account(ctx context.Context, userID int) (int, error) {
-	s.userID = userID
-	return 500, s.accountErr
+	return s.accounts[userID], s.accountErr
 }
