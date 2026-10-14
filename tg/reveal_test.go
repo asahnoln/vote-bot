@@ -55,6 +55,11 @@ func TestReveal(t *testing.T) {
 		t.Errorf("question id for answer: got %q; want %q", got, want)
 	}
 
+	wantUIDs := []int{876, 2345}
+	if diff := cmp.Diff(wantUIDs, storeSpy.userIDs); diff != "" {
+		t.Errorf("accounts user IDs mismatch (-want +got):%s", diff)
+	}
+
 	if got, want := len(destSpy.got), 2; got != want {
 		t.Fatalf("request count: got %v; want %v", got, want)
 	}
@@ -133,10 +138,10 @@ func TestRevealLastClosedQuestionError(t *testing.T) {
 	}
 }
 
-func TestRevealAnswerError(t *testing.T) {
-	wantErr := errors.New("answer error")
+func TestRevealAnswersError(t *testing.T) {
+	wantErr := errors.New("answers error")
 	h := tg.RevealHandler{Store: &revealStoreSpy{
-		answerErr: wantErr,
+		answersErr: wantErr,
 	}}
 
 	_, err := h.Handle(context.Background(), tg.Update{})
@@ -145,11 +150,10 @@ func TestRevealAnswerError(t *testing.T) {
 	}
 }
 
-func TestRevealAccountError(t *testing.T) {
-	wantErr := errors.New("account error")
+func TestRevealAccountsError(t *testing.T) {
+	wantErr := errors.New("accounts error")
 	h := tg.RevealHandler{Store: &revealStoreSpy{
-		answers:    []store.Answer{{}},
-		accountErr: wantErr,
+		accountsErr: wantErr,
 	}}
 
 	_, err := h.Handle(context.Background(), tg.Update{})
@@ -163,8 +167,9 @@ type revealStoreSpy struct {
 	answers               []store.Answer
 	accounts              map[int]int
 	lastClosedQuestionErr error
-	answerErr             error
-	accountErr            error
+	answersErr            error
+	accountsErr           error
+	userIDs               []int
 }
 
 func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, error) {
@@ -178,9 +183,10 @@ func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, er
 
 func (s *revealStoreSpy) Answers(ctx context.Context, questionID string) ([]store.Answer, error) {
 	s.questionID = questionID
-	return s.answers, s.answerErr
+	return s.answers, s.answersErr
 }
 
-func (s *revealStoreSpy) Account(ctx context.Context, userID int) (int, error) {
-	return s.accounts[userID], s.accountErr
+func (s *revealStoreSpy) Accounts(ctx context.Context, userIDs []int) (map[int]int, error) {
+	s.userIDs = userIDs
+	return s.accounts, s.accountsErr
 }

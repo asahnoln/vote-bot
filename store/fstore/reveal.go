@@ -21,6 +21,10 @@ func (f *Firestore) Answers(ctx context.Context, questionID string) (answers []s
 	return nil, nil
 }
 
+func (f *Firestore) Accounts(ctx context.Context, userIDs []int) (accs map[int]int, err error) {
+	return nil, nil
+}
+
 func (f *Firestore) Answer(ctx context.Context, userID int, questionID string) (a store.Answer, err error) {
 	d, err := f.c.Collection(AnswersCollection).Doc(answerDocID(userID, questionID)).Get(ctx)
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 type RevealStore interface {
 	LastClosedQuestion(context.Context) (store.Question, error)
 	Answers(ctx context.Context, questionID string) ([]store.Answer, error)
-	Account(ctx context.Context, userID int) (int, error)
+	Accounts(ctx context.Context, userIDs []int) (map[int]int, error)
 }
 
 type RevealHandler struct {
@@ -40,12 +40,17 @@ func (r *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 		return nil, fmt.Errorf("answers: %w", err)
 	}
 
-	for _, a := range answers {
-		acc, err := r.Store.Account(ctx, a.UserID)
-		if err != nil {
-			return nil, fmt.Errorf("account: %w", err)
-		}
+	userIDs := make([]int, len(answers))
+	for i, a := range answers {
+		userIDs[i] = a.UserID
+	}
 
+	accs, err := r.Store.Accounts(ctx, userIDs)
+	if err != nil {
+		return nil, fmt.Errorf("account: %w", err)
+	}
+
+	for _, a := range answers {
 		rightMsg := "Вы ответили правильно!"
 		if !a.IsRight {
 			rightMsg = "Вы ответили неправильно."
@@ -64,7 +69,7 @@ func (r *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 					},
 					{
 						Type: InputRichBlockParagraphType,
-						Text: fmt.Sprintf("Ваш текущий счет - %d.", acc),
+						Text: fmt.Sprintf("Ваш текущий счет - %d.", accs[a.UserID]),
 					},
 				},
 			},
