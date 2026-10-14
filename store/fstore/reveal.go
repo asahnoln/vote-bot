@@ -31,6 +31,8 @@ func (f *Firestore) Answer(ctx context.Context, userID int, questionID string) (
 	return a, nil
 }
 
+const ACCOUNT_START_MONEY = 1000
+
 func (f *Firestore) Account(ctx context.Context, userID int) (int, error) {
 	docs, err := f.c.Collection(AnswersCollection).WhereEntity(firestore.PropertyFilter{
 		Path:     "user_id",
@@ -43,13 +45,17 @@ func (f *Firestore) Account(ctx context.Context, userID int) (int, error) {
 
 	sum := 0
 	for _, d := range docs {
-		data := d.Data()
-		b := data["bet"].(int64)
-		if !data["is_right"].(bool) {
-			b *= -1
+		a := store.Answer{}
+		err := d.DataTo(&a)
+		if err != nil {
+			return 0, fmt.Errorf("data %#v to answer: %w", d, err)
 		}
-		sum += int(b)
+
+		if !a.IsRight {
+			a.Bet *= -1
+		}
+		sum += int(a.Bet)
 	}
 
-	return 1000 + sum, nil
+	return ACCOUNT_START_MONEY + sum, nil
 }
