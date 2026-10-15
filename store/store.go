@@ -13,9 +13,10 @@ type Question struct {
 }
 
 type Answer struct {
-	UserID  int  `firestore:"user_id"`
-	IsRight bool `firestore:"is_right"`
-	Bet     int  `firestore:"bet"`
+	UserID  int    `firestore:"user_id"`
+	IsRight bool   `firestore:"is_right"`
+	Bet     int    `firestore:"bet"`
+	A       string `firestore:"a"`
 }
 
 type User struct {

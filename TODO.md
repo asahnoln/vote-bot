@@ -81,14 +81,14 @@ Each user has an account. (At the start they have 1000$)
 - [x] Check unhappy cases for answer http and store
 - [x] Check unhappy cases for bet http and store
 - [x] Send question to those who joined
-- [ ] Auto register webhook?
 - [x] Save users who join the bot
 - [x] Admin closes question - update latest message to stop accepting answers
 - [x] Admin sends answer and account status to all
+- [ ] Auto register webhook?
 - [ ] Check out whole code and refactor things if necessary
+- [ ] Refactor tests
 - [ ] Fix condition on question handler
 - [ ] Check default behaviour of bot without handlers (no condition met)
-- [ ] Refactor tests
 - [ ] Bot commands must be scoped to admins
 - [ ] Robust messages (what question, answer and bet was chosen at each step and after question closing)
 - [ ] If bet was not chosen before question close - what do???
@@ -98,6 +98,7 @@ Each user has an account. (At the start they have 1000$)
 - [ ] What if EVERYONE LOST before the end of the game??
 - [ ] Start bot with secret token from QR
 - [ ] Set webhook with secret token
+- [ ] Delete incoming user messages
 
 ## Stats
 

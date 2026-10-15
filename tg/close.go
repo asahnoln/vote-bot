@@ -3,10 +3,14 @@ package tg
 import (
 	"context"
 	"fmt"
+
+	"github.com/asahnoln/vote-bot/store"
 )
 
 type CloseStore interface {
 	Userser
+	CurrentQuestioner
+	Answerser
 	CloseCurrentQuestion(ctx context.Context) error
 }
 
@@ -32,25 +36,74 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, er
 		return nil, fmt.Errorf("users: %w", err)
 	}
 
+	q, err := h.Store.CurrentQuestion(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("current question: %w", err)
+	}
+
+	answers, err := h.Store.Answers(ctx, q.ID)
+	if err != nil {
+		return nil, fmt.Errorf("answers: %w", err)
+	}
+
+	answersMap := make(map[int]store.Answer)
+	for _, a := range answers {
+		answersMap[a.UserID] = a
+	}
+
 	err = h.Store.CloseCurrentQuestion(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("close current question: %w", err)
 	}
 
-	msg := EditMessageText{
-		RichMessage: InputRichMessage{
-			Blocks: []InputRichBlock{
-				{
-					Type: InputRichBlockParagraphType,
-					Text: "Вопрос закрыт!",
+	for _, u := range users {
+		msg := EditMessageText{
+			RichMessage: InputRichMessage{
+				Blocks: []InputRichBlock{
+					{
+						Type: InputRichBlockParagraphType,
+						Text: q.Q,
+					},
 				},
 			},
-		},
-	}
+		}
 
-	for _, u := range users {
 		msg.ChatID = u.UserID
 		msg.MessageID = u.LastMessageID
+
+		if a, ok := answersMap[u.UserID]; ok {
+			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+				Type: InputRichBlockParagraphType,
+				Text: "Ваш ответ: " + a.A,
+			})
+
+			if a.Bet > 0 {
+				msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+					Type: InputRichBlockParagraphType,
+					Text: fmt.Sprintf("Ваша ставка: %d", a.Bet),
+				})
+			} else {
+				msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+					Type: InputRichBlockParagraphType,
+					Text: "Вы не успели сделать ставку...",
+				})
+				msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+					Type: InputRichBlockParagraphType,
+					Text: "Ваш ответ не засчитан.",
+				})
+			}
+		} else {
+			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+				Type: InputRichBlockParagraphType,
+				Text: "Вы не успели ответить...",
+			})
+		}
+
+		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+			Type: InputRichBlockParagraphType,
+			Text: "Вопрос закрыт!",
+		})
+
 		msgs = append(msgs, msg)
 	}
 	return msgs, nil

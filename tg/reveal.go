@@ -7,9 +7,13 @@ import (
 	"github.com/asahnoln/vote-bot/store"
 )
 
-type RevealStore interface {
-	LastClosedQuestion(context.Context) (store.Question, error)
+type Answerser interface {
 	Answers(ctx context.Context, questionID string) ([]store.Answer, error)
+}
+
+type RevealStore interface {
+	Answerser
+	LastClosedQuestion(context.Context) (store.Question, error)
 	Accounts(ctx context.Context, userIDs []int) (map[int]int, error)
 }
 

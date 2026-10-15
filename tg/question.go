@@ -12,10 +12,13 @@ type Prefix string
 type Userser interface {
 	Users(context.Context) (userIDs []store.User, err error)
 }
+type CurrentQuestioner interface {
+	CurrentQuestion(context.Context) (store.Question, error)
+}
 
 type QuestionStore interface {
 	Userser
-	CurrentQuestion(context.Context) (store.Question, error)
+	CurrentQuestioner
 	SaveLastMessageID(ctx context.Context, userID int, msgID int) error
 }
 

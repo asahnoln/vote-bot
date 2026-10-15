@@ -16,6 +16,13 @@ func TestCloseHandler(t *testing.T) {
 			{UserID: 91, LastMessageID: 67521},
 			{UserID: 56, LastMessageID: 303},
 			{UserID: 23, LastMessageID: 10002},
+			{UserID: 24, LastMessageID: 10003},
+		},
+		currentQuestionID: "very-good-question",
+		answers: []store.Answer{
+			{UserID: 91, A: "Кто-то", Bet: 900},
+			{UserID: 56, A: "Никто", Bet: 300},
+			{UserID: 24, A: "Никто"},
 		},
 	}
 	h := tg.CloseHandler{
@@ -35,15 +42,27 @@ func TestCloseHandler(t *testing.T) {
 		t.Errorf("question closed: got %v; want %v", got, want)
 	}
 
-	if got, want := len(msgs), 3; got != want {
+	if got, want := len(msgs), 4; got != want {
 		t.Errorf("msgs count: got %v; want %v", got, want)
 	}
 
-	want := tg.EditMessageText{
+	want1 := tg.EditMessageText{
 		ChatID:    91,
 		MessageID: 67521,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Кто это сделал?",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш ответ: Кто-то",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваша ставка: 900",
+				},
 				{
 					Type: "paragraph",
 					Text: "Вопрос закрыт!",
@@ -51,15 +70,92 @@ func TestCloseHandler(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(want, msgs[0]); diff != "" {
+	if diff := cmp.Diff(want1, msgs[0]); diff != "" {
 		t.Errorf("request mismatch (-want +got):%s", diff)
 	}
 
-	if got, want := msgs[1].(tg.EditMessageText).ChatID, 56; got != want {
-		t.Errorf("request 2nd user id: got %v; want %v", got, want)
+	want2 := tg.EditMessageText{
+		ChatID:    56,
+		MessageID: 303,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Кто это сделал?",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш ответ: Никто",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваша ставка: 300",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вопрос закрыт!",
+				},
+			},
+		},
 	}
-	if got, want := msgs[1].(tg.EditMessageText).MessageID, 303; got != want {
-		t.Errorf("request 2nd user id: got %v; want %v", got, want)
+	if diff := cmp.Diff(want2, msgs[1]); diff != "" {
+		t.Errorf("request 2 mismatch (-want +got):%s", diff)
+	}
+
+	want3 := tg.EditMessageText{
+		ChatID:    23,
+		MessageID: 10002,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Кто это сделал?",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вы не успели ответить...",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вопрос закрыт!",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want3, msgs[2]); diff != "" {
+		t.Errorf("request 3 mismatch (-want +got):%s", diff)
+	}
+
+	want4 := tg.EditMessageText{
+		ChatID:    24,
+		MessageID: 10003,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Кто это сделал?",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш ответ: Никто",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вы не успели сделать ставку...",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш ответ не засчитан.",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вопрос закрыт!",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want4, msgs[3]); diff != "" {
+		t.Errorf("request 4 mismatch (-want +got):%s", diff)
 	}
 }
 
@@ -118,10 +214,24 @@ func TestCloseName(t *testing.T) {
 }
 
 type closeStoreSpy struct {
-	userIDs  []store.User
-	closed   bool
-	err      error
-	usersErr error
+	userIDs           []store.User
+	closed            bool
+	answers           []store.Answer
+	currentQuestionID string
+	err               error
+	usersErr          error
+	answersErr        error
+	curQuestionErr    error
+}
+
+func (s *closeStoreSpy) CurrentQuestion(context.Context) (store.Question, error) {
+	return store.Question{
+		Q: "Кто это сделал?",
+	}, s.curQuestionErr
+}
+
+func (s *closeStoreSpy) Answers(ctx context.Context, questionID string) ([]store.Answer, error) {
+	return s.answers, s.answersErr
 }
 
 func (s *closeStoreSpy) Users(context.Context) ([]store.User, error) {
