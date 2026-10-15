@@ -61,46 +61,76 @@ func TestBotDestError(t *testing.T) {
 	})
 }
 
-type handlerStub struct{}
+func TestBotHandlers(t *testing.T) {
+	tests := []struct {
+		updText    string
+		wantChatID int
+	}{
+		{"handler1", 10},
+		{"handler2", 20},
+	}
 
-func (s *handlerStub) Condition(tg.Update) bool {
-	return true
-}
+	handlerStubBase := &handlerStub{}
+	handlerStub1 := &handlerCustomStub{
+		conditionFunc: func(u tg.Update) bool {
+			return u.Message.Text == "handler1"
+		},
+		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.URLer, err error) {
+			msgs = append(msgs, tg.SendRichMessage{
+				ChatID: 10,
+			})
+			return
+		},
+		handleRespFunc: handlerStubBase.HandleResponse,
+		nameFunc:       handlerStubBase.Name,
+	}
+	handlerStub2 := &handlerCustomStub{
+		conditionFunc: func(u tg.Update) bool {
+			return u.Message.Text == "handler2"
+		},
+		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.URLer, err error) {
+			msgs = append(msgs, tg.SendRichMessage{
+				ChatID: 20,
+			})
+			return
+		},
+		handleRespFunc: handlerStubBase.HandleResponse,
+		nameFunc:       handlerStubBase.Name,
+	}
 
-func (s *handlerStub) Handle(context.Context, tg.Update) (msgs []tg.URLer, err error) {
-	msgs = append(msgs, tg.EditMessageText{})
-	return
-}
+	b := tg.Bot{}
+	b.Handle(handlerStub1)
+	b.Handle(handlerStub2)
 
-func (s *handlerStub) HandleResponse(context.Context, tg.Message) error {
-	return nil
-}
+	for _, tt := range tests {
+		t.Run(tt.updText, func(t *testing.T) {
+			upd := tg.Update{
+				Message: tg.Message{
+					Text: tt.updText,
+				},
+			}
 
-func (s *handlerStub) Name() string {
-	return "stub"
-}
+			body, err := json.Marshal(&upd)
+			if err != nil {
+				t.Fatalf("marshal err: %v", err)
+			}
 
-type handlerCustomStub struct {
-	conditionFunc  func(tg.Update) bool
-	handleFunc     func(context.Context, tg.Update) ([]tg.URLer, error)
-	handleRespFunc func(context.Context, tg.Message) error
-	nameFunc       func() string
-}
+			r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(body))
+			w := httptest.NewRecorder()
 
-func (s *handlerCustomStub) Condition(upd tg.Update) bool {
-	return s.conditionFunc(upd)
-}
+			dest := &destSpy{}
+			b.Dest = dest
+			b.ServeHTTP(w, r)
 
-func (s *handlerCustomStub) Handle(ctx context.Context, upd tg.Update) (msgs []tg.URLer, err error) {
-	return s.handleFunc(ctx, upd)
-}
+			if got, want := w.Code, http.StatusOK; got != want {
+				t.Errorf("bot response code: got %v; want %v", got, want)
+			}
 
-func (s *handlerCustomStub) HandleResponse(ctx context.Context, m tg.Message) error {
-	return s.handleRespFunc(ctx, m)
-}
-
-func (s *handlerCustomStub) Name() string {
-	return s.nameFunc()
+			if got, want := dest.got[0].(tg.SendRichMessage).ChatID, tt.wantChatID; got != want {
+				t.Errorf("sent msg with chat ID: got %v; want %v", got, want)
+			}
+		})
+	}
 }
 
 func TestBotHandler(t *testing.T) {
@@ -220,4 +250,46 @@ func (s *storeSpy) SaveLastMessageID(ctx context.Context, userID int, msgID int)
 	}
 
 	return s.err
+}
+
+type handlerStub struct{}
+
+func (s *handlerStub) Condition(tg.Update) bool {
+	return true
+}
+
+func (s *handlerStub) Handle(context.Context, tg.Update) (msgs []tg.URLer, err error) {
+	msgs = append(msgs, tg.EditMessageText{})
+	return
+}
+
+func (s *handlerStub) HandleResponse(context.Context, tg.Message) error {
+	return nil
+}
+
+func (s *handlerStub) Name() string {
+	return "stub"
+}
+
+type handlerCustomStub struct {
+	conditionFunc  func(tg.Update) bool
+	handleFunc     func(context.Context, tg.Update) ([]tg.URLer, error)
+	handleRespFunc func(context.Context, tg.Message) error
+	nameFunc       func() string
+}
+
+func (s *handlerCustomStub) Condition(upd tg.Update) bool {
+	return s.conditionFunc(upd)
+}
+
+func (s *handlerCustomStub) Handle(ctx context.Context, upd tg.Update) (msgs []tg.URLer, err error) {
+	return s.handleFunc(ctx, upd)
+}
+
+func (s *handlerCustomStub) HandleResponse(ctx context.Context, m tg.Message) error {
+	return s.handleRespFunc(ctx, m)
+}
+
+func (s *handlerCustomStub) Name() string {
+	return s.nameFunc()
 }
