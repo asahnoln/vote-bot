@@ -86,6 +86,10 @@ Each user has an account. (At the start they have 1000$)
 - [x] Admin sends answer and account status to all
 - [x] Robust messages (what question, answer and bet was chosen at each step and after question closing)
 - [ ] Auto register webhook?
+- [ ] Optional questions which don't count
+- [ ] On reveal we have to define who lost
+- [ ] If user misses a question - he looses
+- [ ] Can join until first nonoptional question is closed
 - [ ] Check out whole code and refactor things if necessary
 - [ ] Refactor tests
 - [ ] Fix condition on question handler
@@ -97,12 +101,13 @@ Each user has an account. (At the start they have 1000$)
 - [ ] Start bot with secret token from QR
 - [ ] Set webhook with secret token
 - [ ] Delete incoming user messages
+- [ ] Part of errors can be returned to admin without problems
 
 ## Flow questions
 
-- [ ] What happens when someone joins midgame?
-- [ ] What happens when someone runs out of money?
-- [ ] What happens when someone misses a question? (answer or bet)
+- [x] What happens when someone joins midgame?
+- [x] What happens when someone runs out of money?
+- [x] What happens when someone misses a question? (answer or bet)
 
 ## Stats
 
