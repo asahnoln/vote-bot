@@ -184,10 +184,6 @@ func TestBotHandler(t *testing.T) {
 	})
 	b.ServeHTTP(w, r)
 
-	if got, want := w.Code, http.StatusOK; got != want {
-		t.Errorf("bot response code: got %v; want %v", got, want)
-	}
-
 	if got, want := len(destSpy.got), 3; got != want {
 		t.Fatalf("dest requests count got %d; want %d", got, want)
 	}

@@ -1,9 +1,7 @@
 package tg_test
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -15,7 +13,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-// TODO: Separate different parts into different tests?
 func TestQuestion(t *testing.T) {
 	upd := tg.Update{
 		Message: tg.Message{
@@ -26,13 +23,6 @@ func TestQuestion(t *testing.T) {
 			Text: "/sendcurrentquestion",
 		},
 	}
-	body, err := json.Marshal(&upd)
-	if err != nil {
-		t.Fatalf("marshal err: %v", err)
-	}
-
-	r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(body))
-	w := httptest.NewRecorder()
 
 	storeSpy := &storeSpy{
 		users: []store.User{
@@ -42,26 +32,14 @@ func TestQuestion(t *testing.T) {
 		},
 	}
 
-	destSpy := &destSpy{
-		returnMsg: tg.Message{
-			Chat: tg.Chat{
-				ID: 501,
-			},
-			MessageID: 1853,
-		},
-	}
-	b := tg.Bot{
-		Dest: destSpy,
-	}
-	b.Handle(&tg.QuestionHandler{Store: storeSpy})
-	b.ServeHTTP(w, r)
-
-	if got, want := w.Code, http.StatusOK; got != want {
-		t.Errorf("bot response code: got %v; want %v", got, want)
+	h := &tg.QuestionHandler{Store: storeSpy}
+	msgs, err := h.Handle(context.Background(), upd)
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := len(destSpy.got), 3; got != want {
-		t.Fatalf("dest requests count got %d; want %d", got, want)
+	if got, want := len(msgs), 3; got != want {
+		t.Fatalf("msgs count: got %d; want %d", got, want)
 	}
 	want := tg.SendRichMessage{
 		ChatID: 501,
@@ -88,15 +66,35 @@ func TestQuestion(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(want, destSpy.got[0]); diff != "" {
+	if diff := cmp.Diff(want, msgs[0]); diff != "" {
 		t.Errorf("request mismatch (-want +got):%s", diff)
 	}
 
-	if got, want := destSpy.got[1].(tg.SendRichMessage).ChatID, 602; got != want {
+	if got, want := msgs[1].(tg.SendRichMessage).ChatID, 602; got != want {
 		t.Errorf("request 2nd user id: got %v; want %v", got, want)
 	}
+}
 
-	if got, want := storeSpy.users[0].LastMessageID, 1853; got != want {
+func TestQuestionHandleResponse(t *testing.T) {
+	spy := &storeSpy{
+		users: []store.User{
+			{UserID: 22},
+			{UserID: 99},
+		},
+	}
+	h := tg.QuestionHandler{Store: spy}
+
+	err := h.HandleResponse(context.Background(), tg.Message{
+		Chat: tg.Chat{
+			ID: 22,
+		},
+		MessageID: 1853,
+	})
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	if got, want := spy.users[0].LastMessageID, 1853; got != want {
 		t.Errorf("last message ID saved: got %v; want %v", got, want)
 	}
 }
