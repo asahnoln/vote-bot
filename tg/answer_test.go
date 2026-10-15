@@ -126,6 +126,21 @@ func TestAnswerWrongDataFormatError(t *testing.T) {
 	}
 }
 
+func TestAnswerNotEnoughMessageFromBefore(t *testing.T) {
+	h := tg.AnswerHandler{
+		Store: &storeSpy{},
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{
+		CallbackQuery: &tg.CallbackQuery{
+			Data: "opt:msg-non-present:answer",
+		},
+	})
+	if got, want := err, tg.ErrNotEnoughOriginalMsgBlocks; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
+}
+
 //go:embed testdata/bet_callback_update.json
 var betCallbackUpdate []byte
 
@@ -152,8 +167,15 @@ func TestBet(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					// TODO: Подумать над ответом
-					Text: "Ваш ответ и ваша ставка приняты!",
+					Text: "Кто же вам желает добра?",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш ответ: Ты",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваша ставка: 500",
 				},
 			},
 		},
@@ -178,6 +200,13 @@ func TestBetSaveError(t *testing.T) {
 	_, err := h.Handle(context.Background(), tg.Update{
 		CallbackQuery: &tg.CallbackQuery{
 			Data: "bet:save-q-2:999",
+			Message: tg.Message{
+				RichMessage: tg.InputRichMessage{
+					Blocks: []tg.InputRichBlock{
+						{}, {},
+					},
+				},
+			},
 		},
 	})
 
@@ -208,6 +237,21 @@ func TestBetWrongDataFormatError(t *testing.T) {
 		},
 	})
 	if got, want := err, tg.ErrWrongCallbackData; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
+}
+
+func TestBetNotEnoughMessageFromBefore(t *testing.T) {
+	h := tg.BetHandler{
+		Store: &storeSpy{},
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{
+		CallbackQuery: &tg.CallbackQuery{
+			Data: "bet:msg-non-present:200",
+		},
+	})
+	if got, want := err, tg.ErrNotEnoughOriginalMsgBlocks; !errors.Is(got, want) {
 		t.Fatalf("got err %v; want %v", got, want)
 	}
 }

@@ -14,8 +14,9 @@ const (
 )
 
 var (
-	ErrBetIsNotANumber   = errors.New("bet is not a number")
-	ErrWrongCallbackData = errors.New("wrong callback data")
+	ErrBetIsNotANumber            = errors.New("bet is not a number")
+	ErrWrongCallbackData          = errors.New("wrong callback data")
+	ErrNotEnoughOriginalMsgBlocks = errors.New("not enough original message blocks")
 )
 
 type AnswerSaver interface {
@@ -40,16 +41,17 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 		return nil, errors.Join(ErrWrongCallbackData, err)
 	}
 
+	if len(upd.CallbackQuery.Message.RichMessage.Blocks) < 2 {
+		return nil, ErrNotEnoughOriginalMsgBlocks
+	}
+
 	prefix := string(BetCallbackDataPrefix) + qID + ":"
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{
-				{
-					Type: InputRichBlockParagraphType,
-					Text: upd.CallbackQuery.Message.RichMessage.Blocks[0].Text,
-				},
+				upd.CallbackQuery.Message.RichMessage.Blocks[0],
 				{
 					Type: InputRichBlockParagraphType,
 					Text: "Ваш ответ: " + answer,
@@ -114,20 +116,6 @@ func (h *BetHandler) Name() string {
 }
 
 func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
-	msg := EditMessageText{
-		ChatID:    upd.CallbackQuery.Message.Chat.ID,
-		MessageID: upd.CallbackQuery.Message.MessageID,
-		RichMessage: InputRichMessage{
-			Blocks: []InputRichBlock{
-				{
-					Type: InputRichBlockParagraphType,
-					// TODO: Подумать над ответом
-					Text: "Ваш ответ и ваша ставка приняты!",
-				},
-			},
-		},
-	}
-
 	qID, betStr, err := qIDAndData(BetCallbackDataPrefix, upd.CallbackQuery.Data)
 	if err != nil {
 		return nil, err
@@ -136,6 +124,25 @@ func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err 
 	bet, err := strconv.Atoi(betStr)
 	if err != nil {
 		return nil, errors.Join(ErrBetIsNotANumber, err)
+	}
+
+	if len(upd.CallbackQuery.Message.RichMessage.Blocks) < 2 {
+		return nil, ErrNotEnoughOriginalMsgBlocks
+	}
+
+	msg := EditMessageText{
+		ChatID:    upd.CallbackQuery.Message.Chat.ID,
+		MessageID: upd.CallbackQuery.Message.MessageID,
+		RichMessage: InputRichMessage{
+			Blocks: []InputRichBlock{
+				upd.CallbackQuery.Message.RichMessage.Blocks[0],
+				upd.CallbackQuery.Message.RichMessage.Blocks[1],
+				{
+					Type: "paragraph",
+					Text: "Ваша ставка: " + betStr,
+				},
+			},
+		},
 	}
 
 	err = h.Store.SaveBet(ctx,

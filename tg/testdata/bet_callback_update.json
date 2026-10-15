@@ -32,6 +32,14 @@
         "blocks": [
           {
             "type": "paragraph",
+            "text": "Кто же вам желает добра?"
+          },
+          {
+            "type": "paragraph",
+            "text": "Ваш ответ: Ты"
+          },
+          {
+            "type": "paragraph",
             "text": "Выберите ставку:"
           },
           {
