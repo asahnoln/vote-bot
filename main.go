@@ -34,10 +34,12 @@ func main() {
 	store := fstore.New(fc)
 	b := &tg.Bot{
 		Dest:      tg.NewDest(os.Getenv("BOT_URL")),
-		Store:     store,
 		ErrorChan: errCh,
 	}
 	b.Handle(&tg.StartHandler{Store: store})
+	b.Handle(&tg.QuestionHandler{Store: store})
+	b.Handle(&tg.AnswerHandler{Store: store})
+	b.Handle(&tg.BetHandler{Store: store})
 	b.Handle(&tg.CloseHandler{Store: store})
 	b.Handle(&tg.RevealHandler{Store: store})
 

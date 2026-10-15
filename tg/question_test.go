@@ -7,7 +7,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"testing/synctest"
 
@@ -52,8 +51,9 @@ func TestQuestion(t *testing.T) {
 		},
 	}
 	b := tg.Bot{
-		Store: storeSpy, Dest: destSpy,
+		Dest: destSpy,
 	}
+	b.Handle(&tg.QuestionHandler{Store: storeSpy})
 	b.ServeHTTP(w, r)
 
 	if got, want := w.Code, http.StatusOK; got != want {
@@ -101,6 +101,24 @@ func TestQuestion(t *testing.T) {
 	}
 }
 
+func TestQuestionCondition(t *testing.T) {
+	h := tg.QuestionHandler{}
+
+	ok := h.Condition(tg.Update{
+		Message: tg.Message{
+			Text: "/sendcurrentquestion",
+		},
+	})
+	if got, want := ok, true; got != want {
+		t.Errorf("got %v; want %v", got, want)
+	}
+
+	ok = h.Condition(tg.Update{})
+	if got, want := ok, false; got != want {
+		t.Errorf("empty update: got %v; want %v", got, want)
+	}
+}
+
 // TODO: Check generally in webhook?
 func TestQuestionUpdateError(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
@@ -126,57 +144,16 @@ func TestQuestionUpdateError(t *testing.T) {
 	})
 }
 
-// TODO: Check generally in bot?
-func TestQuestionNoStoreError(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))
-		w := httptest.NewRecorder()
-
-		errCh := make(chan error)
-		go func() {
-			err := <-errCh
-			if got, want := err, tg.ErrStoreNil; !errors.Is(got, want) {
-				t.Errorf("got err %q; want %q", got, want)
-			}
-		}()
-
-		b := tg.Bot{
-			ErrorChan: errCh,
-		}
-		b.ServeHTTP(w, r)
-
-		if got, want := w.Code, http.StatusInternalServerError; got != want {
-			t.Errorf("bot response code: got %v; want %v", got, want)
-		}
-	})
-}
-
 func TestQuestionStoreError(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))
-		w := httptest.NewRecorder()
+	wantErr := errors.New("question error")
+	h := tg.QuestionHandler{
+		Store: &storeSpy{err: wantErr},
+	}
+	_, err := h.Handle(context.Background(), tg.Update{})
 
-		wantErr := errors.New("store error")
-		errCh := make(chan error)
-		go func() {
-			err := <-errCh
-			if got, want := err, wantErr; !errors.Is(got, want) {
-				t.Errorf("got err %q; want %q", got, want)
-			}
-		}()
-
-		b := tg.Bot{
-			Store: &storeSpy{
-				err: wantErr,
-			},
-			ErrorChan: errCh,
-		}
-		b.ServeHTTP(w, r)
-
-		if got, want := w.Code, http.StatusInternalServerError; got != want {
-			t.Errorf("bot response code: got %v; want %v", got, want)
-		}
-	})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
 }
 
 func TestQuestionUsersError(t *testing.T) {

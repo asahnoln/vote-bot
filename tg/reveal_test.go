@@ -24,8 +24,7 @@ func TestReveal(t *testing.T) {
 
 	destSpy := &destSpy{}
 	b := tg.Bot{
-		Store: &storeSpy{},
-		Dest:  destSpy,
+		Dest: destSpy,
 	}
 
 	storeSpy := &revealStoreSpy{

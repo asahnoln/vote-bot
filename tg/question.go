@@ -27,7 +27,7 @@ type QuestionHandler struct {
 }
 
 func (h *QuestionHandler) Condition(upd Update) bool {
-	return upd.CallbackQuery == nil
+	return upd.Message.Text == "/sendcurrentquestion"
 }
 
 func (h *QuestionHandler) Name() string {
@@ -35,10 +35,6 @@ func (h *QuestionHandler) Name() string {
 }
 
 func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
-	if h.Store == nil {
-		return nil, ErrStoreNil
-	}
-
 	uIDs, err := h.Store.Users(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("users: %w", err)

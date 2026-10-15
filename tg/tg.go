@@ -3,7 +3,6 @@ package tg
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -64,12 +63,6 @@ type Chat struct {
 	ID int
 }
 
-type Store interface {
-	QuestionStore
-	AnswerSaver
-	BetSaver
-}
-
 type Response struct {
 	OK          bool
 	Description string
@@ -81,13 +74,10 @@ type Sender interface {
 }
 
 type Bot struct {
-	Store     Store
 	Dest      Sender
 	ErrorChan chan<- error
 	hs        []Handler
 }
-
-var ErrStoreNil = errors.New("store is nil")
 
 type Handler interface {
 	Name() string
@@ -119,10 +109,6 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 		b.error(err, w, http.StatusInternalServerError)
 		return
 	}
-
-	b.Handle(&QuestionHandler{Store: b.Store})
-	b.Handle(&AnswerHandler{Store: b.Store})
-	b.Handle(&BetHandler{Store: b.Store})
 
 	var handler Handler
 	for _, h := range b.hs {

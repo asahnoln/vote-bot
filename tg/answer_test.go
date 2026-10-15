@@ -24,9 +24,9 @@ func TestAnswer(t *testing.T) {
 	storeSpy := &storeSpy{}
 	destSpy := &destSpy{}
 	b := tg.Bot{
-		Store: storeSpy,
-		Dest:  destSpy,
+		Dest: destSpy,
 	}
+	b.Handle(&tg.AnswerHandler{Store: storeSpy})
 	b.ServeHTTP(w, r)
 
 	if got, want := w.Code, http.StatusOK; got != want {
@@ -102,9 +102,9 @@ func TestAnswerSaveError(t *testing.T) {
 			err: wantErr,
 		}
 		b := tg.Bot{
-			Store:     storeSpy,
 			ErrorChan: errCh,
 		}
+		b.Handle(&tg.AnswerHandler{Store: storeSpy})
 		b.ServeHTTP(w, r)
 
 		if got, want := w.Code, http.StatusInternalServerError; got != want {
@@ -151,9 +151,9 @@ func TestBet(t *testing.T) {
 	storeSpy := &storeSpy{}
 	destSpy := &destSpy{}
 	b := tg.Bot{
-		Store: storeSpy,
-		Dest:  destSpy,
+		Dest: destSpy,
 	}
+	b.Handle(&tg.BetHandler{Store: storeSpy})
 	b.ServeHTTP(w, r)
 
 	if got, want := w.Code, http.StatusOK; got != want {

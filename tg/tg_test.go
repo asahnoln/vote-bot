@@ -1,7 +1,9 @@
 package tg_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
+	"github.com/google/go-cmp/cmp"
 )
 
 func init() {
@@ -48,15 +51,157 @@ func TestBotDestError(t *testing.T) {
 
 		b := tg.Bot{
 			Dest:      &destSpy{err: wantErr},
-			Store:     &storeSpy{users: []store.User{{}}},
 			ErrorChan: errCh,
 		}
+		b.Handle(&handlerStub{})
 		b.ServeHTTP(w, r)
 
 		if got, want := w.Code, http.StatusInternalServerError; got != want {
 			t.Errorf("bot response code: got %v; want %v", got, want)
 		}
 	})
+}
+
+type handlerStub struct{}
+
+func (s *handlerStub) Condition(tg.Update) bool {
+	return true
+}
+
+func (s *handlerStub) Handle(context.Context, tg.Update) (msgs []tg.URLer, err error) {
+	msgs = append(msgs, tg.EditMessageText{})
+	return
+}
+
+func (s *handlerStub) HandleResponse(context.Context, tg.Message) error {
+	return nil
+}
+
+func (s *handlerStub) Name() string {
+	return "stub"
+}
+
+type handlerCustomStub struct {
+	conditionFunc  func(tg.Update) bool
+	handleFunc     func(context.Context, tg.Update) ([]tg.URLer, error)
+	handleRespFunc func(context.Context, tg.Message) error
+	nameFunc       func() string
+}
+
+func (s *handlerCustomStub) Condition(tg.Update) bool {
+	return true
+}
+
+func (s *handlerCustomStub) Handle(context.Context, tg.Update) (msgs []tg.URLer, err error) {
+	msgs = append(msgs, tg.EditMessageText{})
+	return
+}
+
+func (s *handlerCustomStub) HandleResponse(context.Context, tg.Message) error {
+	return nil
+}
+
+func (s *handlerCustomStub) Name() string {
+	return "stub"
+}
+
+func TestBotHandler(t *testing.T) {
+	upd := tg.Update{
+		Message: tg.Message{
+			Text: "specialText",
+		},
+	}
+	body, err := json.Marshal(&upd)
+	if err != nil {
+		t.Fatalf("marshal err: %v", err)
+	}
+
+	r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	storeSpy := &storeSpy{
+		users: []store.User{
+			{UserID: 501},
+			{UserID: 602},
+			{UserID: 703},
+		},
+	}
+
+	destSpy := &destSpy{
+		returnMsg: tg.Message{
+			Chat: tg.Chat{
+				ID: 501,
+			},
+			MessageID: 1853,
+		},
+	}
+	b := tg.Bot{
+		Dest: destSpy,
+	}
+	b.Handle(&handlerCustomStub{
+		conditionFunc: func(u tg.Update) bool {
+			return u.Message.Text == "specialText"
+		},
+		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.URLer, err error) {
+			msgs = append(msgs, tg.EditMessageText{
+				MessageID: 96712,
+			})
+			msgs = append(msgs, tg.EditMessageText{})
+			msgs = append(msgs, tg.EditMessageText{})
+			return
+		},
+		handleRespFunc: func(ctx context.Context, m tg.Message) error {
+			return nil
+		},
+		nameFunc: func() string {
+			return "customStub"
+		},
+	})
+	b.ServeHTTP(w, r)
+
+	if got, want := w.Code, http.StatusOK; got != want {
+		t.Errorf("bot response code: got %v; want %v", got, want)
+	}
+
+	if got, want := len(destSpy.got), 3; got != want {
+		t.Fatalf("dest requests count got %d; want %d", got, want)
+	}
+	want := tg.SendRichMessage{
+		ChatID: 501,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "X or Y?",
+				},
+				{
+					Type:  "buttons",
+					Align: "left",
+					Buttons: []tg.RichMessageButton{
+						{
+							Text:         "X",
+							CallbackData: "opt:opt-q-99:X",
+						},
+						{
+							Text:         "Y",
+							CallbackData: "opt:opt-q-99:Y",
+						},
+					},
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, destSpy.got[0]); diff != "" {
+		t.Errorf("request mismatch (-want +got):%s", diff)
+	}
+
+	if got, want := destSpy.got[1].(tg.SendRichMessage).ChatID, 602; got != want {
+		t.Errorf("request 2nd user id: got %v; want %v", got, want)
+	}
+
+	if got, want := storeSpy.users[0].LastMessageID, 1853; got != want {
+		t.Errorf("last message ID saved: got %v; want %v", got, want)
+	}
 }
 
 type storeSpy struct {
