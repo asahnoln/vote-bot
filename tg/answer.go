@@ -41,6 +41,15 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 		return nil, errors.Join(ErrWrongCallbackData, err)
 	}
 
+	err = h.Store.SaveAnswer(ctx,
+		upd.CallbackQuery.Message.Chat.ID,
+		qID,
+		answer,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("save answer: %w", err)
+	}
+
 	if len(upd.CallbackQuery.Message.RichMessage.Blocks) < 2 {
 		return nil, ErrNotEnoughOriginalMsgBlocks
 	}
@@ -80,15 +89,6 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 				},
 			},
 		},
-	}
-
-	err = h.Store.SaveAnswer(ctx,
-		upd.CallbackQuery.Message.Chat.ID,
-		qID,
-		answer,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("save answer: %w", err)
 	}
 
 	msgs = append(msgs, msg)

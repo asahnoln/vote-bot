@@ -238,6 +238,14 @@ type questionStoreStub struct {
 	err error
 }
 
+func (s *questionStoreStub) CurrentQuestion(context.Context) (store.Question, error) {
+	return store.Question{
+		ID:   "opt-q-99",
+		Q:    "X or Y?",
+		Opts: []string{"X", "Y"},
+	}, s.err
+}
+
 type lastMessageStoreSpy struct {
 	userID int
 	msgID  int
@@ -251,34 +259,26 @@ func (s *lastMessageStoreSpy) SaveLastMessageID(ctx context.Context, userID int,
 	return s.err
 }
 
-func (s *questionStoreStub) CurrentQuestion(context.Context) (store.Question, error) {
-	return store.Question{
-		ID:   "opt-q-99",
-		Q:    "X or Y?",
-		Opts: []string{"X", "Y"},
-	}, s.err
+type answerStoreSpy struct {
+	userID     int
+	questionID string
+	answer     string
+	err        error
+}
+
+func (s *answerStoreSpy) SaveAnswer(ctx context.Context, userID int, questiongID string, answer string) error {
+	s.userID = userID
+	s.questionID = questiongID
+	s.answer = answer
+	return s.err
 }
 
 type storeSpy struct {
 	err        error
-	usersErr   error
-	users      []store.User
 	userID     int
 	questionID string
 	answer     string
 	bet        int
-}
-
-func (s *storeSpy) Users(context.Context) ([]store.User, error) {
-	return s.users, s.usersErr
-}
-
-func (s *storeSpy) CurrentQuestion(context.Context) (store.Question, error) {
-	return store.Question{
-		ID:   "opt-q-99",
-		Q:    "X or Y?",
-		Opts: []string{"X", "Y"},
-	}, s.err
 }
 
 func (s *storeSpy) SaveAnswer(ctx context.Context, userID int, questiongID string, answer string) error {
@@ -292,17 +292,6 @@ func (s *storeSpy) SaveBet(ctx context.Context, userID int, questionID string, b
 	s.userID = userID
 	s.questionID = questionID
 	s.bet = bet
-	return s.err
-}
-
-func (s *storeSpy) SaveLastMessageID(ctx context.Context, userID int, msgID int) error {
-	for i, u := range s.users {
-		if u.UserID == userID {
-			s.users[i].LastMessageID = msgID
-			break
-		}
-	}
-
 	return s.err
 }
 

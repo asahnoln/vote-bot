@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"testing/synctest"
 
 	"github.com/asahnoln/vote-bot/tg"
 	"github.com/google/go-cmp/cmp"
@@ -18,19 +18,14 @@ import (
 var answerCallbackUpdate []byte
 
 func TestAnswer(t *testing.T) {
-	r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(answerCallbackUpdate))
-	w := httptest.NewRecorder()
+	upd := tg.Update{}
+	json.Unmarshal(answerCallbackUpdate, &upd)
+	storeSpy := &answerStoreSpy{}
 
-	storeSpy := &storeSpy{}
-	destSpy := &destSpy{}
-	b := tg.Bot{
-		Dest: destSpy,
-	}
-	b.Handle(&tg.AnswerHandler{Store: storeSpy})
-	b.ServeHTTP(w, r)
-
-	if got, want := w.Code, http.StatusOK; got != want {
-		t.Errorf("answer status: got %v; want %v", got, want)
+	h := &tg.AnswerHandler{Store: storeSpy}
+	msgs, err := h.Handle(context.Background(), upd)
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
 	}
 
 	want := tg.EditMessageText{
@@ -71,7 +66,7 @@ func TestAnswer(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(want, destSpy.got[0]); diff != "" {
+	if diff := cmp.Diff(want, msgs[0]); diff != "" {
 		t.Errorf("edit message text mismatch (-want +got):%s", diff)
 	}
 
@@ -81,36 +76,27 @@ func TestAnswer(t *testing.T) {
 	if got, want := storeSpy.answer, "Ты"; got != want {
 		t.Errorf("save answer: got %v; want %v", got, want)
 	}
+	if got, want := storeSpy.questionID, "opt-q-67"; got != want {
+		t.Errorf("save question: got %v; want %v", got, want)
+	}
 }
 
 func TestAnswerSaveError(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(answerCallbackUpdate))
-		w := httptest.NewRecorder()
+	wantErr := errors.New("save error")
 
-		wantErr := errors.New("save error")
-
-		errCh := make(chan error)
-		go func() {
-			err := <-errCh
-			if got, want := err, wantErr; !errors.Is(got, want) {
-				t.Fatalf("got err %v; want %v", got, want)
-			}
-		}()
-
-		storeSpy := &storeSpy{
-			err: wantErr,
-		}
-		b := tg.Bot{
-			ErrorChan: errCh,
-		}
-		b.Handle(&tg.AnswerHandler{Store: storeSpy})
-		b.ServeHTTP(w, r)
-
-		if got, want := w.Code, http.StatusInternalServerError; got != want {
-			t.Errorf("answer status: got %v; want %v", got, want)
-		}
+	storeSpy := &answerStoreSpy{
+		err: wantErr,
+	}
+	h := &tg.AnswerHandler{Store: storeSpy}
+	_, err := h.Handle(context.Background(), tg.Update{
+		CallbackQuery: &tg.CallbackQuery{
+			Data: "opt:save-error:data",
+		},
 	})
+
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
 }
 
 func TestAnswerWrongDataFormatError(t *testing.T) {
@@ -128,7 +114,7 @@ func TestAnswerWrongDataFormatError(t *testing.T) {
 
 func TestAnswerNotEnoughMessageFromBefore(t *testing.T) {
 	h := tg.AnswerHandler{
-		Store: &storeSpy{},
+		Store: &answerStoreSpy{},
 	}
 
 	_, err := h.Handle(context.Background(), tg.Update{
