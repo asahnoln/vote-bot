@@ -2,11 +2,12 @@ package tg
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/asahnoln/vote-bot/store"
 )
+
+type Prefix string
 
 type Userser interface {
 	Users(context.Context) (userIDs []store.User, err error)
@@ -61,16 +62,11 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []URLer,
 	}
 	for _, o := range q.Opts {
 		// TODO: TDD utility for button auto row placement
-		cbData, _ := json.Marshal(AnswerCallbackData{
-			Type:       OptCallbackDataType,
-			QuestionID: q.ID,
-			Answer:     o,
-		})
 		msg.RichMessage.Blocks[1].Buttons = append(
 			msg.RichMessage.Blocks[1].Buttons,
 			RichMessageButton{
 				Text:         o,
-				CallbackData: string(cbData),
+				CallbackData: fmt.Sprintf("%s%s:%s", OptCallbackDataPrefix, q.ID, o),
 			},
 		)
 	}
