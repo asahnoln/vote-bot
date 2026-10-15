@@ -63,6 +63,17 @@ func TestQuestion(t *testing.T) {
 	if got, want := len(destSpy.got), 3; got != want {
 		t.Fatalf("dest requests count got %d; want %d", got, want)
 	}
+
+	cbData1, _ := json.Marshal(tg.AnswerCallbackData{
+		Type:       "opt",
+		QuestionID: "opt-q-99",
+		Answer:     "X",
+	})
+	cbData2, _ := json.Marshal(tg.AnswerCallbackData{
+		Type:       "opt",
+		QuestionID: "opt-q-99",
+		Answer:     "Y",
+	})
 	want := tg.SendRichMessage{
 		ChatID: 501,
 		RichMessage: tg.InputRichMessage{
@@ -77,11 +88,11 @@ func TestQuestion(t *testing.T) {
 					Buttons: []tg.RichMessageButton{
 						{
 							Text:         "X",
-							CallbackData: "opt:opt-q-99:X",
+							CallbackData: string(cbData1),
 						},
 						{
 							Text:         "Y",
-							CallbackData: "opt:opt-q-99:Y",
+							CallbackData: string(cbData2),
 						},
 					},
 				},

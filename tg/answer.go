@@ -10,6 +10,14 @@ import (
 	"strings"
 )
 
+type CallbackDataType string
+
+const (
+	OptCallbackDataType CallbackDataType = "opt"
+)
+
+type Prefix string
+
 const (
 	OptCallbackDataPrefix Prefix = "opt:"
 	BetCallbackDataPrefix Prefix = "bet:"
@@ -29,10 +37,10 @@ type AnswerHandler struct {
 }
 
 type AnswerCallbackData struct {
-	Type       string
-	QuestionID string
-	Answer     string
-	Question   string
+	Type       CallbackDataType `json:"type"`
+	QuestionID string           `json:"question_id"`
+	Question   string           `json:"question"`
+	Answer     string           `json:"answer"`
 }
 
 func (h *AnswerHandler) Condition(upd Update) bool {
@@ -47,7 +55,7 @@ func (h *AnswerHandler) Condition(upd Update) bool {
 		return false
 	}
 
-	return d.Type == "opt"
+	return d.Type == OptCallbackDataType
 }
 
 func (h *AnswerHandler) Name() string {
