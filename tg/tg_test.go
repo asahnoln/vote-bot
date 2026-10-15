@@ -201,6 +201,40 @@ func TestBotHandler(t *testing.T) {
 	}
 }
 
+type usersStoreStub struct {
+	users []store.User
+	err   error
+}
+
+func (s *usersStoreStub) Users(context.Context) ([]store.User, error) {
+	return s.users, s.err
+}
+
+type questionStoreStub struct {
+	err error
+}
+
+type lastMessageStoreSpy struct {
+	userID int
+	msgID  int
+	err    error
+}
+
+func (s *lastMessageStoreSpy) SaveLastMessageID(ctx context.Context, userID int, msgID int) error {
+	s.userID = userID
+	s.msgID = msgID
+
+	return s.err
+}
+
+func (s *questionStoreStub) CurrentQuestion(context.Context) (store.Question, error) {
+	return store.Question{
+		ID:   "opt-q-99",
+		Q:    "X or Y?",
+		Opts: []string{"X", "Y"},
+	}, s.err
+}
+
 type storeSpy struct {
 	err        error
 	usersErr   error

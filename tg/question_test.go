@@ -24,11 +24,17 @@ func TestQuestion(t *testing.T) {
 		},
 	}
 
-	storeSpy := &storeSpy{
-		users: []store.User{
-			{UserID: 501},
-			{UserID: 602},
-			{UserID: 703},
+	storeSpy := &struct {
+		usersStoreStub
+		questionStoreStub
+		lastMessageStoreSpy
+	}{
+		usersStoreStub: usersStoreStub{
+			users: []store.User{
+				{UserID: 501},
+				{UserID: 602},
+				{UserID: 703},
+			},
 		},
 	}
 
@@ -76,12 +82,11 @@ func TestQuestion(t *testing.T) {
 }
 
 func TestQuestionHandleResponse(t *testing.T) {
-	spy := &storeSpy{
-		users: []store.User{
-			{UserID: 22},
-			{UserID: 99},
-		},
-	}
+	spy := &struct {
+		usersStoreStub
+		questionStoreStub
+		lastMessageStoreSpy
+	}{}
 	h := tg.QuestionHandler{Store: spy}
 
 	err := h.HandleResponse(context.Background(), tg.Message{
@@ -94,8 +99,11 @@ func TestQuestionHandleResponse(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := spy.users[0].LastMessageID, 1853; got != want {
-		t.Errorf("last message ID saved: got %v; want %v", got, want)
+	if got, want := spy.userID, 22; got != want {
+		t.Errorf("last user ID saved: got %v; want %v", got, want)
+	}
+	if got, want := spy.msgID, 1853; got != want {
+		t.Errorf("last msg ID saved: got %v; want %v", got, want)
 	}
 }
 
