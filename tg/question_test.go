@@ -3,10 +3,7 @@ package tg_test
 import (
 	"context"
 	"errors"
-	"net/http"
-	"net/http/httptest"
 	"testing"
-	"testing/synctest"
 
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
@@ -125,35 +122,19 @@ func TestQuestionCondition(t *testing.T) {
 	}
 }
 
-// TODO: Check generally in webhook?
-func TestQuestionUpdateError(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		r := httptest.NewRequest(http.MethodPost, "/webhook", nil)
-		w := httptest.NewRecorder()
-
-		errCh := make(chan error)
-		go func() {
-			err := <-errCh
-			if got, want := err.Error(), "update decode: unexpected end of JSON input"; got != want {
-				t.Errorf("got err %q; want %q", got, want)
-			}
-		}()
-
-		b := tg.Bot{
-			ErrorChan: errCh,
-		}
-		b.ServeHTTP(w, r)
-
-		if got, want := w.Code, http.StatusInternalServerError; got != want {
-			t.Errorf("bot response code: got %v; want %v", got, want)
-		}
-	})
-}
-
 func TestQuestionStoreError(t *testing.T) {
 	wantErr := errors.New("question error")
+	stub := &struct {
+		usersStoreStub
+		questionStoreStub
+		lastMessageStoreSpy
+	}{
+		questionStoreStub: questionStoreStub{
+			err: wantErr,
+		},
+	}
 	h := tg.QuestionHandler{
-		Store: &storeSpy{err: wantErr},
+		Store: stub,
 	}
 	_, err := h.Handle(context.Background(), tg.Update{})
 
@@ -164,8 +145,17 @@ func TestQuestionStoreError(t *testing.T) {
 
 func TestQuestionUsersError(t *testing.T) {
 	wantErr := errors.New("users error")
+	stub := &struct {
+		usersStoreStub
+		questionStoreStub
+		lastMessageStoreSpy
+	}{
+		usersStoreStub: usersStoreStub{
+			err: wantErr,
+		},
+	}
 	h := tg.QuestionHandler{
-		Store: &storeSpy{usersErr: wantErr},
+		Store: stub,
 	}
 	_, err := h.Handle(context.Background(), tg.Update{})
 

@@ -34,6 +34,30 @@ func TestDefaultNotFound(t *testing.T) {
 	}
 }
 
+func TestBotUpdateError(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodPost, "/webhook", nil)
+		w := httptest.NewRecorder()
+
+		errCh := make(chan error)
+		go func() {
+			err := <-errCh
+			if got, want := err.Error(), "update decode: unexpected end of JSON input"; got != want {
+				t.Errorf("got err %q; want %q", got, want)
+			}
+		}()
+
+		b := tg.Bot{
+			ErrorChan: errCh,
+		}
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusInternalServerError; got != want {
+			t.Errorf("bot response code: got %v; want %v", got, want)
+		}
+	})
+}
+
 func TestBotDestError(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		r := httptest.NewRequest("", "/webhook", strings.NewReader("{}"))
@@ -44,7 +68,7 @@ func TestBotDestError(t *testing.T) {
 		go func() {
 			err := <-errCh
 			if got, want := err, wantErr; !errors.Is(got, want) {
-				t.Fatalf("got err %v; want %v", got, want)
+				t.Errorf("got err %v; want %v", got, want)
 			}
 		}()
 
