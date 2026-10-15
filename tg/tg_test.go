@@ -15,7 +15,6 @@ import (
 
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
-	"github.com/google/go-cmp/cmp"
 )
 
 func init() {
@@ -88,21 +87,20 @@ type handlerCustomStub struct {
 	nameFunc       func() string
 }
 
-func (s *handlerCustomStub) Condition(tg.Update) bool {
-	return true
+func (s *handlerCustomStub) Condition(upd tg.Update) bool {
+	return s.conditionFunc(upd)
 }
 
-func (s *handlerCustomStub) Handle(context.Context, tg.Update) (msgs []tg.URLer, err error) {
-	msgs = append(msgs, tg.EditMessageText{})
-	return
+func (s *handlerCustomStub) Handle(ctx context.Context, upd tg.Update) (msgs []tg.URLer, err error) {
+	return s.handleFunc(ctx, upd)
 }
 
-func (s *handlerCustomStub) HandleResponse(context.Context, tg.Message) error {
-	return nil
+func (s *handlerCustomStub) HandleResponse(ctx context.Context, m tg.Message) error {
+	return s.handleRespFunc(ctx, m)
 }
 
 func (s *handlerCustomStub) Name() string {
-	return "stub"
+	return s.nameFunc()
 }
 
 func TestBotHandler(t *testing.T) {
@@ -119,14 +117,6 @@ func TestBotHandler(t *testing.T) {
 	r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
-	storeSpy := &storeSpy{
-		users: []store.User{
-			{UserID: 501},
-			{UserID: 602},
-			{UserID: 703},
-		},
-	}
-
 	destSpy := &destSpy{
 		returnMsg: tg.Message{
 			Chat: tg.Chat{
@@ -138,19 +128,24 @@ func TestBotHandler(t *testing.T) {
 	b := tg.Bot{
 		Dest: destSpy,
 	}
+
+	gotM := tg.Message{}
 	b.Handle(&handlerCustomStub{
 		conditionFunc: func(u tg.Update) bool {
 			return u.Message.Text == "specialText"
 		},
 		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.URLer, err error) {
-			msgs = append(msgs, tg.EditMessageText{
-				MessageID: 96712,
+			msgs = append(msgs, tg.SendRichMessage{
+				ChatID: 96712,
 			})
-			msgs = append(msgs, tg.EditMessageText{})
-			msgs = append(msgs, tg.EditMessageText{})
+			msgs = append(msgs, tg.EditMessageText{
+				ChatID: 602,
+			})
+			msgs = append(msgs, tg.SendRichMessage{})
 			return
 		},
 		handleRespFunc: func(ctx context.Context, m tg.Message) error {
+			gotM = m
 			return nil
 		},
 		nameFunc: func() string {
@@ -166,41 +161,17 @@ func TestBotHandler(t *testing.T) {
 	if got, want := len(destSpy.got), 3; got != want {
 		t.Fatalf("dest requests count got %d; want %d", got, want)
 	}
-	want := tg.SendRichMessage{
-		ChatID: 501,
-		RichMessage: tg.InputRichMessage{
-			Blocks: []tg.InputRichBlock{
-				{
-					Type: "paragraph",
-					Text: "X or Y?",
-				},
-				{
-					Type:  "buttons",
-					Align: "left",
-					Buttons: []tg.RichMessageButton{
-						{
-							Text:         "X",
-							CallbackData: "opt:opt-q-99:X",
-						},
-						{
-							Text:         "Y",
-							CallbackData: "opt:opt-q-99:Y",
-						},
-					},
-				},
-			},
-		},
-	}
-	if diff := cmp.Diff(want, destSpy.got[0]); diff != "" {
-		t.Errorf("request mismatch (-want +got):%s", diff)
+
+	if got, want := destSpy.got[0].(tg.SendRichMessage).ChatID, 96712; got != want {
+		t.Errorf("dest request msg chatID: got %d; want %d", got, want)
 	}
 
-	if got, want := destSpy.got[1].(tg.SendRichMessage).ChatID, 602; got != want {
+	if got, want := destSpy.got[1].(tg.EditMessageText).ChatID, 602; got != want {
 		t.Errorf("request 2nd user id: got %v; want %v", got, want)
 	}
 
-	if got, want := storeSpy.users[0].LastMessageID, 1853; got != want {
-		t.Errorf("last message ID saved: got %v; want %v", got, want)
+	if got, want := gotM.MessageID, 1853; got != want {
+		t.Errorf("last message handled: got %v; want %v", got, want)
 	}
 }
 
