@@ -2,8 +2,10 @@ package tg
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 )
@@ -26,8 +28,26 @@ type AnswerHandler struct {
 	Store AnswerSaver
 }
 
+type AnswerCallbackData struct {
+	Type       string
+	QuestionID string
+	Answer     string
+	Question   string
+}
+
 func (h *AnswerHandler) Condition(upd Update) bool {
-	return upd.CallbackQuery != nil && strings.HasPrefix(upd.CallbackQuery.Data, string(OptCallbackDataPrefix))
+	if upd.CallbackQuery == nil {
+		return false
+	}
+
+	var d AnswerCallbackData
+	err := json.Unmarshal([]byte(upd.CallbackQuery.Data), &d)
+	if err != nil {
+		slog.Error("answer condition: callback data unmarshal", "err", err)
+		return false
+	}
+
+	return d.Type == "opt"
 }
 
 func (h *AnswerHandler) Name() string {
@@ -35,17 +55,26 @@ func (h *AnswerHandler) Name() string {
 }
 
 func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
-	qID, answer, err := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
+	var d AnswerCallbackData
+	err = json.Unmarshal([]byte(upd.CallbackQuery.Data), &d)
 	if err != nil {
-		return nil, errors.Join(ErrWrongCallbackData, err)
+		return nil, fmt.Errorf("callback data unmarshal: %w", err)
 	}
 
-	prefix := string(BetCallbackDataPrefix) + qID + ":"
+	prefix := string(BetCallbackDataPrefix) + d.QuestionID + ":"
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{
+				{
+					Type: InputRichBlockParagraphType,
+					Text: d.Question,
+				},
+				{
+					Type: InputRichBlockParagraphType,
+					Text: "Ваш ответ: " + d.Answer,
+				},
 				{
 					Type: InputRichBlockParagraphType,
 					Text: "Выберите ставку:",
@@ -74,8 +103,8 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 
 	err = h.Store.SaveAnswer(ctx,
 		upd.CallbackQuery.Message.Chat.ID,
-		qID,
-		answer,
+		d.QuestionID,
+		d.Answer,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("save answer: %w", err)

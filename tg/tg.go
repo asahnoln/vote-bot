@@ -47,6 +47,14 @@ type Update struct {
 	Message       Message
 	CallbackQuery *CallbackQuery `json:"callback_query"`
 }
+
+type CallbackData struct {
+	Type       string
+	QuestionID string
+	Answer     string
+	Question   string
+}
+
 type CallbackQuery struct {
 	// NOTE: Actually MaybeInaccessibleMessage, probably should work it out
 	Message Message
