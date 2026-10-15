@@ -1,13 +1,10 @@
 package tg_test
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"encoding/json"
 	"errors"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/asahnoln/vote-bot/tg"
@@ -131,19 +128,14 @@ func TestAnswerNotEnoughMessageFromBefore(t *testing.T) {
 var betCallbackUpdate []byte
 
 func TestBet(t *testing.T) {
-	r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(betCallbackUpdate))
-	w := httptest.NewRecorder()
+	upd := tg.Update{}
+	json.Unmarshal(betCallbackUpdate, &upd)
 
-	storeSpy := &storeSpy{}
-	destSpy := &destSpy{}
-	b := tg.Bot{
-		Dest: destSpy,
-	}
-	b.Handle(&tg.BetHandler{Store: storeSpy})
-	b.ServeHTTP(w, r)
-
-	if got, want := w.Code, http.StatusOK; got != want {
-		t.Errorf("bet status: got %v; want %v", got, want)
+	storeSpy := &betStoreSpy{}
+	h := &tg.BetHandler{Store: storeSpy}
+	msgs, err := h.Handle(context.Background(), upd)
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
 	}
 
 	want := tg.EditMessageText{
@@ -166,22 +158,25 @@ func TestBet(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(want, destSpy.got[0]); diff != "" {
+	if diff := cmp.Diff(want, msgs[0]); diff != "" {
 		t.Errorf("edit message text mismatch (-want +got):%s", diff)
 	}
 
 	if got, want := storeSpy.userID, 45030021; got != want {
-		t.Errorf("save bet: got %v; want %v", got, want)
+		t.Errorf("save userID: got %v; want %v", got, want)
 	}
 	if got, want := storeSpy.bet, 500; got != want {
 		t.Errorf("save bet: got %v; want %v", got, want)
+	}
+	if got, want := storeSpy.questionID, "bet-q-1"; got != want {
+		t.Errorf("save questionID: got %v; want %v", got, want)
 	}
 }
 
 func TestBetSaveError(t *testing.T) {
 	wantErr := errors.New("save error")
 	h := tg.BetHandler{
-		Store: &storeSpy{err: wantErr},
+		Store: &betStoreSpy{err: wantErr},
 	}
 	_, err := h.Handle(context.Background(), tg.Update{
 		CallbackQuery: &tg.CallbackQuery{
@@ -229,7 +224,7 @@ func TestBetWrongDataFormatError(t *testing.T) {
 
 func TestBetNotEnoughMessageFromBefore(t *testing.T) {
 	h := tg.BetHandler{
-		Store: &storeSpy{},
+		Store: &betStoreSpy{},
 	}
 
 	_, err := h.Handle(context.Background(), tg.Update{
@@ -242,13 +237,30 @@ func TestBetNotEnoughMessageFromBefore(t *testing.T) {
 	}
 }
 
-type destSpy struct {
-	got       []any
-	err       error
-	returnMsg tg.Message
+type answerStoreSpy struct {
+	userID     int
+	questionID string
+	answer     string
+	err        error
 }
 
-func (d *destSpy) Send(ctx context.Context, data tg.URLer) (m tg.Message, err error) {
-	d.got = append(d.got, data)
-	return d.returnMsg, d.err
+func (s *answerStoreSpy) SaveAnswer(ctx context.Context, userID int, questiongID string, answer string) error {
+	s.userID = userID
+	s.questionID = questiongID
+	s.answer = answer
+	return s.err
+}
+
+type betStoreSpy struct {
+	userID     int
+	questionID string
+	bet        int
+	err        error
+}
+
+func (s *betStoreSpy) SaveBet(ctx context.Context, userID int, questionID string, bet int) error {
+	s.userID = userID
+	s.questionID = questionID
+	s.bet = bet
+	return s.err
 }

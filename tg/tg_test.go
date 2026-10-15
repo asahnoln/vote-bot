@@ -259,42 +259,6 @@ func (s *lastMessageStoreSpy) SaveLastMessageID(ctx context.Context, userID int,
 	return s.err
 }
 
-type answerStoreSpy struct {
-	userID     int
-	questionID string
-	answer     string
-	err        error
-}
-
-func (s *answerStoreSpy) SaveAnswer(ctx context.Context, userID int, questiongID string, answer string) error {
-	s.userID = userID
-	s.questionID = questiongID
-	s.answer = answer
-	return s.err
-}
-
-type storeSpy struct {
-	err        error
-	userID     int
-	questionID string
-	answer     string
-	bet        int
-}
-
-func (s *storeSpy) SaveAnswer(ctx context.Context, userID int, questiongID string, answer string) error {
-	s.userID = userID
-	s.questionID = questiongID
-	s.answer = answer
-	return s.err
-}
-
-func (s *storeSpy) SaveBet(ctx context.Context, userID int, questionID string, bet int) error {
-	s.userID = userID
-	s.questionID = questionID
-	s.bet = bet
-	return s.err
-}
-
 type handlerStub struct{}
 
 func (s *handlerStub) Condition(tg.Update) bool {
@@ -335,4 +299,15 @@ func (s *handlerCustomStub) HandleResponse(ctx context.Context, m tg.Message) er
 
 func (s *handlerCustomStub) Name() string {
 	return s.nameFunc()
+}
+
+type destSpy struct {
+	got       []any
+	err       error
+	returnMsg tg.Message
+}
+
+func (d *destSpy) Send(ctx context.Context, data tg.URLer) (m tg.Message, err error) {
+	d.got = append(d.got, data)
+	return d.returnMsg, d.err
 }
