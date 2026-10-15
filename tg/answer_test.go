@@ -40,14 +40,6 @@ func TestAnswer(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Что за вопрос?",
-				},
-				{
-					Type: "paragraph",
-					Text: "Ваш ответ: Ты",
-				},
-				{
-					Type: "paragraph",
 					Text: "Выберите ставку:",
 				},
 				{
@@ -113,14 +105,16 @@ func TestAnswerSaveError(t *testing.T) {
 	})
 }
 
-func TestAnswerCallbackNil(t *testing.T) {
+func TestAnswerWrongDataFormatError(t *testing.T) {
 	h := tg.AnswerHandler{}
 
-	// TODO: Should condition return error instead of ok???
-	ok := h.Condition(tg.Update{})
-
-	if got, want := ok, false; got != want {
-		t.Errorf("got %v; want %v", got, want)
+	_, err := h.Handle(context.Background(), tg.Update{
+		CallbackQuery: &tg.CallbackQuery{
+			Data: "opt: wrong data ",
+		},
+	})
+	if got, want := err, tg.ErrWrongCallbackData; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
 	}
 }
 

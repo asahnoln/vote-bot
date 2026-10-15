@@ -38,15 +38,15 @@
             "buttons": [
               {
                 "text": "Я",
-                "callback_data": "{\"type\":\"opt\",\"questionID\":\"opt-q-67\",\"answer\":\"Я\",\"question\":\"Что за вопрос\"}"
+                "callback_data": "opt:opt-q-67:Я"
               },
               {
                 "text": "Ты",
-                "callback_data": "{\"type\":\"opt\",\"questionID\":\"opt-q-67\",\"answer\":\"Ты\",\"question\":\"Что за вопрос\"}"
+                "callback_data": "opt:opt-q-67:Ты"
               },
               {
                 "text": "Он",
-                "callback_data": "{\"type\":\"opt\",\"questionID\":\"opt-q-67\",\"answer\":\"Он\",\"question\":\"Что за вопрос\"}"
+                "callback_data": "opt:opt-q-67:Он"
               }
             ],
             "align": "center"
@@ -55,6 +55,6 @@
       }
     },
     "chat_instance": "-8468197742047179003",
-    "data": "{\"type\":\"opt\",\"questionID\":\"opt-q-67\",\"answer\":\"Ты\",\"question\":\"Что за вопрос?\"}"
+    "data": "opt:opt-q-67:Ты"
   }
 }
