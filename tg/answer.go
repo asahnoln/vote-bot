@@ -48,6 +48,14 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 			Blocks: []InputRichBlock{
 				{
 					Type: InputRichBlockParagraphType,
+					Text: upd.CallbackQuery.Message.RichMessage.Blocks[0].Text,
+				},
+				{
+					Type: InputRichBlockParagraphType,
+					Text: "Ваш ответ: " + answer,
+				},
+				{
+					Type: InputRichBlockParagraphType,
 					Text: "Выберите ставку:",
 				},
 				{

@@ -54,9 +54,10 @@ type CallbackQuery struct {
 }
 
 type Message struct {
-	MessageID int `json:"message_id"`
-	Chat      Chat
-	Text      string
+	MessageID   int `json:"message_id"`
+	Chat        Chat
+	Text        string
+	RichMessage InputRichMessage `json:"rich_message"`
 }
 
 type Chat struct {

@@ -96,6 +96,8 @@ Each user has an account. (At the start they have 1000$)
 - [ ] Check if question was delivered and if the command was repeated - send it if it was not delivered
 - [ ] Stop sending questions to those who lost the game
 - [ ] What if EVERYONE LOST before the end of the game??
+- [ ] Start bot with secret token from QR
+- [ ] Set webhook with secret token
 
 ## Stats
 

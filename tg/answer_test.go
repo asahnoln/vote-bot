@@ -40,6 +40,14 @@ func TestAnswer(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
+					Text: "Кто же вам желает добра?",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш ответ: Ты",
+				},
+				{
+					Type: "paragraph",
 					Text: "Выберите ставку:",
 				},
 				{
