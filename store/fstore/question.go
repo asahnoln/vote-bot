@@ -33,29 +33,41 @@ func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err 
 	return q, nil
 }
 
+const (
+	ConfigCollection     = "config"
+	CurrentQuestionDocID = "current_question"
+)
+
+const IdxPath = "idx"
+
 func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
 	results, _ := f.c.Collection(QuestionsCollection).NewAggregationQuery().WithCount("all").Get(ctx)
 	count := results["all"].(*firestorepb.Value).GetIntegerValue()
-	d, _ := f.c.Collection("config").Doc("current_question").Get(ctx)
-	if d.Data()["idx"].(int64) >= count {
+	d, _ := f.c.Collection(ConfigCollection).Doc(CurrentQuestionDocID).Get(ctx)
+	if d.Data()[IdxPath].(int64) >= count {
 		return store.ErrNoOpenQuestionsLeft
 	}
 
-	f.c.Collection("config").Doc("current_question").Update(ctx, []firestore.Update{
-		{Path: "idx", Value: firestore.Increment(1)},
+	f.c.Collection(ConfigCollection).Doc(CurrentQuestionDocID).Update(ctx, []firestore.Update{
+		{Path: IdxPath, Value: firestore.Increment(1)},
 	})
 
 	return nil
 }
 
 func (f *Firestore) getQuestionByCurrentIdx(ctx context.Context, n int) (q store.Question, err error) {
-	idxInt, err := f.getCurrentQuestionIdx(ctx)
+	idx, err := f.getCurrentQuestionIdx(ctx)
 	if err != nil {
 		return q, fmt.Errorf("current question idx: %w", err)
 	}
 
+	offset := int(idx) + n
+	if offset < 0 {
+		return q, fmt.Errorf("%w: idx %d, n %d", store.ErrQuestionsOffsetMustNotBeNegative, idx, n)
+	}
+
 	docs, err := f.c.Collection(QuestionsCollection).
-		Offset(int(idxInt) + n).
+		Offset(offset).
 		Limit(1).
 		Documents(ctx).
 		GetAll()
@@ -78,12 +90,12 @@ func (f *Firestore) getQuestionByCurrentIdx(ctx context.Context, n int) (q store
 }
 
 func (f *Firestore) getCurrentQuestionIdx(ctx context.Context) (int, error) {
-	d, err := f.c.Collection("config").Doc("current_question").Get(ctx)
+	d, err := f.c.Collection(ConfigCollection).Doc(CurrentQuestionDocID).Get(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("doc: %w", err)
 	}
 
-	idx, err := d.DataAt("idx")
+	idx, err := d.DataAt(IdxPath)
 	if err != nil {
 		return 0, fmt.Errorf("data: %w", err)
 	}

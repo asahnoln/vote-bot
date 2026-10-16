@@ -112,6 +112,24 @@ func TestNoQuestionIdxWrongType(t *testing.T) {
 	}
 }
 
+func TestNoQuestionIdxNegative(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": -1,
+	})
+
+	f := fstore.New(c)
+
+	_, err := f.CurrentQuestion(ctx)
+	if got, want := err, store.ErrQuestionsOffsetMustNotBeNegative; !errors.Is(got, want) {
+		t.Fatalf("fstore no questions: got err %v; want %v", got, want)
+	}
+}
+
 func TestNoQuestion(t *testing.T) {
 	ctx := context.Background()
 
