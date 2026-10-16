@@ -17,7 +17,7 @@ const (
 )
 
 func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err error) {
-	q, err = f.currentQuestion(ctx)
+	q, err = f.getQuestionByCurrentIdx(ctx, 0)
 	if err != nil {
 		return q, fmt.Errorf("current question: %w", err)
 	}
@@ -41,16 +41,27 @@ const (
 const IdxPath = "idx"
 
 func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
-	results, _ := f.c.Collection(QuestionsCollection).NewAggregationQuery().WithCount("all").Get(ctx)
+	results, err := f.c.Collection(QuestionsCollection).NewAggregationQuery().WithCount("all").Get(ctx)
+	if err != nil {
+		return fmt.Errorf("count all questions: %w", err)
+	}
+
 	count := results["all"].(*firestorepb.Value).GetIntegerValue()
-	d, _ := f.c.Collection(ConfigCollection).Doc(CurrentQuestionDocID).Get(ctx)
-	if d.Data()[IdxPath].(int64) >= count {
+	idx, err := f.getCurrentQuestionIdx(ctx)
+	if err != nil {
+		return fmt.Errorf("current idx: %w", err)
+	}
+
+	if idx >= int(count) {
 		return store.ErrNoOpenQuestionsLeft
 	}
 
-	f.c.Collection(ConfigCollection).Doc(CurrentQuestionDocID).Update(ctx, []firestore.Update{
+	_, err = f.c.Collection(ConfigCollection).Doc(CurrentQuestionDocID).Update(ctx, []firestore.Update{
 		{Path: IdxPath, Value: firestore.Increment(1)},
 	})
+	if err != nil {
+		return fmt.Errorf("update idx: %w", err)
+	}
 
 	return nil
 }
@@ -106,8 +117,4 @@ func (f *Firestore) getCurrentQuestionIdx(ctx context.Context) (int, error) {
 	}
 
 	return int(idxInt), nil
-}
-
-func (f *Firestore) currentQuestion(ctx context.Context) (q store.Question, err error) {
-	return f.getQuestionByCurrentIdx(ctx, 0)
 }
