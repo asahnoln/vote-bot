@@ -49,10 +49,13 @@ func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
 }
 
 func (f *Firestore) getQuestionByCurrentIdx(ctx context.Context, n int) (q store.Question, err error) {
-	d, _ := f.c.Collection("config").Doc("current_question").Get(ctx)
+	idxInt, err := f.getCurrentQuestionIdx(ctx)
+	if err != nil {
+		return q, fmt.Errorf("current question idx: %w", err)
+	}
 
 	docs, err := f.c.Collection(QuestionsCollection).
-		Offset(int(d.Data()["idx"].(int64)) + n).
+		Offset(int(idxInt) + n).
 		Limit(1).
 		Documents(ctx).
 		GetAll()
@@ -72,6 +75,25 @@ func (f *Firestore) getQuestionByCurrentIdx(ctx context.Context, n int) (q store
 	q.ID = docs[0].Ref.ID
 
 	return q, nil
+}
+
+func (f *Firestore) getCurrentQuestionIdx(ctx context.Context) (int, error) {
+	d, err := f.c.Collection("config").Doc("current_question").Get(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("doc: %w", err)
+	}
+
+	idx, err := d.DataAt("idx")
+	if err != nil {
+		return 0, fmt.Errorf("data: %w", err)
+	}
+
+	idxInt, ok := idx.(int64)
+	if !ok {
+		return 0, fmt.Errorf("idx %[1]v is not int64, but %[1]T", idx)
+	}
+
+	return int(idxInt), nil
 }
 
 func (f *Firestore) currentQuestion(ctx context.Context) (q store.Question, err error) {

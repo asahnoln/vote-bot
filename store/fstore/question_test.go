@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/store/fstore"
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestQuestion(t *testing.T) {
@@ -56,6 +59,56 @@ func TestQuestion(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, q); diff != "" {
 		t.Errorf("question mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestNoQuestionIdx(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	f := fstore.New(c)
+
+	_, err := f.CurrentQuestion(ctx)
+	if got, want := status.Code(err), codes.NotFound; err == nil || got != want {
+		t.Fatalf("fstore no questions idx: got err %v; want %v", got, want)
+	}
+}
+
+func TestNoQuestionIdxMissing(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"somethingElse": "someData",
+	})
+
+	f := fstore.New(c)
+
+	_, err := f.CurrentQuestion(ctx)
+	if got, want := err.Error(), `no field "idx"`; !strings.Contains(got, want) {
+		t.Fatalf("fstore no questions substring: got err %v; want substring %v", got, want)
+	}
+}
+
+func TestNoQuestionIdxWrongType(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": "wrongType",
+	})
+
+	f := fstore.New(c)
+
+	_, err := f.CurrentQuestion(ctx)
+	if got, want := err.Error(), `is not int64`; !strings.Contains(got, want) {
+		t.Fatalf("fstore no questions substring: got err %v; want substring %v", got, want)
 	}
 }
 
