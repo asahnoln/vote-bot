@@ -1,11 +1,9 @@
 package tg_test
 
 import (
-	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	_ "embed"
@@ -19,14 +17,6 @@ import (
 var revealCommandUpdate []byte
 
 func TestReveal(t *testing.T) {
-	r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(revealCommandUpdate))
-	w := httptest.NewRecorder()
-
-	destSpy := &destSpy{}
-	b := tg.Bot{
-		Dest: destSpy,
-	}
-
 	storeSpy := &revealStoreSpy{
 		answers: []store.Answer{
 			{
@@ -43,11 +33,13 @@ func TestReveal(t *testing.T) {
 			2345: 300,
 		},
 	}
-	b.Handle(&tg.RevealHandler{Store: storeSpy})
-	b.ServeHTTP(w, r)
+	h := &tg.RevealHandler{Store: storeSpy}
 
-	if got, want := w.Code, http.StatusOK; got != want {
-		t.Errorf("reveal status: got %v; want %v", got, want)
+	upd := tg.Update{}
+	json.Unmarshal(revealCommandUpdate, &upd)
+	msgs, err := h.Handle(context.Background(), upd)
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
 	}
 
 	if got, want := storeSpy.questionID, "last-closed-q-99"; got != want {
@@ -59,7 +51,7 @@ func TestReveal(t *testing.T) {
 		t.Errorf("accounts user IDs mismatch (-want +got):%s", diff)
 	}
 
-	if got, want := len(destSpy.got), 2; got != want {
+	if got, want := len(msgs), 2; got != want {
 		t.Fatalf("request count: got %v; want %v", got, want)
 	}
 
@@ -83,7 +75,7 @@ func TestReveal(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(want1, destSpy.got[0]); diff != "" {
+	if diff := cmp.Diff(want1, msgs[0]); diff != "" {
 		t.Errorf("send message 1 mismatch (-want +got):%s", diff)
 	}
 
@@ -106,7 +98,7 @@ func TestReveal(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(want2, destSpy.got[1]); diff != "" {
+	if diff := cmp.Diff(want2, msgs[1]); diff != "" {
 		t.Errorf("send message 2 mismatch (-want +got):%s", diff)
 	}
 }

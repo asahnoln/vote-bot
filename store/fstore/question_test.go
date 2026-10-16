@@ -17,27 +17,27 @@ func TestQuestion(t *testing.T) {
 	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": 1,
+	})
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Set(ctx, store.Question{
-		Q:      "Should not be used?",
-		Closed: true,
-		A:      1,
-		Opts:   []string{"skip", "avoid"},
-		Order:  0,
+		Q:     "Should not be used?",
+		A:     1,
+		Opts:  []string{"skip", "avoid"},
+		Order: 0,
 	})
 	col.Doc("test-q-1").Set(ctx, store.Question{
-		Q:      "SaaaS or SoooS?",
-		Closed: false,
-		A:      2,
-		Opts:   []string{"jej", "joj", "sas", "sos"},
-		Order:  1,
+		Q:     "SaaaS or SoooS?",
+		A:     2,
+		Opts:  []string{"jej", "joj", "sas", "sos"},
+		Order: 1,
 	})
 	col.Doc("test-q-2").Set(ctx, store.Question{
-		Q:      "Should skip in future?",
-		Closed: false,
-		A:      1,
-		Opts:   []string{"SKIP", "FUTURE"},
-		Order:  2,
+		Q:     "Should skip in future?",
+		A:     1,
+		Opts:  []string{"SKIP", "FUTURE"},
+		Order: 2,
 	})
 
 	f := fstore.New(c)
@@ -65,10 +65,14 @@ func TestNoQuestion(t *testing.T) {
 	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": 0,
+	})
+
 	f := fstore.New(c)
 
 	_, err := f.CurrentQuestion(ctx)
-	if got, want := err, store.ErrNoQuestionsFound; !errors.Is(got, want) {
+	if got, want := err, store.ErrNoOpenQuestionsLeft; !errors.Is(got, want) {
 		t.Fatalf("fstore no questions: got err %v; want %v", got, want)
 	}
 }
@@ -79,12 +83,14 @@ func TestSomeQuestionHasNoOpts(t *testing.T) {
 	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": 0,
+	})
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Set(ctx, store.Question{
-		Q:      "NO OPTS???",
-		Closed: false,
-		A:      1,
-		Order:  0,
+		Q:     "NO OPTS???",
+		A:     1,
+		Order: 0,
 	})
 	f := fstore.New(c)
 
@@ -107,15 +113,17 @@ func TestSomeQuestionAnswerIndexIsLarger(t *testing.T) {
 		{-999},
 	}
 
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": 0,
+	})
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("index %d", tt.a), func(t *testing.T) {
 			col := c.Collection("questions")
 			col.Doc("test-q-0").Set(ctx, store.Question{
-				Q:      "Answer is out of bounds???",
-				Closed: false,
-				A:      tt.a,
-				Opts:   []string{"One answer..."},
-				Order:  0,
+				Q:     "Answer is out of bounds???",
+				A:     tt.a,
+				Opts:  []string{"One answer..."},
+				Order: 0,
 			})
 			f := fstore.New(c)
 
@@ -133,27 +141,27 @@ func TestCloseCurrentQuestion(t *testing.T) {
 	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": 1,
+	})
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Set(ctx, store.Question{
-		Q:      "Should not be used?",
-		Closed: true,
-		A:      1,
-		Opts:   []string{"skip", "avoid"},
-		Order:  0,
+		Q:     "Should not be used?",
+		A:     1,
+		Opts:  []string{"skip", "avoid"},
+		Order: 0,
 	})
 	col.Doc("test-q-1").Set(ctx, store.Question{
-		Q:      "SaaaS or SoooS?",
-		Closed: false,
-		A:      2,
-		Opts:   []string{"jej", "joj", "sas", "sos"},
-		Order:  1,
+		Q:     "SaaaS or SoooS?",
+		A:     2,
+		Opts:  []string{"jej", "joj", "sas", "sos"},
+		Order: 1,
 	})
 	col.Doc("test-q-2").Set(ctx, store.Question{
-		Q:      "Should skip in future?",
-		Closed: false,
-		A:      1,
-		Opts:   []string{"SKIP", "FUTURE"},
-		Order:  2,
+		Q:     "Should skip in future?",
+		A:     1,
+		Opts:  []string{"SKIP", "FUTURE"},
+		Order: 2,
 	})
 
 	f := fstore.New(c)
@@ -163,31 +171,31 @@ func TestCloseCurrentQuestion(t *testing.T) {
 		t.Fatalf("fstore close question: got err %v; want nil", err)
 	}
 
-	d, _ := c.Collection("questions").Doc("test-q-1").Get(ctx)
-	got := store.Question{}
-	d.DataTo(&got)
-	want := store.Question{
-		Q:      "SaaaS or SoooS?",
-		Closed: true,
-		A:      2,
-		Opts:   []string{"jej", "joj", "sas", "sos"},
-		Order:  1,
-	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("close question mismatch (-want +got):\n%s", diff)
+	d, _ := c.Collection("config").Doc("current_question").Get(ctx)
+	if got, want := d.Data()["idx"].(int64), int64(2); got != want {
+		t.Errorf("current question idx: got %v; want %v", got, want)
 	}
 }
 
-func TestCloseCurrentQuestionNoQuestionsError(t *testing.T) {
+func TestCloseCurrentQuestionIdxBiggerThanQuestionCount(t *testing.T) {
 	ctx := context.Background()
 
 	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": 1,
+	})
+	c.Collection("questions").Doc("test-q-0").Set(ctx, store.Question{
+		Q:     "Should not be used?",
+		A:     1,
+		Opts:  []string{"skip", "avoid"},
+		Order: 0,
+	})
 	f := fstore.New(c)
 
 	err := f.CloseCurrentQuestion(ctx)
-	if got, want := err, store.ErrNoQuestionsFound; !errors.Is(got, want) {
+	if got, want := err, store.ErrNoOpenQuestionsLeft; !errors.Is(got, want) {
 		t.Fatalf("fstore no questions: got err %v; want %v", got, want)
 	}
 }

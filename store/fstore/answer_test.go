@@ -18,11 +18,10 @@ func TestSaveAnswer(t *testing.T) {
 
 	c.Collection("answers").Doc("52:test-q-67").Delete(ctx)
 	c.Collection(fstore.QuestionsCollection).Doc("test-q-67").Set(ctx, store.Question{
-		Q:      "52 or 42?",
-		Closed: false,
-		A:      1,
-		Opts:   []string{"wrong", "right"},
-		Order:  0,
+		Q:     "52 or 42?",
+		A:     1,
+		Opts:  []string{"wrong", "right"},
+		Order: 0,
 	})
 
 	f := fstore.New(c)

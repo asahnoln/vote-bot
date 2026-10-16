@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/firestore/apiv1/firestorepb"
 	"github.com/asahnoln/vote-bot/store"
 )
 
@@ -33,30 +34,25 @@ func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err 
 }
 
 func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
-	q, err := f.currentQuestion(ctx)
-	if err != nil {
-		return fmt.Errorf("current question: %w", err)
+	results, _ := f.c.Collection(QuestionsCollection).NewAggregationQuery().WithCount("all").Get(ctx)
+	count := results["all"].(*firestorepb.Value).GetIntegerValue()
+	d, _ := f.c.Collection("config").Doc("current_question").Get(ctx)
+	if d.Data()["idx"].(int64) >= count {
+		return store.ErrNoOpenQuestionsLeft
 	}
 
-	_, err = f.c.Collection(QuestionsCollection).
-		Doc(q.ID).Set(ctx, map[string]any{
-		"closed": true,
-	}, firestore.MergeAll)
-	if err != nil {
-		return fmt.Errorf("current question set: %w", err)
-	}
+	f.c.Collection("config").Doc("current_question").Update(ctx, []firestore.Update{
+		{Path: "idx", Value: firestore.Increment(1)},
+	})
 
 	return nil
 }
 
-func (f *Firestore) getQuestion(ctx context.Context, closed bool, orderDir firestore.Direction) (q store.Question, err error) {
+func (f *Firestore) getQuestionByCurrentIdx(ctx context.Context, n int) (q store.Question, err error) {
+	d, _ := f.c.Collection("config").Doc("current_question").Get(ctx)
+
 	docs, err := f.c.Collection(QuestionsCollection).
-		WhereEntity(firestore.PropertyFilter{
-			Path:     ClosedPath,
-			Operator: EqualOp,
-			Value:    closed,
-		}).
-		OrderBy(OrderPath, orderDir).
+		Offset(int(d.Data()["idx"].(int64)) + n).
 		Limit(1).
 		Documents(ctx).
 		GetAll()
@@ -65,7 +61,7 @@ func (f *Firestore) getQuestion(ctx context.Context, closed bool, orderDir fires
 	}
 
 	if len(docs) == 0 {
-		return q, store.ErrNoQuestionsFound
+		return q, store.ErrNoOpenQuestionsLeft
 	}
 
 	err = docs[0].DataTo(&q)
@@ -79,5 +75,5 @@ func (f *Firestore) getQuestion(ctx context.Context, closed bool, orderDir fires
 }
 
 func (f *Firestore) currentQuestion(ctx context.Context) (q store.Question, err error) {
-	return f.getQuestion(ctx, false, firestore.Asc)
+	return f.getQuestionByCurrentIdx(ctx, 0)
 }

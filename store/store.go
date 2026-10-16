@@ -4,12 +4,11 @@ package store
 import "errors"
 
 type Question struct {
-	ID     string   `firestore:"id,omitempty"`
-	Q      string   `firestore:"q,omitempty"`
-	A      int      `firestore:"a,omitempty"`
-	Opts   []string `firestore:"opts,omitempty"`
-	Closed bool     `firestore:"closed"`
-	Order  int      `firestore:"order"`
+	ID    string   `firestore:"id,omitempty"`
+	Q     string   `firestore:"q,omitempty"`
+	A     int      `firestore:"a,omitempty"`
+	Opts  []string `firestore:"opts,omitempty"`
+	Order int      `firestore:"order"`
 }
 
 type Answer struct {
@@ -25,7 +24,7 @@ type User struct {
 }
 
 var (
-	ErrNoQuestionsFound                 = errors.New("no questions found")
+	ErrNoOpenQuestionsLeft              = errors.New("no open questions left")
 	ErrQuestionHasNoOpts                = errors.New("question has no opts")
 	ErrQuestionAnswerIndexIsOutOfBounds = errors.New("question answer index is out of bounds")
 )

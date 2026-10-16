@@ -10,7 +10,7 @@ import (
 )
 
 func (f *Firestore) LastClosedQuestion(ctx context.Context) (q store.Question, err error) {
-	q, err = f.getQuestion(ctx, true, firestore.Desc)
+	q, err = f.getQuestionByCurrentIdx(ctx, -1)
 	if err != nil {
 		return q, fmt.Errorf("get question: %w", err)
 	}
