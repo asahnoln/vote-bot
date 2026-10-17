@@ -25,8 +25,6 @@ func TestCloseHandler(t *testing.T) {
 		answersStoreStub: answersStoreStub{
 			answers: []store.Answer{
 				{UserID: 91, A: "Кто-то", Bet: 900},
-				{UserID: 56, A: "Никто", Bet: 300},
-				{UserID: 24, A: "Никто"},
 			},
 		},
 	}
@@ -55,7 +53,7 @@ func TestCloseHandler(t *testing.T) {
 		t.Errorf("msgs count: got %v; want %v", got, want)
 	}
 
-	want1 := tg.EditMessageText{
+	want := tg.EditMessageText{
 		ChatID:    91,
 		MessageID: 67521,
 		RichMessage: tg.InputRichMessage{
@@ -79,97 +77,13 @@ func TestCloseHandler(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(want1, msgs[0]); diff != "" {
+	if diff := cmp.Diff(want, msgs[0]); diff != "" {
 		t.Errorf("request mismatch (-want +got):%s", diff)
-	}
-
-	want2 := tg.EditMessageText{
-		ChatID:    56,
-		MessageID: 303,
-		RichMessage: tg.InputRichMessage{
-			Blocks: []tg.InputRichBlock{
-				{
-					Type: "paragraph",
-					Text: "X or Y?",
-				},
-				{
-					Type: "paragraph",
-					Text: "Ваш ответ: Никто",
-				},
-				{
-					Type: "paragraph",
-					Text: "Ваша ставка: 300",
-				},
-				{
-					Type: "paragraph",
-					Text: "Вопрос закрыт!",
-				},
-			},
-		},
-	}
-	if diff := cmp.Diff(want2, msgs[1]); diff != "" {
-		t.Errorf("request 2 mismatch (-want +got):%s", diff)
-	}
-
-	want3 := tg.EditMessageText{
-		ChatID:    23,
-		MessageID: 10002,
-		RichMessage: tg.InputRichMessage{
-			Blocks: []tg.InputRichBlock{
-				{
-					Type: "paragraph",
-					Text: "X or Y?",
-				},
-				{
-					Type: "paragraph",
-					Text: "Вы не успели ответить...",
-				},
-				{
-					Type: "paragraph",
-					Text: "Вопрос закрыт!",
-				},
-			},
-		},
-	}
-	if diff := cmp.Diff(want3, msgs[2]); diff != "" {
-		t.Errorf("request 3 mismatch (-want +got):%s", diff)
-	}
-
-	want4 := tg.EditMessageText{
-		ChatID:    24,
-		MessageID: 10003,
-		RichMessage: tg.InputRichMessage{
-			Blocks: []tg.InputRichBlock{
-				{
-					Type: "paragraph",
-					Text: "X or Y?",
-				},
-				{
-					Type: "paragraph",
-					Text: "Ваш ответ: Никто",
-				},
-				{
-					Type: "paragraph",
-					Text: "Вы не успели сделать ставку...",
-				},
-				{
-					Type: "paragraph",
-					Text: "Ваш ответ не засчитан.",
-				},
-				{
-					Type: "paragraph",
-					Text: "Вопрос закрыт!",
-				},
-			},
-		},
-	}
-	if diff := cmp.Diff(want4, msgs[3]); diff != "" {
-		t.Errorf("request 4 mismatch (-want +got):%s", diff)
 	}
 }
 
 func TestClosingMessage(t *testing.T) {
-	msg := tg.ClosingMessage(191, 167521, "Q or W?", "WWW!!!", 1900)
+	msg := tg.ClosingMessage(191, 167521, "Q or W?", store.Answer{A: "WWW!!!", Bet: 1900})
 	want := tg.EditMessageText{
 		ChatID:    191,
 		MessageID: 167521,
@@ -186,6 +100,68 @@ func TestClosingMessage(t *testing.T) {
 				{
 					Type: "paragraph",
 					Text: "Ваша ставка: 1900",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вопрос закрыт!",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, msg); diff != "" {
+		t.Errorf("request mismatch (-want +got):%s", diff)
+	}
+}
+
+func TestClosingMessageNoBet(t *testing.T) {
+	msg := tg.ClosingMessage(124, 110003, "Cool question", store.Answer{A: "Cool answer"})
+	want := tg.EditMessageText{
+		ChatID:    124,
+		MessageID: 110003,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Cool question",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш ответ: Cool answer",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вы не успели сделать ставку...",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш ответ не засчитан.",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вопрос закрыт!",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, msg); diff != "" {
+		t.Errorf("request mismatch (-want +got):%s", diff)
+	}
+}
+
+func TestClosingMessageNoAnswer(t *testing.T) {
+	msg := tg.ClosingMessage(123, 110002, "Question with answer?", store.Answer{})
+	want := tg.EditMessageText{
+		ChatID:    123,
+		MessageID: 110002,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Question with answer?",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вы не успели ответить...",
 				},
 				{
 					Type: "paragraph",

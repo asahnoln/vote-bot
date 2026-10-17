@@ -57,59 +57,19 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, er
 	}
 
 	for _, u := range users {
-		msg := EditMessageText{
-			RichMessage: InputRichMessage{
-				Blocks: []InputRichBlock{
-					{
-						Type: InputRichBlockParagraphType,
-						Text: q.Q,
-					},
-				},
-			},
-		}
-
-		msg.ChatID = u.UserID
-		msg.MessageID = u.LastMessageID
-
-		if a, ok := answersMap[u.UserID]; ok {
-			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
-				Type: InputRichBlockParagraphType,
-				Text: "Ваш ответ: " + a.A,
-			})
-
-			if a.Bet > 0 {
-				msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
-					Type: InputRichBlockParagraphType,
-					Text: fmt.Sprintf("Ваша ставка: %d", a.Bet),
-				})
-			} else {
-				msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
-					Type: InputRichBlockParagraphType,
-					Text: "Вы не успели сделать ставку...",
-				})
-				msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
-					Type: InputRichBlockParagraphType,
-					Text: "Ваш ответ не засчитан.",
-				})
-			}
-		} else {
-			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
-				Type: InputRichBlockParagraphType,
-				Text: "Вы не успели ответить...",
-			})
-		}
-
-		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
-			Type: InputRichBlockParagraphType,
-			Text: "Вопрос закрыт!",
-		})
-
-		msgs = append(msgs, msg)
+		msgs = append(msgs,
+			ClosingMessage(
+				u.UserID,
+				u.LastMessageID,
+				q.Q,
+				answersMap[u.UserID],
+			),
+		)
 	}
 	return msgs, nil
 }
 
-func ClosingMessage(userID int, messageID int, question string, answer string, bet int) (msg EditMessageText) {
+func ClosingMessage(userID int, messageID int, question string, a store.Answer) (msg EditMessageText) {
 	msg = EditMessageText{
 		ChatID:    userID,
 		MessageID: messageID,
@@ -119,21 +79,42 @@ func ClosingMessage(userID int, messageID int, question string, answer string, b
 					Type: InputRichBlockParagraphType,
 					Text: question,
 				},
-				{
-					Type: InputRichBlockParagraphType,
-					Text: "Ваш ответ: " + answer,
-				},
-				{
-					Type: InputRichBlockParagraphType,
-					Text: fmt.Sprintf("Ваша ставка: %d", bet),
-				},
-				{
-					Type: InputRichBlockParagraphType,
-					Text: "Вопрос закрыт!",
-				},
 			},
 		},
 	}
+
+	if a.A != "" {
+		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+			Type: InputRichBlockParagraphType,
+			Text: "Ваш ответ: " + a.A,
+		})
+
+		if a.Bet > 0 {
+			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+				Type: InputRichBlockParagraphType,
+				Text: fmt.Sprintf("Ваша ставка: %d", a.Bet),
+			})
+		} else {
+			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+				Type: InputRichBlockParagraphType,
+				Text: "Вы не успели сделать ставку...",
+			})
+			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+				Type: InputRichBlockParagraphType,
+				Text: "Ваш ответ не засчитан.",
+			})
+		}
+	} else {
+		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+			Type: InputRichBlockParagraphType,
+			Text: "Вы не успели ответить...",
+		})
+	}
+
+	msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+		Type: InputRichBlockParagraphType,
+		Text: "Вопрос закрыт!",
+	})
 
 	return
 }
