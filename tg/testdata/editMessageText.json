@@ -12,7 +12,17 @@
             "text": "edit button 1",
             "callback_data": "edit button data"
           }
-        ]
+        ],
+        "cells": [
+          [
+            {
+              "text": "edit table cell 1",
+              "align": "center"
+            }
+          ]
+        ],
+        "caption": "edit caption",
+        "is_striped": true
       }
     ]
   }

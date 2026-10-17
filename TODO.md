@@ -92,6 +92,7 @@ Each user has an account. (At the start they have 1000$)
 - [x] On reveal we have to define who lost
 - [x] If user misses a question - he looses
 - [ ] Bot commands must be scoped to admins
+- [ ] VABANK ALL IN
 - [ ] Start bot with secret token from QR
 - [ ] Check default behaviour of bot without handlers (no condition met)
 - [ ] Check out whole code and refactor things if necessary

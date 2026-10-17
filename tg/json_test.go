@@ -28,6 +28,16 @@ func TestSendRichMessageStr(t *testing.T) {
 							CallbackData: "button data",
 						},
 					},
+					Cells: [][]tg.RichBlockTableCell{
+						{
+							{
+								Text:  "table cell 1",
+								Align: "left",
+							},
+						},
+					},
+					Caption:   "caption",
+					IsStriped: true,
 				},
 			},
 		},
@@ -63,6 +73,16 @@ func TestEditMessageText(t *testing.T) {
 							CallbackData: "edit button data",
 						},
 					},
+					Cells: [][]tg.RichBlockTableCell{
+						{
+							{
+								Text:  "edit table cell 1",
+								Align: "center",
+							},
+						},
+					},
+					Caption:   "edit caption",
+					IsStriped: true,
 				},
 			},
 		},

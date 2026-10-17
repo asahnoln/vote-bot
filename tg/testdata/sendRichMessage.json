@@ -11,7 +11,17 @@
             "text": "button 1",
             "callback_data": "button data"
           }
-        ]
+        ],
+        "cells": [
+          [
+            {
+              "text": "table cell 1",
+              "align": "left"
+            }
+          ]
+        ],
+        "caption": "caption",
+        "is_striped": true
       }
     ]
   }

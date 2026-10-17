@@ -31,15 +31,23 @@ const (
 )
 
 type InputRichBlock struct {
-	Type    InputRichBlockType  `json:"type"`
-	Text    string              `json:"text"`
-	Align   Align               `json:"align"`
-	Buttons []RichMessageButton `json:"buttons"`
+	Type      InputRichBlockType     `json:"type"`
+	Text      string                 `json:"text"`
+	Align     Align                  `json:"align"`
+	Buttons   []RichMessageButton    `json:"buttons"`
+	Cells     [][]RichBlockTableCell `json:"cells"`
+	Caption   string                 `json:"caption"`
+	IsStriped bool                   `json:"is_striped"`
 }
 
 type RichMessageButton struct {
 	Text         string `json:"text"`
 	CallbackData string `json:"callback_data"`
+}
+
+type RichBlockTableCell struct {
+	Text  string `json:"text"`
+	Align Align  `json:"align"`
 }
 
 type Update struct {
