@@ -25,6 +25,11 @@ func TestUsers(t *testing.T) {
 		"user_id":         390,
 		"last_message_id": 201,
 	})
+	col.Doc("390").Set(ctx, map[string]any{
+		"user_id":         404,
+		"last_message_id": 404,
+		"lost":            true,
+	})
 
 	f := fstore.New(c)
 
