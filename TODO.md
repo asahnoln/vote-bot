@@ -85,23 +85,24 @@ Each user has an account. (At the start they have 1000$)
 - [x] Admin closes question - update latest message to stop accepting answers
 - [x] Admin sends answer and account status to all
 - [x] Robust messages (what question, answer and bet was chosen at each step and after question closing)
-- [ ] Auto register webhook?
-- [ ] Optional questions which don't count
+- [x] Can join until first nonoptional question is closed
+- [x] Refactor tests
+- [x] Fix condition on question handler
 - [ ] On reveal we have to define who lost
 - [ ] If user misses a question - he looses
-- [ ] Can join until first nonoptional question is closed
-- [ ] Check out whole code and refactor things if necessary
-- [ ] Refactor tests
-- [ ] Fix condition on question handler
-- [ ] Check default behaviour of bot without handlers (no condition met)
 - [ ] Bot commands must be scoped to admins
-- [ ] Check if question was delivered and if the command was repeated - send it if it was not delivered
 - [ ] Stop sending questions to those who lost the game
-- [ ] What if EVERYONE LOST before the end of the game??
 - [ ] Start bot with secret token from QR
+- [ ] Check default behaviour of bot without handlers (no condition met)
+- [ ] Check out whole code and refactor things if necessary
+- [ ] Refactor testing destination called
+- [ ] Part of errors can be returned to admin without problems
+- [ ] Auto register webhook?
+- [ ] Optional questions which don't count
+- [ ] Check if question was delivered and if the command was repeated - send it if it was not delivered
+- [ ] What if EVERYONE LOST before the end of the game??
 - [ ] Set webhook with secret token
 - [ ] Delete incoming user messages
-- [ ] Part of errors can be returned to admin without problems
 
 ## Flow questions
 
