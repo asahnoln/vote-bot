@@ -2,11 +2,14 @@ package fstore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
 	"cloud.google.com/go/firestore"
 	"github.com/asahnoln/vote-bot/store"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const UsersCollection = "users"
@@ -33,10 +36,14 @@ func (f *Firestore) Users(ctx context.Context) (users []store.User, err error) {
 func (f *Firestore) SaveUser(ctx context.Context, userID int) error {
 	_, err := f.c.Collection(UsersCollection).
 		Doc(strconv.Itoa(userID)).
-		Set(ctx, map[string]any{
+		Create(ctx, map[string]any{
 			"user_id": userID,
 		})
 	if err != nil {
+		if status.Code(err) == codes.AlreadyExists {
+			err = errors.Join(store.ErrUserAlreadySaved, err)
+		}
+
 		return fmt.Errorf("user %d doc: %w", userID, err)
 	}
 

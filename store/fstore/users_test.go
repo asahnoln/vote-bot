@@ -2,6 +2,7 @@ package fstore_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/asahnoln/vote-bot/store"
@@ -79,6 +80,24 @@ func TestSaveUser(t *testing.T) {
 
 	if got, want := d.Data()["user_id"].(int64), int64(67); got != want {
 		t.Errorf("got doc user id %v; want %v", got, want)
+	}
+}
+
+func TestSaveUserAlreadySavedError(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("users").Doc("52").Set(ctx, map[string]any{
+		"user_id": 52,
+	})
+
+	f := fstore.New(c)
+
+	err := f.SaveUser(ctx, 52)
+	if got, want := err, store.ErrUserAlreadySaved; !errors.Is(got, want) {
+		t.Fatalf("fstore save user: got err %v; want %v", got, want)
 	}
 }
 
