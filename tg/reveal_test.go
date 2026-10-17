@@ -57,7 +57,7 @@ func TestReveal(t *testing.T) {
 		t.Fatalf("request count: got %v; want %v", got, want)
 	}
 
-	want1 := tg.SendRichMessage{
+	want := tg.SendRichMessage{
 		ChatID: 876,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
@@ -77,17 +77,46 @@ func TestReveal(t *testing.T) {
 		},
 	}
 
-	if diff := cmp.Diff(want1, msgs[0]); diff != "" {
-		t.Errorf("send message 1 mismatch (-want +got):%s", diff)
+	if diff := cmp.Diff(want, msgs[0]); diff != "" {
+		t.Errorf("send message mismatch (-want +got):%s", diff)
 	}
+}
 
-	want2 := tg.SendRichMessage{
-		ChatID: 2345,
+func TestRevealMessage(t *testing.T) {
+	msg := tg.RevealMessage(876, "Poo or Foo?", "Foo", true, 500)
+	want := tg.SendRichMessage{
+		ChatID: 876,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Да или Нет? Правильный ответ: Да!",
+					Text: "Poo or Foo? Правильный ответ: Foo!",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вы ответили правильно!",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш текущий счет - 500.",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, msg); diff != "" {
+		t.Errorf("msg mismatch (-want +got):%s", diff)
+	}
+}
+
+func TestRevealMessageWrongAndBankrupt(t *testing.T) {
+	msg := tg.RevealMessage(877, "Saas or Jooj?", "Zheezh", false, 0)
+	want := tg.SendRichMessage{
+		ChatID: 877,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Saas or Jooj? Правильный ответ: Zheezh!",
 				},
 				{
 					Type: "paragraph",
@@ -95,13 +124,17 @@ func TestReveal(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваш текущий счет - 300.",
+					Text: "Ваш текущий счет - 0.",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вы проиграли!",
 				},
 			},
 		},
 	}
-	if diff := cmp.Diff(want2, msgs[1]); diff != "" {
-		t.Errorf("send message 2 mismatch (-want +got):%s", diff)
+	if diff := cmp.Diff(want, msg); diff != "" {
+		t.Errorf("msg mismatch (-want +got):%s", diff)
 	}
 }
 
