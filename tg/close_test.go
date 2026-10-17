@@ -168,6 +168,37 @@ func TestCloseHandler(t *testing.T) {
 	}
 }
 
+func TestClosingMessage(t *testing.T) {
+	msg := tg.ClosingMessage(191, 167521, "Q or W?", "WWW!!!", 1900)
+	want := tg.EditMessageText{
+		ChatID:    191,
+		MessageID: 167521,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Q or W?",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш ответ: WWW!!!",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваша ставка: 1900",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вопрос закрыт!",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, msg); diff != "" {
+		t.Errorf("request mismatch (-want +got):%s", diff)
+	}
+}
+
 func TestCloseHandlerUsersStoreError(t *testing.T) {
 	wantErr := errors.New("users store error")
 	spy := &closeStoreSpy{

@@ -108,3 +108,32 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, er
 	}
 	return msgs, nil
 }
+
+func ClosingMessage(userID int, messageID int, question string, answer string, bet int) (msg EditMessageText) {
+	msg = EditMessageText{
+		ChatID:    userID,
+		MessageID: messageID,
+		RichMessage: InputRichMessage{
+			Blocks: []InputRichBlock{
+				{
+					Type: InputRichBlockParagraphType,
+					Text: question,
+				},
+				{
+					Type: InputRichBlockParagraphType,
+					Text: "Ваш ответ: " + answer,
+				},
+				{
+					Type: InputRichBlockParagraphType,
+					Text: fmt.Sprintf("Ваша ставка: %d", bet),
+				},
+				{
+					Type: InputRichBlockParagraphType,
+					Text: "Вопрос закрыт!",
+				},
+			},
+		},
+	}
+
+	return
+}
