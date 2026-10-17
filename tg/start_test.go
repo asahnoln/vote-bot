@@ -5,11 +5,10 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
 	"github.com/google/go-cmp/cmp"
 )
-
-// TODO: Send him some acknowledge that he already joined
 
 func TestStartHandler(t *testing.T) {
 	spy := &usersStoreSpy{}
@@ -118,6 +117,32 @@ func TestStartHandlerQuestionStoreError(t *testing.T) {
 	_, err := h.Handle(context.Background(), tg.Update{})
 	if got, want := err, wantErr; !errors.Is(got, want) {
 		t.Errorf("got err %v; want %v", got, want)
+	}
+}
+
+func TestStartDontSaveIfUserAlreadyJoined(t *testing.T) {
+	spy := &usersStoreSpy{
+		err: store.ErrUserAlreadySaved,
+	}
+	h := tg.StartHandler{
+		Store: spy,
+	}
+
+	msgs, err := h.Handle(context.Background(), tg.Update{
+		Message: tg.Message{
+			Chat: tg.Chat{
+				ID: 202,
+			},
+			Text: "/start",
+		},
+	})
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	// TODO: What text should be used?
+	if got, want := msgs[0].(tg.SendRichMessage).RichMessage.Blocks[0].Text, "Вы уже участвуете в игре!"; got != want {
+		t.Errorf("text: got %v; want %v", got, want)
 	}
 }
 

@@ -2,7 +2,10 @@ package tg
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"github.com/asahnoln/vote-bot/store"
 )
 
 type StartStore interface {
@@ -37,7 +40,11 @@ func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, er
 		text = "Вы пропустили первый обязательный вопрос и потому не можете быть допущены к игре."
 	} else {
 		err = h.Store.SaveUser(ctx, upd.Message.Chat.ID)
-		if err != nil {
+
+		switch {
+		case errors.Is(err, store.ErrUserAlreadySaved):
+			text = "Вы уже участвуете в игре!"
+		case err != nil:
 			return nil, fmt.Errorf("save user: %w", err)
 		}
 	}

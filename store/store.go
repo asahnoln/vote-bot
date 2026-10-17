@@ -28,4 +28,5 @@ var (
 	ErrQuestionHasNoOpts                = errors.New("question has no opts")
 	ErrQuestionAnswerIndexIsOutOfBounds = errors.New("question answer index is out of bounds")
 	ErrQuestionsOffsetMustNotBeNegative = errors.New("questions offset must not be negative")
+	ErrUserAlreadySaved                 = errors.New("user already saved")
 )
