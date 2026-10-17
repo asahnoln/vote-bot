@@ -5,15 +5,15 @@ import (
 	"fmt"
 )
 
-type UserSaver interface {
+type StartStore interface {
+	FirstQuestionMissed(ctx context.Context) (bool, error)
 	SaveUser(ctx context.Context, userID int) error
 }
 
 type StartHandler struct {
-	Store UserSaver
+	Store StartStore
 }
 
-// HandleResponse implements [Handler].
 func (h *StartHandler) HandleResponse(context.Context, Message) error {
 	return nil
 }
@@ -27,9 +27,19 @@ func (h *StartHandler) Condition(upd Update) bool {
 }
 
 func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
-	err = h.Store.SaveUser(ctx, upd.Message.Chat.ID)
+	ok, err := h.Store.FirstQuestionMissed(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("save user: %w", err)
+		return nil, fmt.Errorf("first question missed: %w", err)
+	}
+
+	text := "Добро пожаловать в игру!"
+	if ok {
+		text = "Вы пропустили первый обязательный вопрос и потому не можете быть допущены к игре."
+	} else {
+		err = h.Store.SaveUser(ctx, upd.Message.Chat.ID)
+		if err != nil {
+			return nil, fmt.Errorf("save user: %w", err)
+		}
 	}
 
 	msg := SendRichMessage{
@@ -38,7 +48,7 @@ func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, er
 			Blocks: []InputRichBlock{
 				{
 					Type: InputRichBlockParagraphType,
-					Text: "Добро пожаловать в игру!",
+					Text: text,
 				},
 			},
 		},

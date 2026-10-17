@@ -9,6 +9,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// TODO: Send him some acknowledge that he already joined
+
 func TestStartHandler(t *testing.T) {
 	spy := &usersStoreSpy{}
 	h := tg.StartHandler{
@@ -27,8 +29,6 @@ func TestStartHandler(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	// TODO: Which msg to tg I need?
-	//
 	if got, want := spy.userID, 913; got != want {
 		t.Errorf("user ID save: got %d; want %d", got, want)
 	}
@@ -65,6 +65,62 @@ func TestStartHandlerStoreError(t *testing.T) {
 	}
 }
 
+func TestStartDontSaveIfQuestionMissed(t *testing.T) {
+	spy := &usersStoreSpy{
+		firstQuestionMissed: true,
+	}
+	h := tg.StartHandler{
+		Store: spy,
+	}
+
+	msgs, err := h.Handle(context.Background(), tg.Update{
+		Message: tg.Message{
+			Chat: tg.Chat{
+				ID: 111,
+			},
+			Text: "/start",
+		},
+	})
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	if got, want := spy.userID, 0; got != want {
+		t.Errorf("user ID save: got %d; want %d", got, want)
+	}
+
+	want := tg.SendRichMessage{
+		ChatID: 111,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					// TODO: Какое сообщение?
+					Text: "Вы пропустили первый обязательный вопрос и потому не можете быть допущены к игре.",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, msgs[0]); diff != "" {
+		t.Errorf("msg mismatch (-want +got):%s", diff)
+	}
+}
+
+func TestStartHandlerQuestionStoreError(t *testing.T) {
+	wantErr := errors.New("question store error")
+	spy := &usersStoreSpy{
+		questionErr: wantErr,
+	}
+	h := tg.StartHandler{
+		Store: spy,
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %v; want %v", got, want)
+	}
+}
+
 func TestStartCondition(t *testing.T) {
 	h := tg.StartHandler{}
 
@@ -90,11 +146,17 @@ func TestStartName(t *testing.T) {
 }
 
 type usersStoreSpy struct {
-	userID int
-	err    error
+	userID              int
+	firstQuestionMissed bool
+	err                 error
+	questionErr         error
 }
 
 func (s *usersStoreSpy) SaveUser(ctx context.Context, userID int) error {
 	s.userID = userID
 	return s.err
+}
+
+func (s *usersStoreSpy) FirstQuestionMissed(ctx context.Context) (bool, error) {
+	return s.firstQuestionMissed, s.questionErr
 }

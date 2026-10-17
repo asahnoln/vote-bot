@@ -66,6 +66,11 @@ func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
 	return nil
 }
 
+// TODO: Test func
+func (f *Firestore) FirstQuestionMissed(ctx context.Context) (ok bool, err error) {
+	return
+}
+
 func (f *Firestore) getQuestionByCurrentIdx(ctx context.Context, n int) (q store.Question, err error) {
 	idx, err := f.getCurrentQuestionIdx(ctx)
 	if err != nil {
