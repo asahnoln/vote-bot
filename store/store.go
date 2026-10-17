@@ -19,8 +19,9 @@ type Answer struct {
 }
 
 type User struct {
-	UserID        int `firestore:"user_id"`
-	LastMessageID int `firestore:"last_message_id"`
+	UserID        int  `firestore:"user_id"`
+	LastMessageID int  `firestore:"last_message_id"`
+	Lost          bool `firestore:"lost"`
 }
 
 var (

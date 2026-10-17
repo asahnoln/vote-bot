@@ -20,12 +20,14 @@ func TestUsers(t *testing.T) {
 	col.Doc("7829").Set(ctx, map[string]any{
 		"user_id":         7829,
 		"last_message_id": 101,
+		"lost":            false,
 	})
 	col.Doc("390").Set(ctx, map[string]any{
 		"user_id":         390,
 		"last_message_id": 201,
+		"lost":            false,
 	})
-	col.Doc("390").Set(ctx, map[string]any{
+	col.Doc("404").Set(ctx, map[string]any{
 		"user_id":         404,
 		"last_message_id": 404,
 		"lost":            true,
@@ -85,6 +87,9 @@ func TestSaveUser(t *testing.T) {
 
 	if got, want := d.Data()["user_id"].(int64), int64(67); got != want {
 		t.Errorf("got doc user id %v; want %v", got, want)
+	}
+	if got, want := d.Data()["lost"].(bool), false; got != want {
+		t.Errorf("got doc lost %v; want %v", got, want)
 	}
 }
 

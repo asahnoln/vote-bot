@@ -15,7 +15,13 @@ import (
 const UsersCollection = "users"
 
 func (f *Firestore) Users(ctx context.Context) (users []store.User, err error) {
-	docs, err := f.c.Collection(UsersCollection).Documents(ctx).GetAll()
+	docs, err := f.c.Collection(UsersCollection).
+		WhereEntity(firestore.PropertyFilter{
+			Path:     "lost",
+			Operator: EqualOp,
+			Value:    false,
+		}).
+		Documents(ctx).GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("users get all: %w", err)
 	}
@@ -36,8 +42,8 @@ func (f *Firestore) Users(ctx context.Context) (users []store.User, err error) {
 func (f *Firestore) SaveUser(ctx context.Context, userID int) error {
 	_, err := f.c.Collection(UsersCollection).
 		Doc(strconv.Itoa(userID)).
-		Create(ctx, map[string]any{
-			"user_id": userID,
+		Create(ctx, store.User{
+			UserID: userID,
 		})
 	if err != nil {
 		if status.Code(err) == codes.AlreadyExists {
