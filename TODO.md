@@ -103,6 +103,7 @@ Each user has an account. (At the start they have 1000$)
 - [ ] What if EVERYONE LOST before the end of the game??
 - [ ] Set webhook with secret token
 - [ ] Delete incoming user messages
+- [ ] Think on misclicks on commands - suddenly close a question, or send answer again etc
 
 ## Flow questions
 

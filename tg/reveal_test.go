@@ -24,17 +24,26 @@ func TestReveal(t *testing.T) {
 				{
 					UserID:  876,
 					IsRight: true,
+					Bet:     100,
 				},
 				{
 					UserID:  2345,
 					IsRight: false,
+					Bet:     200,
 				},
 				{
 					UserID:  15789,
-					IsRight: false,
+					IsRight: true,
+					Bet:     500,
 				},
 				{
 					UserID:  15790,
+					IsRight: false,
+					Bet:     700,
+				},
+				// Must be filtered out
+				{
+					UserID:  15791,
 					IsRight: false,
 				},
 			},
@@ -64,7 +73,7 @@ func TestReveal(t *testing.T) {
 	}
 
 	if diff := cmp.Diff([]int{15789, 15790}, storeSpy.lostUserStoreStub.userIDs); diff != "" {
-		t.Errorf("accounts user IDs mismatch (-want +got):%s", diff)
+		t.Errorf("lost user IDs mismatch (-want +got):%s", diff)
 	}
 
 	if got, want := len(msgs), 4; got != want {
@@ -157,6 +166,9 @@ func TestRevealWrongAnswer(t *testing.T) {
 		answersStoreStub: answersStoreStub{
 			answers: []store.Answer{{}},
 		},
+		accounts: map[int]int{
+			0: 1,
+		},
 	}}
 	data, err := h.Handle(context.Background(), tg.Update{})
 	if err != nil {
@@ -192,6 +204,9 @@ func TestRevealLostUserError(t *testing.T) {
 		},
 		lostUserStoreStub: lostUserStoreStub{
 			err: wantErr,
+		},
+		accounts: map[int]int{
+			100: 0,
 		},
 	}}
 

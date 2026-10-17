@@ -45,9 +45,14 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 		return nil, fmt.Errorf("answers: %w", err)
 	}
 
-	userIDs := make([]int, len(answers))
-	for i, a := range answers {
-		userIDs[i] = a.UserID
+	userIDs := make([]int, 0)
+	for _, a := range answers {
+		// Filter out from response messages
+		if a.Bet == 0 {
+			continue
+		}
+
+		userIDs = append(userIDs, a.UserID)
 	}
 
 	accs, err := h.Store.Accounts(ctx, userIDs)
@@ -56,7 +61,12 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 	}
 
 	for _, a := range answers {
-		acc := accs[a.UserID]
+		acc, ok := accs[a.UserID]
+		// If bet was not set - user was filtered out above
+		if !ok {
+			continue
+		}
+
 		msgs = append(
 			msgs,
 			RevealMessage(
