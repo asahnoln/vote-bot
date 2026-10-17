@@ -10,19 +10,24 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// TODO: Scope to admin
+// TODO: Make user loose if they missed the question
 func TestCloseHandler(t *testing.T) {
 	spy := &closeStoreSpy{
-		userIDs: []store.User{
-			{UserID: 91, LastMessageID: 67521},
-			{UserID: 56, LastMessageID: 303},
-			{UserID: 23, LastMessageID: 10002},
-			{UserID: 24, LastMessageID: 10003},
+		usersStoreStub: usersStoreStub{
+			users: []store.User{
+				{UserID: 91, LastMessageID: 67521},
+				{UserID: 56, LastMessageID: 303},
+				{UserID: 23, LastMessageID: 10002},
+				{UserID: 24, LastMessageID: 10003},
+			},
 		},
-		currentQuestionID: "very-good-question",
-		answers: []store.Answer{
-			{UserID: 91, A: "Кто-то", Bet: 900},
-			{UserID: 56, A: "Никто", Bet: 300},
-			{UserID: 24, A: "Никто"},
+		answersStoreStub: answersStoreStub{
+			answers: []store.Answer{
+				{UserID: 91, A: "Кто-то", Bet: 900},
+				{UserID: 56, A: "Никто", Bet: 300},
+				{UserID: 24, A: "Никто"},
+			},
 		},
 	}
 	h := tg.CloseHandler{
@@ -42,6 +47,10 @@ func TestCloseHandler(t *testing.T) {
 		t.Errorf("question closed: got %v; want %v", got, want)
 	}
 
+	if got, want := spy.answersStoreStub.questionID, "opt-q-99"; got != want {
+		t.Errorf("answers question: got %v; want %v", got, want)
+	}
+
 	if got, want := len(msgs), 4; got != want {
 		t.Errorf("msgs count: got %v; want %v", got, want)
 	}
@@ -53,7 +62,7 @@ func TestCloseHandler(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Кто это сделал?",
+					Text: "X or Y?",
 				},
 				{
 					Type: "paragraph",
@@ -81,7 +90,7 @@ func TestCloseHandler(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Кто это сделал?",
+					Text: "X or Y?",
 				},
 				{
 					Type: "paragraph",
@@ -109,7 +118,7 @@ func TestCloseHandler(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Кто это сделал?",
+					Text: "X or Y?",
 				},
 				{
 					Type: "paragraph",
@@ -133,7 +142,7 @@ func TestCloseHandler(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Кто это сделал?",
+					Text: "X or Y?",
 				},
 				{
 					Type: "paragraph",
@@ -160,9 +169,28 @@ func TestCloseHandler(t *testing.T) {
 }
 
 func TestCloseHandlerUsersStoreError(t *testing.T) {
-	wantErr := errors.New("store error")
+	wantErr := errors.New("users store error")
 	spy := &closeStoreSpy{
-		usersErr: wantErr,
+		usersStoreStub: usersStoreStub{
+			err: wantErr,
+		},
+	}
+	h := tg.CloseHandler{
+		Store: spy,
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %v; want %v", got, want)
+	}
+}
+
+func TestCloseHandlerAnswersStoreError(t *testing.T) {
+	wantErr := errors.New("answers store error")
+	spy := &closeStoreSpy{
+		answersStoreStub: answersStoreStub{
+			err: wantErr,
+		},
 	}
 	h := tg.CloseHandler{
 		Store: spy,
@@ -214,28 +242,22 @@ func TestCloseName(t *testing.T) {
 }
 
 type closeStoreSpy struct {
-	userIDs           []store.User
-	closed            bool
-	answers           []store.Answer
-	currentQuestionID string
-	err               error
-	usersErr          error
-	answersErr        error
-	curQuestionErr    error
+	questionStoreStub
+	usersStoreStub
+	answersStoreStub
+	closed bool
+	err    error
 }
 
-func (s *closeStoreSpy) CurrentQuestion(context.Context) (store.Question, error) {
-	return store.Question{
-		Q: "Кто это сделал?",
-	}, s.curQuestionErr
+type answersStoreStub struct {
+	questionID string
+	answers    []store.Answer
+	err        error
 }
 
-func (s *closeStoreSpy) Answers(ctx context.Context, questionID string) ([]store.Answer, error) {
-	return s.answers, s.answersErr
-}
-
-func (s *closeStoreSpy) Users(context.Context) ([]store.User, error) {
-	return s.userIDs, s.usersErr
+func (s *answersStoreStub) Answers(ctx context.Context, questionID string) ([]store.Answer, error) {
+	s.questionID = questionID
+	return s.answers, s.err
 }
 
 func (s *closeStoreSpy) CloseCurrentQuestion(ctx context.Context) error {

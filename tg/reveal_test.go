@@ -18,14 +18,16 @@ var revealCommandUpdate []byte
 
 func TestReveal(t *testing.T) {
 	storeSpy := &revealStoreSpy{
-		answers: []store.Answer{
-			{
-				UserID:  876,
-				IsRight: true,
-			},
-			{
-				UserID:  2345,
-				IsRight: false,
+		answersStoreStub: answersStoreStub{
+			answers: []store.Answer{
+				{
+					UserID:  876,
+					IsRight: true,
+				},
+				{
+					UserID:  2345,
+					IsRight: false,
+				},
 			},
 		},
 		accounts: map[int]int{
@@ -42,7 +44,7 @@ func TestReveal(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := storeSpy.questionID, "last-closed-q-99"; got != want {
+	if got, want := storeSpy.answersStoreStub.questionID, "last-closed-q-99"; got != want {
 		t.Errorf("question id for answer: got %q; want %q", got, want)
 	}
 
@@ -105,7 +107,9 @@ func TestReveal(t *testing.T) {
 
 func TestRevealWrongAnswer(t *testing.T) {
 	h := tg.RevealHandler{Store: &revealStoreSpy{
-		answers: []store.Answer{{}},
+		answersStoreStub: answersStoreStub{
+			answers: []store.Answer{{}},
+		},
 	}}
 	data, err := h.Handle(context.Background(), tg.Update{})
 	if err != nil {
@@ -132,7 +136,9 @@ func TestRevealLastClosedQuestionError(t *testing.T) {
 func TestRevealAnswersError(t *testing.T) {
 	wantErr := errors.New("answers error")
 	h := tg.RevealHandler{Store: &revealStoreSpy{
-		answersErr: wantErr,
+		answersStoreStub: answersStoreStub{
+			err: wantErr,
+		},
 	}}
 
 	_, err := h.Handle(context.Background(), tg.Update{})
@@ -154,13 +160,11 @@ func TestRevealAccountsError(t *testing.T) {
 }
 
 type revealStoreSpy struct {
-	questionID            string
-	answers               []store.Answer
-	accounts              map[int]int
+	answersStoreStub
 	lastClosedQuestionErr error
-	answersErr            error
-	accountsErr           error
 	userIDs               []int
+	accounts              map[int]int
+	accountsErr           error
 }
 
 func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, error) {
@@ -170,11 +174,6 @@ func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, er
 		A:    0,
 		Opts: []string{"Да", "Нет"},
 	}, s.lastClosedQuestionErr
-}
-
-func (s *revealStoreSpy) Answers(ctx context.Context, questionID string) ([]store.Answer, error) {
-	s.questionID = questionID
-	return s.answers, s.answersErr
 }
 
 func (s *revealStoreSpy) Accounts(ctx context.Context, userIDs []int) (map[int]int, error) {

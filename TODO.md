@@ -88,10 +88,10 @@ Each user has an account. (At the start they have 1000$)
 - [x] Can join until first nonoptional question is closed
 - [x] Refactor tests
 - [x] Fix condition on question handler
+- [x] Stop sending questions to those who lost the game
 - [ ] On reveal we have to define who lost
 - [ ] If user misses a question - he looses
 - [ ] Bot commands must be scoped to admins
-- [ ] Stop sending questions to those who lost the game
 - [ ] Start bot with secret token from QR
 - [ ] Check default behaviour of bot without handlers (no condition met)
 - [ ] Check out whole code and refactor things if necessary

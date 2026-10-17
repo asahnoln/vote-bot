@@ -10,6 +10,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// TODO: Limit to admins
+
 func TestQuestion(t *testing.T) {
 	upd := tg.Update{
 		Message: tg.Message{
