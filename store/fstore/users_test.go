@@ -8,6 +8,8 @@ import (
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/store/fstore"
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestUsers(t *testing.T) {
@@ -141,5 +143,52 @@ func TestSaveLastMessageID(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("user mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestSaveLostUser(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("users").Doc("2222").Set(ctx, map[string]any{
+		"user_id": 2222,
+	})
+
+	f := fstore.New(c)
+
+	err := f.SaveLostUser(ctx, 2222)
+	if err != nil {
+		t.Fatalf("fstore save lost user: got err %v; want nil", err)
+	}
+
+	d, err := c.Collection("users").Doc("2222").Get(ctx)
+	if err != nil {
+		t.Fatalf("fstore user get: got err %v; want nil", err)
+	}
+
+	got := store.User{}
+	d.DataTo(&got)
+	want := store.User{
+		UserID: 2222,
+		Lost:   true,
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("lost user mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestSaveLostUserError(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	f := fstore.New(c)
+
+	err := f.SaveLostUser(ctx, 9999)
+	if got, want := status.Code(err), codes.NotFound; err == nil || got != want {
+		t.Fatalf("fstore save lost user: got err %v; want %v", got, want)
 	}
 }

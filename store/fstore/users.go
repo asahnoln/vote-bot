@@ -71,5 +71,14 @@ func (f *Firestore) SaveLastMessageID(ctx context.Context, userID int, msgID int
 
 // TODO: Implement
 func (f *Firestore) SaveLostUser(ctx context.Context, userID int) error {
+	_, err := f.c.Collection(UsersCollection).
+		Doc(strconv.Itoa(userID)).
+		Update(ctx, []firestore.Update{
+			{Path: "lost", Value: true},
+		})
+	if err != nil {
+		return fmt.Errorf("users update: %w", err)
+	}
+
 	return nil
 }
