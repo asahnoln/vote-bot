@@ -89,8 +89,8 @@ Each user has an account. (At the start they have 1000$)
 - [x] Refactor tests
 - [x] Fix condition on question handler
 - [x] Stop sending questions to those who lost the game
-- [ ] On reveal we have to define who lost
-- [ ] If user misses a question - he looses
+- [x] On reveal we have to define who lost
+- [x] If user misses a question - he looses
 - [ ] Bot commands must be scoped to admins
 - [ ] Start bot with secret token from QR
 - [ ] Check default behaviour of bot without handlers (no condition met)
