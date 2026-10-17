@@ -270,3 +270,51 @@ func TestCloseCurrentQuestionIdxBiggerThanQuestionCount(t *testing.T) {
 		t.Fatalf("fstore no questions: got err %v; want %v", got, want)
 	}
 }
+
+func TestFirstQuestionMissed(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	tests := []struct {
+		idx  int
+		want bool
+	}{
+		{1, true},
+		{0, false},
+	}
+
+	f := fstore.New(c)
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("index %d", tt.idx), func(t *testing.T) {
+			c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+				"idx": tt.idx,
+			})
+
+			ok, err := f.FirstQuestionMissed(ctx)
+			if err != nil {
+				t.Fatalf("fstore question: got err %v; want nil", err)
+			}
+
+			if got, want := ok, tt.want; got != want {
+				t.Errorf("fstore question missed: got err %v; want %v", got, want)
+			}
+		})
+	}
+}
+
+func TestFirstQuestionMissedError(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	f := fstore.New(c)
+
+	_, err := f.FirstQuestionMissed(ctx)
+	if got, want := status.Code(err), codes.NotFound; err == nil || got != want {
+		t.Fatalf("fstore first question missed idx: got err %v; want %v", got, want)
+	}
+}
