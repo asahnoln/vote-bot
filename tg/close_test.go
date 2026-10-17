@@ -78,7 +78,7 @@ func TestCloseHandler(t *testing.T) {
 		t.Errorf("request mismatch (-want +got):%s", diff)
 	}
 
-	if diff := cmp.Diff([]int{23, 24}, spy.lostUserIDs); diff != "" {
+	if diff := cmp.Diff([]int{23, 24}, spy.lostUserStoreStub.userIDs); diff != "" {
 		t.Errorf("lost user IDs mismatch (-want +got):%s", diff)
 	}
 }
@@ -201,7 +201,9 @@ func TestCloseHandlerLostUserStoreError(t *testing.T) {
 				{},
 			},
 		},
-		lostUserErr: wantErr,
+		lostUserStoreStub: lostUserStoreStub{
+			err: wantErr,
+		},
 	}
 	h := tg.CloseHandler{
 		Store: spy,
@@ -273,21 +275,14 @@ type closeStoreSpy struct {
 	questionStoreStub
 	usersStoreStub
 	answersStoreStub
+	lostUserStoreStub
 	closed bool
 	err    error
-
-	lostUserIDs []int
-	lostUserErr error
 }
 
 func (s *closeStoreSpy) CloseCurrentQuestion(ctx context.Context) error {
 	s.closed = true
 	return s.err
-}
-
-func (s *closeStoreSpy) SaveLostUser(ctx context.Context, userID int) error {
-	s.lostUserIDs = append(s.lostUserIDs, userID)
-	return s.lostUserErr
 }
 
 type answersStoreStub struct {
@@ -299,4 +294,14 @@ type answersStoreStub struct {
 func (s *answersStoreStub) Answers(ctx context.Context, questionID string) ([]store.Answer, error) {
 	s.questionID = questionID
 	return s.answers, s.err
+}
+
+type lostUserStoreStub struct {
+	userIDs []int
+	err     error
+}
+
+func (s *lostUserStoreStub) SaveLostUser(ctx context.Context, userID int) error {
+	s.userIDs = append(s.userIDs, userID)
+	return s.err
 }

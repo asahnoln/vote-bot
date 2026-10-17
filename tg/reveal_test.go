@@ -16,6 +16,7 @@ import (
 //go:embed testdata/reveal_command_update.json
 var revealCommandUpdate []byte
 
+// TODO: Save lost user if their balance is 0 or less
 func TestReveal(t *testing.T) {
 	storeSpy := &revealStoreSpy{
 		answersStoreStub: answersStoreStub{
@@ -28,11 +29,21 @@ func TestReveal(t *testing.T) {
 					UserID:  2345,
 					IsRight: false,
 				},
+				{
+					UserID:  15789,
+					IsRight: false,
+				},
+				{
+					UserID:  15790,
+					IsRight: false,
+				},
 			},
 		},
 		accounts: map[int]int{
-			876:  500,
-			2345: 300,
+			876:   500,
+			2345:  300,
+			15789: 0,
+			15790: -200,
 		},
 	}
 	h := &tg.RevealHandler{Store: storeSpy}
@@ -48,12 +59,15 @@ func TestReveal(t *testing.T) {
 		t.Errorf("question id for answer: got %q; want %q", got, want)
 	}
 
-	wantUIDs := []int{876, 2345}
-	if diff := cmp.Diff(wantUIDs, storeSpy.userIDs); diff != "" {
+	if diff := cmp.Diff([]int{876, 2345, 15789, 15790}, storeSpy.userIDs); diff != "" {
 		t.Errorf("accounts user IDs mismatch (-want +got):%s", diff)
 	}
 
-	if got, want := len(msgs), 2; got != want {
+	if diff := cmp.Diff([]int{15789, 15790}, storeSpy.lostUserStoreStub.userIDs); diff != "" {
+		t.Errorf("accounts user IDs mismatch (-want +got):%s", diff)
+	}
+
+	if got, want := len(msgs), 4; got != want {
 		t.Fatalf("request count: got %v; want %v", got, want)
 	}
 
@@ -194,6 +208,7 @@ func TestRevealAccountsError(t *testing.T) {
 
 type revealStoreSpy struct {
 	answersStoreStub
+	lostUserStoreStub
 	lastClosedQuestionErr error
 	userIDs               []int
 	accounts              map[int]int

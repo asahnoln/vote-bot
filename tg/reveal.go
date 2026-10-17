@@ -55,32 +55,8 @@ func (r *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 	}
 
 	for _, a := range answers {
-		rightMsg := "Вы ответили правильно!"
-		if !a.IsRight {
-			rightMsg = "Вы ответили неправильно."
-		}
-
-		msg := SendRichMessage{
-			RichMessage: InputRichMessage{
-				Blocks: []InputRichBlock{
-					{
-						Type: InputRichBlockParagraphType,
-						Text: fmt.Sprintf("%s Правильный ответ: %s!", q.Q, q.Opts[q.A]),
-					},
-					{
-						Type: InputRichBlockParagraphType,
-						Text: rightMsg,
-					},
-					{
-						Type: InputRichBlockParagraphType,
-						Text: fmt.Sprintf("Ваш текущий счет - %d.", accs[a.UserID]),
-					},
-				},
-			},
-		}
-
-		msg.ChatID = a.UserID
-		msgs = append(msgs, msg)
+		msgs = append(msgs,
+			RevealMessage(a.UserID, q.Q, q.Opts[q.A], a.IsRight, accs[a.UserID]))
 	}
 
 	return msgs, nil

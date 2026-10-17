@@ -7,12 +7,16 @@ import (
 	"github.com/asahnoln/vote-bot/store"
 )
 
+type LostUserSaver interface {
+	SaveLostUser(ctx context.Context, userID int) error
+}
+
 type CloseStore interface {
 	Userser
 	CurrentQuestioner
 	Answerser
+	LostUserSaver
 	CloseCurrentQuestion(ctx context.Context) error
-	SaveLostUser(ctx context.Context, userID int) error
 }
 
 type CloseHandler struct {
