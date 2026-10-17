@@ -16,7 +16,7 @@ import (
 //go:embed testdata/reveal_command_update.json
 var revealCommandUpdate []byte
 
-// TODO: Save lost user if their balance is 0 or less
+// TODO: Scope to admin
 func TestReveal(t *testing.T) {
 	storeSpy := &revealStoreSpy{
 		answersStoreStub: answersStoreStub{
@@ -180,6 +180,27 @@ func TestRevealLastClosedQuestionError(t *testing.T) {
 	}
 }
 
+func TestRevealLostUserError(t *testing.T) {
+	wantErr := errors.New("lost user error")
+	h := tg.RevealHandler{Store: &revealStoreSpy{
+		answersStoreStub: answersStoreStub{
+			answers: []store.Answer{
+				{
+					UserID: 100,
+				},
+			},
+		},
+		lostUserStoreStub: lostUserStoreStub{
+			err: wantErr,
+		},
+	}}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %q; want %q", got, want)
+	}
+}
+
 func TestRevealAnswersError(t *testing.T) {
 	wantErr := errors.New("answers error")
 	h := tg.RevealHandler{Store: &revealStoreSpy{
@@ -203,6 +224,25 @@ func TestRevealAccountsError(t *testing.T) {
 	_, err := h.Handle(context.Background(), tg.Update{})
 	if got, want := err, wantErr; !errors.Is(got, want) {
 		t.Errorf("got err %q; want %q", got, want)
+	}
+}
+
+func TestRevealCondition(t *testing.T) {
+	h := tg.RevealHandler{}
+
+	ok := h.Condition(tg.Update{
+		Message: tg.Message{
+			Text: "/sendanswer",
+		},
+	})
+
+	if got, want := ok, true; got != want {
+		t.Errorf("reveal true condition: got %v; want %v", got, want)
+	}
+
+	ok = h.Condition(tg.Update{})
+	if got, want := ok, false; got != want {
+		t.Errorf("reveal false condition: got %v; want %v", got, want)
 	}
 }
 

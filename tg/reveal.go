@@ -13,6 +13,7 @@ type Answerser interface {
 
 type RevealStore interface {
 	Answerser
+	LostUserSaver
 	LastClosedQuestion(context.Context) (store.Question, error)
 	Accounts(ctx context.Context, userIDs []int) (map[int]int, error)
 }
@@ -21,25 +22,25 @@ type RevealHandler struct {
 	Store RevealStore
 }
 
-func (r *RevealHandler) HandleResponse(context.Context, Message) error {
+func (h *RevealHandler) HandleResponse(context.Context, Message) error {
 	return nil
 }
 
-func (r *RevealHandler) Name() string {
+func (h *RevealHandler) Name() string {
 	return "reveal"
 }
 
-func (r *RevealHandler) Condition(upd Update) bool {
+func (h *RevealHandler) Condition(upd Update) bool {
 	return upd.Message.Text == "/sendanswer"
 }
 
-func (r *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
-	q, err := r.Store.LastClosedQuestion(ctx)
+func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
+	q, err := h.Store.LastClosedQuestion(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("last closed question: %w", err)
 	}
 
-	answers, err := r.Store.Answers(ctx, q.ID)
+	answers, err := h.Store.Answers(ctx, q.ID)
 	if err != nil {
 		return nil, fmt.Errorf("answers: %w", err)
 	}
@@ -49,14 +50,30 @@ func (r *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 		userIDs[i] = a.UserID
 	}
 
-	accs, err := r.Store.Accounts(ctx, userIDs)
+	accs, err := h.Store.Accounts(ctx, userIDs)
 	if err != nil {
 		return nil, fmt.Errorf("account: %w", err)
 	}
 
 	for _, a := range answers {
-		msgs = append(msgs,
-			RevealMessage(a.UserID, q.Q, q.Opts[q.A], a.IsRight, accs[a.UserID]))
+		acc := accs[a.UserID]
+		msgs = append(
+			msgs,
+			RevealMessage(
+				a.UserID,
+				q.Q,
+				q.Opts[q.A],
+				a.IsRight,
+				acc,
+			),
+		)
+
+		if acc <= 0 {
+			err := h.Store.SaveLostUser(ctx, a.UserID)
+			if err != nil {
+				return nil, fmt.Errorf("save lost user %d: %w", a.UserID, err)
+			}
+		}
 	}
 
 	return msgs, nil
