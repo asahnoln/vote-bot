@@ -11,7 +11,6 @@ import (
 )
 
 // TODO: Scope to admin
-// TODO: Make user loose if they missed the question
 func TestCloseHandler(t *testing.T) {
 	spy := &closeStoreSpy{
 		usersStoreStub: usersStoreStub{
@@ -25,6 +24,8 @@ func TestCloseHandler(t *testing.T) {
 		answersStoreStub: answersStoreStub{
 			answers: []store.Answer{
 				{UserID: 91, A: "Кто-то", Bet: 900},
+				{UserID: 56, A: "Кто-то", Bet: 500},
+				{UserID: 23, A: "Кто-то"},
 			},
 		},
 	}
@@ -32,11 +33,7 @@ func TestCloseHandler(t *testing.T) {
 		Store: spy,
 	}
 
-	msgs, err := h.Handle(context.Background(), tg.Update{
-		Message: tg.Message{
-			Text: "/closequestion",
-		},
-	})
+	msgs, err := h.Handle(context.Background(), tg.Update{})
 	if err != nil {
 		t.Fatalf("got err %v; want nil", err)
 	}
@@ -79,6 +76,10 @@ func TestCloseHandler(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, msgs[0]); diff != "" {
 		t.Errorf("request mismatch (-want +got):%s", diff)
+	}
+
+	if diff := cmp.Diff([]int{23, 24}, spy.lostUserIDs); diff != "" {
+		t.Errorf("lost user IDs mismatch (-want +got):%s", diff)
 	}
 }
 
@@ -192,6 +193,26 @@ func TestCloseHandlerUsersStoreError(t *testing.T) {
 	}
 }
 
+func TestCloseHandlerLostUserStoreError(t *testing.T) {
+	wantErr := errors.New("lost user store error")
+	spy := &closeStoreSpy{
+		usersStoreStub: usersStoreStub{
+			users: []store.User{
+				{},
+			},
+		},
+		lostUserErr: wantErr,
+	}
+	h := tg.CloseHandler{
+		Store: spy,
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %v; want %v", got, want)
+	}
+}
+
 func TestCloseHandlerAnswersStoreError(t *testing.T) {
 	wantErr := errors.New("answers store error")
 	spy := &closeStoreSpy{
@@ -254,6 +275,19 @@ type closeStoreSpy struct {
 	answersStoreStub
 	closed bool
 	err    error
+
+	lostUserIDs []int
+	lostUserErr error
+}
+
+func (s *closeStoreSpy) CloseCurrentQuestion(ctx context.Context) error {
+	s.closed = true
+	return s.err
+}
+
+func (s *closeStoreSpy) SaveLostUser(ctx context.Context, userID int) error {
+	s.lostUserIDs = append(s.lostUserIDs, userID)
+	return s.lostUserErr
 }
 
 type answersStoreStub struct {
@@ -265,9 +299,4 @@ type answersStoreStub struct {
 func (s *answersStoreStub) Answers(ctx context.Context, questionID string) ([]store.Answer, error) {
 	s.questionID = questionID
 	return s.answers, s.err
-}
-
-func (s *closeStoreSpy) CloseCurrentQuestion(ctx context.Context) error {
-	s.closed = true
-	return s.err
 }

@@ -12,6 +12,7 @@ type CloseStore interface {
 	CurrentQuestioner
 	Answerser
 	CloseCurrentQuestion(ctx context.Context) error
+	SaveLostUser(ctx context.Context, userID int) error
 }
 
 type CloseHandler struct {
@@ -57,14 +58,22 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, er
 	}
 
 	for _, u := range users {
+		a := answersMap[u.UserID]
 		msgs = append(msgs,
 			ClosingMessage(
 				u.UserID,
 				u.LastMessageID,
 				q.Q,
-				answersMap[u.UserID],
+				a,
 			),
 		)
+
+		if a.Bet == 0 { // Works for both missing answer and bet
+			err := h.Store.SaveLostUser(ctx, u.UserID)
+			if err != nil {
+				return nil, fmt.Errorf("save lost user %d: %w", u.UserID, err)
+			}
+		}
 	}
 	return msgs, nil
 }
