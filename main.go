@@ -42,6 +42,7 @@ func main() {
 	b.Handle(&tg.BetHandler{Store: store})
 	b.Handle(&tg.CloseHandler{Store: store})
 	b.Handle(&tg.RevealHandler{Store: store})
+	b.Handle(&tg.StatsRichestHandler{Store: store})
 
 	// TODO: Create http server for context
 	err = http.ListenAndServe(":8080", b)

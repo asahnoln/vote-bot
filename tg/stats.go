@@ -15,6 +15,14 @@ type StatsRichestHandler struct {
 	Store RichestUserser
 }
 
+func (h *StatsRichestHandler) Name() string {
+	return "stats_richestusers"
+}
+
+func (h *StatsRichestHandler) Condition(upd Update) bool {
+	return upd.Message.Text == "/statsrichestusers"
+}
+
 func (h *StatsRichestHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
 	users, err := h.Store.RichestUsers(ctx)
 	if err != nil {
@@ -42,4 +50,8 @@ func (h *StatsRichestHandler) Handle(ctx context.Context, upd Update) (msgs []UR
 	}
 	msgs = append(msgs, msg)
 	return msgs, nil
+}
+
+func (h *StatsRichestHandler) HandleResponse(context.Context, Message) error {
+	return nil
 }

@@ -74,6 +74,35 @@ func TestStatsRichestStoreErr(t *testing.T) {
 	}
 }
 
+func TestStatsRichestCondition(t *testing.T) {
+	h := tg.StatsRichestHandler{}
+
+	ok := h.Condition(tg.Update{
+		Message: tg.Message{
+			Text: "/statsrichestusers",
+		},
+	})
+
+	if got, want := ok, true; got != want {
+		t.Errorf("stats richest users condition: got %v; want %v", got, want)
+	}
+
+	ok = h.Condition(tg.Update{})
+	if got, want := ok, false; got != want {
+		t.Errorf("stats richest users false condition: got %v; want %v", got, want)
+	}
+}
+
+func TestStatsRichestUsersName(t *testing.T) {
+	h := tg.StatsRichestHandler{}
+
+	n := h.Name()
+
+	if got, want := n, "stats_richestusers"; got != want {
+		t.Errorf("got name %q; want %q", got, want)
+	}
+}
+
 type richestStoreStub struct {
 	err error
 }
