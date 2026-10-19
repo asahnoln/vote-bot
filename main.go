@@ -30,12 +30,12 @@ func main() {
 	errCh := make(chan error)
 	go func() {
 		for err := range errCh {
+			slog.ErrorContext(ctx, "bot", "err", err)
 			if err := sendErrorMsgsToAdmins(ctx, dest, err); err != nil {
 				if err != nil {
 					slog.ErrorContext(ctx, "send error to telegram", "err", err)
 				}
 			}
-			slog.ErrorContext(ctx, "bot", "err", err)
 		}
 	}()
 
@@ -98,7 +98,7 @@ func setBotCommands(ctx context.Context, dest tg.Dest) error {
 	return nil
 }
 
-func sendErrorMsgsToAdmins(ctx context.Context, dest tg.Dest, err error) error {
+func sendErrorMsgsToAdmins(ctx context.Context, dest tg.Dest, errToSend error) error {
 	adminIDs := os.Getenv("ADMIN_IDS")
 	ids := strings.Split(adminIDs, ",")
 	for _, id := range ids {
@@ -113,7 +113,7 @@ func sendErrorMsgsToAdmins(ctx context.Context, dest tg.Dest, err error) error {
 				Blocks: []tg.InputRichBlock{
 					{
 						Type: tg.InputRichBlockParagraphType,
-						Text: fmt.Sprintf("Ошибка! %v", err),
+						Text: fmt.Sprintf("Ошибка! %v", errToSend),
 					},
 				},
 			},
