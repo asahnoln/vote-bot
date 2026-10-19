@@ -307,7 +307,7 @@ type destSpy struct {
 	returnMsg tg.Message
 }
 
-func (d *destSpy) Send(ctx context.Context, data tg.URLer) (m tg.Message, err error) {
+func (d *destSpy) Send(ctx context.Context, data tg.URLer) (m any, err error) {
 	d.got = append(d.got, data)
 	return d.returnMsg, d.err
 }

@@ -9,11 +9,6 @@ import (
 	"net/http"
 )
 
-const (
-	SendRichMessageMethod = "sendRichMessage"
-	EditMessageTextMethod = "editMessageText"
-)
-
 type Dest struct {
 	URL string
 }
@@ -44,7 +39,7 @@ func (EditMessageText) URL() string {
 	return "editMessageText"
 }
 
-func (d Dest) Send(ctx context.Context, data URLer) (m Message, err error) {
+func (d Dest) Send(ctx context.Context, data URLer) (m any, err error) {
 	if data == nil {
 		return
 	}
@@ -80,6 +75,21 @@ func (d Dest) Send(ctx context.Context, data URLer) (m Message, err error) {
 
 	if !resp.OK {
 		return m, fmt.Errorf("tg srv not ok: %s", resp.Description)
+	}
+
+	if _, ok := resp.Result.(map[string]any); ok {
+		data, err := json.Marshal(resp.Result)
+		if err != nil {
+			return m, fmt.Errorf("result marshal: %w", err)
+		}
+
+		msg := Message{}
+		err = json.Unmarshal(data, &msg)
+		if err != nil {
+			return m, fmt.Errorf("result marshal: %w", err)
+		}
+
+		resp.Result = msg
 	}
 
 	return resp.Result, nil

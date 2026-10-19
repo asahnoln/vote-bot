@@ -77,11 +77,11 @@ type Chat struct {
 type Response struct {
 	OK          bool
 	Description string
-	Result      Message
+	Result      any
 }
 
 type Sender interface {
-	Send(ctx context.Context, data URLer) (Message, error)
+	Send(ctx context.Context, data URLer) (any, error)
 }
 
 type Bot struct {
@@ -145,7 +145,7 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		err = handler.HandleResponse(ctx, resp)
+		err = handler.HandleResponse(ctx, resp.(Message))
 		if err != nil {
 			b.error(fmt.Errorf("dest resp save: %w", err), w, http.StatusInternalServerError)
 			break
