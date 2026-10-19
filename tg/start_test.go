@@ -2,6 +2,7 @@ package tg_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -16,24 +17,22 @@ func TestStartHandler(t *testing.T) {
 		Store: spy,
 	}
 
-	msgs, err := h.Handle(context.Background(), tg.Update{
-		Message: tg.Message{
-			Chat: tg.Chat{
-				ID: 913,
-			},
-			Text: "/start",
-		},
-	})
+	upd := tg.Update{}
+	json.Unmarshal(revealCommandUpdate, &upd)
+	msgs, err := h.Handle(context.Background(), upd)
 	if err != nil {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := spy.userID, 913; got != want {
+	if got, want := spy.userID, 876; got != want {
 		t.Errorf("user ID save: got %d; want %d", got, want)
+	}
+	if got, want := spy.name, "Артур Асланян @asahnoln"; got != want {
+		t.Errorf("user name save: got %q; want %q", got, want)
 	}
 
 	want := tg.SendRichMessage{
-		ChatID: 913,
+		ChatID: 876,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
 				{
@@ -172,13 +171,15 @@ func TestStartName(t *testing.T) {
 
 type usersStoreSpy struct {
 	userID              int
+	name                string
 	firstQuestionMissed bool
 	err                 error
 	questionErr         error
 }
 
-func (s *usersStoreSpy) SaveUser(ctx context.Context, userID int) error {
+func (s *usersStoreSpy) SaveUser(ctx context.Context, userID int, name string) error {
 	s.userID = userID
+	s.name = name
 	return s.err
 }
 

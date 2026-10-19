@@ -53,7 +53,6 @@ func TestSendRichMessageStr(t *testing.T) {
 	}
 }
 
-//
 //go:embed testdata/editMessageText.json
 var editMessageText string
 

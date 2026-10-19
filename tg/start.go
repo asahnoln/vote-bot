@@ -10,7 +10,7 @@ import (
 
 type StartStore interface {
 	FirstQuestionMissed(ctx context.Context) (bool, error)
-	SaveUser(ctx context.Context, userID int) error
+	SaveUser(ctx context.Context, userID int, name string) error
 }
 
 type StartHandler struct {
@@ -39,7 +39,11 @@ func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, er
 	if ok {
 		text = "Вы пропустили первый обязательный вопрос и потому не можете быть допущены к игре."
 	} else {
-		err = h.Store.SaveUser(ctx, upd.Message.Chat.ID)
+		err = h.Store.SaveUser(
+			ctx,
+			upd.Message.Chat.ID,
+			fmt.Sprintf("%s %s @%s", upd.Message.Chat.FirstName, upd.Message.Chat.LastName, upd.Message.Chat.Username),
+		)
 
 		switch {
 		case errors.Is(err, store.ErrUserAlreadySaved):

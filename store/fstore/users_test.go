@@ -77,7 +77,7 @@ func TestSaveUser(t *testing.T) {
 
 	f := fstore.New(c)
 
-	err := f.SaveUser(ctx, 67)
+	err := f.SaveUser(ctx, 67, "Cool name")
 	if err != nil {
 		t.Fatalf("fstore save user: got err %v; want nil", err)
 	}
@@ -93,6 +93,9 @@ func TestSaveUser(t *testing.T) {
 	if got, want := d.Data()["lost"].(bool), false; got != want {
 		t.Errorf("got doc lost %v; want %v", got, want)
 	}
+	if got, want := d.Data()["name"].(string), "Cool name"; got != want {
+		t.Errorf("got doc name %q; want %q", got, want)
+	}
 }
 
 func TestSaveUserAlreadySavedError(t *testing.T) {
@@ -107,7 +110,7 @@ func TestSaveUserAlreadySavedError(t *testing.T) {
 
 	f := fstore.New(c)
 
-	err := f.SaveUser(ctx, 52)
+	err := f.SaveUser(ctx, 52, "wow")
 	if got, want := err, store.ErrUserAlreadySaved; !errors.Is(got, want) {
 		t.Fatalf("fstore save user: got err %v; want %v", got, want)
 	}
@@ -257,3 +260,31 @@ func TestRichestUsers(t *testing.T) {
 		t.Errorf("richest users mismatch (-want +got):\n%s", diff)
 	}
 }
+
+func TestRichestUsersNoUsersStop(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	f := fstore.New(c)
+
+	_, err := f.RichestUsers(ctx)
+	if err != nil {
+		t.Fatalf("fstore richest users: got err %v; want nil", err)
+	}
+}
+
+// func TestRichestUsersNoUsersStop(t *testing.T) {
+// 	ctx := context.Background()
+//
+// 	c := firestoreMemoryEmulatorClient(t, ctx)
+// 	resetDB(ctx, c)
+//
+// 	f := fstore.New(c)
+//
+// 	_, err := f.RichestUsers(ctx)
+// 	if got, want := status.Code(err), codes.NotFound; err == nil || got != want {
+// 		t.Fatalf("fstore richest users: got err %v; want %v", got, want)
+// 	}
+// }

@@ -40,11 +40,12 @@ func (f *Firestore) Users(ctx context.Context) (users []store.User, err error) {
 	return users, nil
 }
 
-func (f *Firestore) SaveUser(ctx context.Context, userID int) error {
+func (f *Firestore) SaveUser(ctx context.Context, userID int, name string) error {
 	_, err := f.c.Collection(UsersCollection).
 		Doc(strconv.Itoa(userID)).
 		Create(ctx, store.User{
 			UserID: userID,
+			Name:   name,
 		})
 	if err != nil {
 		if status.Code(err) == codes.AlreadyExists {
@@ -85,7 +86,14 @@ func (f *Firestore) SaveLostUser(ctx context.Context, userID int) error {
 
 // TODO: This is very inefficient (3 loops!), gotta move data around...
 func (f *Firestore) RichestUsers(ctx context.Context) ([]store.User, error) {
-	users, _ := f.Users(ctx)
+	users, err := f.Users(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("users: %w", err)
+	}
+
+	if len(users) == 0 {
+		return nil, nil
+	}
 
 	uIDs := make([]int, len(users))
 	for i, u := range users {
@@ -119,9 +127,5 @@ func (f *Firestore) RichestUsers(ctx context.Context) ([]store.User, error) {
 		n += 1
 	}
 
-	// want := []store.User{
-	// 	{UserID: 2, Name: "Richest and won 1", Acc: 10000},
-	// 	{UserID: 3, Name: "Richest and won 2", Acc: 10000},
-	// }
 	return users[:n], nil
 }

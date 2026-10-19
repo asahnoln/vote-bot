@@ -68,7 +68,10 @@ type Message struct {
 }
 
 type Chat struct {
-	ID int
+	ID        int
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Username  string
 }
 
 type Response struct {
