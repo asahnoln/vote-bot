@@ -15,7 +15,6 @@ import (
 
 const UsersCollection = "users"
 
-// TODO: Implement
 func (f *Firestore) AllUsers(ctx context.Context) (users []store.User, err error) {
 	return f.users(ctx)
 }
