@@ -12,6 +12,40 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func TestAllUsers(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	col := c.Collection("users")
+	col.Doc("7829").Set(ctx, map[string]any{
+		"user_id":         7829,
+		"last_message_id": 101,
+		"lost":            false,
+	})
+	col.Doc("404").Set(ctx, map[string]any{
+		"user_id":         404,
+		"last_message_id": 404,
+		"lost":            true,
+	})
+
+	f := fstore.New(c)
+
+	uIDs, err := f.AllUsers(ctx)
+	if err != nil {
+		t.Fatalf("fstore users: got err %v; want nil", err)
+	}
+
+	want := []store.User{
+		{UserID: 404, LastMessageID: 404, Lost: true},
+		{UserID: 7829, LastMessageID: 101},
+	}
+	if diff := cmp.Diff(want, uIDs); diff != "" {
+		t.Errorf("all user IDs mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestUsers(t *testing.T) {
 	ctx := context.Background()
 
