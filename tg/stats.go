@@ -7,12 +7,13 @@ import (
 	"github.com/asahnoln/vote-bot/store"
 )
 
-type RichestUserser interface {
+type StatsRichestStore interface {
+	AllUsers(ctx context.Context) ([]store.User, error)
 	RichestUsers(ctx context.Context) ([]store.User, error)
 }
 
 type StatsRichestHandler struct {
-	Store RichestUserser
+	Store StatsRichestStore
 }
 
 func (h *StatsRichestHandler) Name() string {
@@ -24,13 +25,14 @@ func (h *StatsRichestHandler) Condition(upd Update) bool {
 }
 
 func (h *StatsRichestHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
-	users, err := h.Store.RichestUsers(ctx)
+	allUsers, _ := h.Store.AllUsers(ctx)
+
+	richestUsers, err := h.Store.RichestUsers(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("richest users: %w", err)
 	}
 
 	msg := SendRichMessage{
-		ChatID: 500,
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{
 				{
@@ -42,13 +44,18 @@ func (h *StatsRichestHandler) Handle(ctx context.Context, upd Update) (msgs []UR
 		},
 	}
 
-	for _, u := range users {
+	for _, u := range richestUsers {
 		msg.RichMessage.Blocks[0].Cells = append(msg.RichMessage.Blocks[0].Cells, []RichBlockTableCell{
 			{Text: u.Name, Align: AlignCenter},
 			{Text: fmt.Sprintf("%d$", u.Acc), Align: AlignCenter},
 		})
 	}
-	msgs = append(msgs, msg)
+
+	for _, u := range allUsers {
+		msg.ChatID = u.UserID
+		msgs = append(msgs, msg)
+	}
+
 	return msgs, nil
 }
 

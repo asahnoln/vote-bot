@@ -20,6 +20,10 @@ func TestStatsRichest(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
+	if got, want := len(msgs), 3; got != want {
+		t.Fatalf("msg count: got %v; want %v", got, want)
+	}
+
 	want := tg.SendRichMessage{
 		ChatID: 500,
 		RichMessage: tg.InputRichMessage{
@@ -57,6 +61,10 @@ func TestStatsRichest(t *testing.T) {
 
 	if diff := cmp.Diff(want, msgs[0]); diff != "" {
 		t.Errorf("send rich message mismatch (-want +got):%s", diff)
+	}
+
+	if got, want := msgs[1].(tg.SendRichMessage).ChatID, 501; got != want {
+		t.Errorf("2nd msg chat id: got %v; want %v", got, want)
 	}
 }
 
@@ -104,7 +112,16 @@ func TestStatsRichestUsersName(t *testing.T) {
 }
 
 type richestStoreStub struct {
-	err error
+	err      error
+	usersErr error
+}
+
+func (s *richestStoreStub) AllUsers(context.Context) ([]store.User, error) {
+	return []store.User{
+		{UserID: 500},
+		{UserID: 501},
+		{UserID: 502},
+	}, s.usersErr
 }
 
 func (s *richestStoreStub) RichestUsers(context.Context) ([]store.User, error) {
