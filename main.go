@@ -30,12 +30,12 @@ func main() {
 	errCh := make(chan error)
 	go func() {
 		for err := range errCh {
-			slog.ErrorContext(ctx, "bot", "err", err)
 			if err := sendErrorMsgsToAdmins(ctx, dest, err); err != nil {
 				if err != nil {
 					slog.ErrorContext(ctx, "send error to telegram", "err", err)
 				}
 			}
+			slog.ErrorContext(ctx, "bot", "err", err)
 		}
 	}()
 
