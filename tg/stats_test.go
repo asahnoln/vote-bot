@@ -2,6 +2,7 @@ package tg_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/asahnoln/vote-bot/store"
@@ -56,6 +57,20 @@ func TestStatsRichest(t *testing.T) {
 
 	if diff := cmp.Diff(want, msgs[0]); diff != "" {
 		t.Errorf("send rich message mismatch (-want +got):%s", diff)
+	}
+}
+
+func TestStatsRichestStoreErr(t *testing.T) {
+	wantErr := errors.New("store error")
+	h := tg.StatsRichestHandler{
+		Store: &richestStoreStub{
+			err: wantErr,
+		},
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %q; want %q", got, want)
 	}
 }
 
