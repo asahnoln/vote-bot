@@ -32,7 +32,7 @@ func (h *CloseHandler) Name() string {
 }
 
 func (h *CloseHandler) Condition(upd Update) bool {
-	return upd.Message.Text == "/closequestion"
+	return upd.Message.Text == "/closecurrentquestion"
 }
 
 func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {

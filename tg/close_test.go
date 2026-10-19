@@ -252,7 +252,7 @@ func TestCloseCondition(t *testing.T) {
 
 	ok := h.Condition(tg.Update{
 		Message: tg.Message{
-			Text: "/closequestion",
+			Text: "/closecurrentquestion",
 		},
 	})
 
