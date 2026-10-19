@@ -100,7 +100,14 @@ func (f *Firestore) RichestUsers(ctx context.Context) ([]store.User, error) {
 		uIDs[i] = u.UserID
 	}
 
-	accs, _ := f.Accounts(ctx, uIDs)
+	accs, err := f.Accounts(ctx, uIDs)
+	if err != nil {
+		return nil, fmt.Errorf("accounts: %w", err)
+	}
+
+	if len(accs) == 0 {
+		return nil, nil
+	}
 
 	for i, u := range users {
 		users[i].Acc = accs[u.UserID]
