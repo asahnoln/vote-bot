@@ -1,0 +1,12 @@
+{
+  "commands": [
+    {
+      "command": "/start",
+      "description": "Начать"
+    }
+  ],
+  "scope": {
+    "type": "chat",
+    "chat_id": 200
+  }
+}

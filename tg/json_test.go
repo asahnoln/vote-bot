@@ -96,3 +96,30 @@ func TestEditMessageText(t *testing.T) {
 		t.Errorf("send rich message mismatch (-want +got):\n%s", diff)
 	}
 }
+
+//go:embed testdata/setMyCommands.json
+var setMyCommands string
+
+func TestSetMyCommandsJSON(t *testing.T) {
+	msg := tg.SetMyCommands{
+		Commands: []tg.BotCommand{
+			{
+				Command:     "/start",
+				Description: "Начать",
+			},
+		},
+		Scope: tg.BotCommandScope{
+			Type:   tg.ChatScope,
+			ChatID: 200,
+		},
+	}
+	got, err := json.MarshalIndent(&msg, "", "  ")
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	want := strings.TrimSpace(setMyCommands)
+	if diff := cmp.Diff(want, string(got)); diff != "" {
+		t.Errorf("set my commands mismatch (-want +got):\n%s", diff)
+	}
+}

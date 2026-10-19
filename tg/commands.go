@@ -1,13 +1,13 @@
 package tg
 
 type SetMyCommands struct {
-	Commands []BotCommand
-	Scope    BotCommandScope
+	Commands []BotCommand    `json:"commands"`
+	Scope    BotCommandScope `json:"scope"`
 }
 
 type BotCommand struct {
-	Command     string
-	Description string
+	Command     string `json:"command"`
+	Description string `json:"description"`
 }
 
 type BotCommandScopeType string
@@ -15,8 +15,8 @@ type BotCommandScopeType string
 const ChatScope BotCommandScopeType = "chat"
 
 type BotCommandScope struct {
-	Type   BotCommandScopeType
-	ChatID int
+	Type   BotCommandScopeType `json:"type"`
+	ChatID int                 `json:"chat_id"`
 }
 
 func (SetMyCommands) URL() string {
