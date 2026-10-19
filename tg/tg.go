@@ -172,7 +172,6 @@ func parseUpdate(w http.ResponseWriter, r *http.Request) (upd Update, err error)
 }
 
 func (b *Bot) error(err error, w http.ResponseWriter, s int) {
-	w.WriteHeader(s)
 	if b.ErrorChan == nil {
 		return
 	}

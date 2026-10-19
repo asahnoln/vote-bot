@@ -25,15 +25,21 @@ func main() {
 		log.Fatalf("init firebase client error: %v", err)
 	}
 
+	dest := tg.NewDest(os.Getenv("BOT_URL"))
+
 	errCh := make(chan error)
 	go func() {
 		for err := range errCh {
 			slog.ErrorContext(ctx, "bot", "err", err)
+			if err := sendErrorMsgsToAdmins(ctx, dest, err); err != nil {
+				if err != nil {
+					slog.ErrorContext(ctx, "send error to telegram", "err", err)
+				}
+			}
 		}
 	}()
 
 	store := fstore.New(fc)
-	dest := tg.NewDest(os.Getenv("BOT_URL"))
 
 	err = setBotCommands(ctx, dest)
 	if err != nil {
@@ -83,6 +89,35 @@ func setBotCommands(ctx context.Context, dest tg.Dest) error {
 		}
 
 		m, err := dest.Send(ctx, tg.CommandsForAdmin(i))
+		if err != nil {
+			return fmt.Errorf("dest send (resp %#v): %w", m, err)
+		}
+
+	}
+
+	return nil
+}
+
+func sendErrorMsgsToAdmins(ctx context.Context, dest tg.Dest, err error) error {
+	adminIDs := os.Getenv("ADMIN_IDS")
+	ids := strings.Split(adminIDs, ",")
+	for _, id := range ids {
+		i, err := strconv.Atoi(id)
+		if err != nil {
+			return fmt.Errorf("atoi id %q: %w", id, err)
+		}
+
+		m, err := dest.Send(ctx, tg.SendRichMessage{
+			ChatID: i,
+			RichMessage: tg.InputRichMessage{
+				Blocks: []tg.InputRichBlock{
+					{
+						Type: tg.InputRichBlockParagraphType,
+						Text: fmt.Sprintf("Ошибка! %v", err),
+					},
+				},
+			},
+		})
 		if err != nil {
 			return fmt.Errorf("dest send (resp %#v): %w", m, err)
 		}
