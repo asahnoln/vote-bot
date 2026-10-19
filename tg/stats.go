@@ -20,7 +20,7 @@ func (h *StatsRichestHandler) Name() string {
 }
 
 func (h *StatsRichestHandler) Condition(upd Update) bool {
-	return upd.Message.Text == "/statsrichestusers"
+	return upd.Message.Text == StatsRichestUsersCommand
 }
 
 func (h *StatsRichestHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {

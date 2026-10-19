@@ -27,7 +27,7 @@ type QuestionHandler struct {
 }
 
 func (h *QuestionHandler) Condition(upd Update) bool {
-	return upd.Message.Text == "/sendcurrentquestion"
+	return upd.Message.Text == SendCurrentQuestionCommand
 }
 
 func (h *QuestionHandler) Name() string {

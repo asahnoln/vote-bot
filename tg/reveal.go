@@ -31,7 +31,7 @@ func (h *RevealHandler) Name() string {
 }
 
 func (h *RevealHandler) Condition(upd Update) bool {
-	return upd.Message.Text == "/sendanswer"
+	return upd.Message.Text == SendAnswerCommand
 }
 
 func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {

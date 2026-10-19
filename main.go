@@ -7,10 +7,11 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
-	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/store/fstore"
 	"github.com/asahnoln/vote-bot/tg"
 	"google.golang.org/api/option"
@@ -32,8 +33,15 @@ func main() {
 	}()
 
 	store := fstore.New(fc)
+	dest := tg.NewDest(os.Getenv("BOT_URL"))
+
+	err = setBotCommands(ctx, dest)
+	if err != nil {
+		log.Fatalf("set bot commands: %v", err)
+	}
+
 	b := &tg.Bot{
-		Dest:      tg.NewDest(os.Getenv("BOT_URL")),
+		Dest:      dest,
 		ErrorChan: errCh,
 	}
 	b.Handle(&tg.StartHandler{Store: store})
@@ -65,11 +73,21 @@ func initFirestoreClient(ctx context.Context) (*firestore.Client, error) {
 	return fc, err
 }
 
-type inMemoryStore struct{}
+func setBotCommands(ctx context.Context, dest tg.Dest) error {
+	adminIDs := os.Getenv("ADMIN_IDS")
+	ids := strings.Split(adminIDs, ",")
+	for _, id := range ids {
+		i, err := strconv.Atoi(id)
+		if err != nil {
+			return fmt.Errorf("atoi id %q: %w", id, err)
+		}
 
-func (s *inMemoryStore) CurrentQuestion(context.Context) (store.Question, error) {
-	return store.Question{
-		Q:    "Кто убийца ваших снов и мечтаний?",
-		Opts: []string{"Нечаев", "П-3", "Сеченов", "Левая"},
-	}, nil
+		m, err := dest.Send(ctx, tg.CommandsForAdmin(i))
+		if err != nil {
+			return fmt.Errorf("dest send (resp %#v): %w", m, err)
+		}
+
+	}
+
+	return nil
 }
