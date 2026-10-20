@@ -30,7 +30,7 @@ func (h *StartHandler) Condition(upd Update) bool {
 }
 
 const (
-	TextWelcomeToTheGame     = "Добро пожаловать в игру!"
+	TextWelcomeToTheGame     = "Добро пожаловать в игру! Ваш стартовый капитал - 1000$."
 	TextMissedFirstQuestion  = "Вы пропустили первый обязательный вопрос и потому не можете быть допущены к игре."
 	TextAlreadyJoinedTheGame = "Вы уже участвуете в игре!"
 )
