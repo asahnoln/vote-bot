@@ -87,10 +87,17 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 	return msgs, nil
 }
 
+const (
+	TextYouAreRight        = "Вы ответили правильно!"
+	TextYouAreWrong        = "Вы ответили неправильно."
+	TextYourCurrentAccount = "Ваш текущий счет - "
+	TextYouLost            = "Вы проиграли!"
+)
+
 func RevealMessage(userID int, isRight bool, acc int) (msg SendRichMessage) {
-	rightMsg := "Вы ответили правильно!"
+	rightMsg := TextYouAreRight
 	if !isRight {
-		rightMsg = "Вы ответили неправильно."
+		rightMsg = TextYouAreWrong
 	}
 	msg = SendRichMessage{
 		ChatID: userID,
@@ -102,7 +109,7 @@ func RevealMessage(userID int, isRight bool, acc int) (msg SendRichMessage) {
 				},
 				{
 					Type: InputRichBlockParagraphType,
-					Text: fmt.Sprintf("Ваш текущий счет - %d.", acc),
+					Text: fmt.Sprintf("%s%d.", TextYourCurrentAccount, acc),
 				},
 			},
 		},
@@ -111,7 +118,7 @@ func RevealMessage(userID int, isRight bool, acc int) (msg SendRichMessage) {
 	if acc <= 0 {
 		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
 			Type: InputRichBlockParagraphType,
-			Text: "Вы проиграли!",
+			Text: TextYouLost,
 		})
 	}
 
