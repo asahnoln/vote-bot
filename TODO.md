@@ -13,27 +13,6 @@ In the end, bot can show stats.
         v
 Store -> Game -> Output
 
-## Main
-
-```go
-func main() {
-  store := db.New()
-  b := bot.New(store)
-  t := tg.New()
-  b.InputFrom(t)
-  b.OutputTo(t)
-
-  for err = bot.Serve(); err != nil {
-    log.Fatal(err)
-  }
-}
-```
-
-## Flow
-
-User starts Bot.
-Bot welcomes user with 1000$.
-
 ### Loop
 
 Admin tells Bot to send a question.
@@ -91,20 +70,23 @@ Each user has an account. (At the start they have 1000$)
 - [x] Stop sending questions to those who lost the game
 - [x] On reveal we have to define who lost
 - [x] If user misses a question - he looses
-- [ ] Bot commands must be scoped to admins
+- [x] Part of errors can be returned to admin without problems
 - [ ] VABANK ALL IN
+- [ ] Stats MOLNIYA - most fastest right answers (even with 0 account)
+- [ ] Stats SHERLOCK - most right answers (even with 0 account)
+- [ ] Stats IGROK VA-BANK - most vabank uses
+- [ ] Bot commands must be scoped to admins
 - [ ] Start bot with secret token from QR
+- [ ] Delete incoming user messages
+- [ ] Think on misclicks on commands - suddenly close a question, or send answer again etc
 - [ ] Check default behaviour of bot without handlers (no condition met)
 - [ ] Check out whole code and refactor things if necessary
 - [ ] Refactor testing destination called
-- [ ] Part of errors can be returned to admin without problems
 - [ ] Auto register webhook?
 - [ ] Optional questions which don't count
 - [ ] Check if question was delivered and if the command was repeated - send it if it was not delivered
 - [ ] What if EVERYONE LOST before the end of the game??
 - [ ] Set webhook with secret token
-- [ ] Delete incoming user messages
-- [ ] Think on misclicks on commands - suddenly close a question, or send answer again etc
 
 ## Flow questions
 
