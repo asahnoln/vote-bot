@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	_ "embed"
@@ -123,10 +124,10 @@ func TestRevealMessage(t *testing.T) {
 	}
 }
 
-func TestRevealMessageWrongAndBankrupt(t *testing.T) {
-	msg := tg.RevealMessage(877, false, 0)
+func TestRevealMessageWrong(t *testing.T) {
+	msg := tg.RevealMessage(878, false, 100)
 	want := tg.SendRichMessage{
-		ChatID: 877,
+		ChatID: 878,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
 				{
@@ -135,11 +136,7 @@ func TestRevealMessageWrongAndBankrupt(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваш текущий счет - 0.",
-				},
-				{
-					Type: "paragraph",
-					Text: "Вы проиграли!",
+					Text: "Ваш текущий счет - 100.",
 				},
 			},
 		},
@@ -149,22 +146,37 @@ func TestRevealMessageWrongAndBankrupt(t *testing.T) {
 	}
 }
 
-func TestRevealWrongAnswer(t *testing.T) {
-	h := tg.RevealHandler{Store: &revealStoreSpy{
-		answersStoreStub: answersStoreStub{
-			answers: []store.Answer{{}},
-		},
-		accounts: map[int]int{
-			0: 1,
-		},
-	}}
-	data, err := h.Handle(context.Background(), tg.Update{})
-	if err != nil {
-		t.Fatalf("got err %v; want nil", err)
-	}
+func TestRevealMessageWrongAndBankrupt(t *testing.T) {
+	tests := []struct {
+		acc int
+	}{{0}, {-100}}
 
-	if got, want := data[0].(tg.SendRichMessage).RichMessage.Blocks[0].Text, "Вы ответили неправильно."; got != want {
-		t.Errorf("got %q; want %q", got, want)
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("acc %d$", tt.acc), func(t *testing.T) {
+			msg := tg.RevealMessage(877, false, tt.acc)
+			want := tg.SendRichMessage{
+				ChatID: 877,
+				RichMessage: tg.InputRichMessage{
+					Blocks: []tg.InputRichBlock{
+						{
+							Type: "paragraph",
+							Text: "Вы ответили неправильно.",
+						},
+						{
+							Type: "paragraph",
+							Text: fmt.Sprintf("Ваш текущий счет - %d.", tt.acc),
+						},
+						{
+							Type: "paragraph",
+							Text: "Вы проиграли!",
+						},
+					},
+				},
+			}
+			if diff := cmp.Diff(want, msg); diff != "" {
+				t.Errorf("msg mismatch (-want +got):%s", diff)
+			}
+		})
 	}
 }
 
