@@ -52,22 +52,17 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []URLer,
 					Type: InputRichBlockParagraphType,
 					Text: q.Q,
 				},
-				{
-					Type:  InputRichBlockButtonsType,
-					Align: AlignLeft,
-				},
 			},
 		},
 	}
-	for o := range q.Opts {
-		// TODO: TDD utility for button auto row placement
-		msg.RichMessage.Blocks[1].Buttons = append(
-			msg.RichMessage.Blocks[1].Buttons,
-			RichMessageButton{
-				Text:         o,
-				CallbackData: fmt.Sprintf("%s%s:%s", OptCallbackDataPrefix, q.ID, o),
-			},
-		)
+
+	btns := SpreadButtons(q.Opts, q.ID, 4)
+	for _, row := range btns {
+		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+			Type:    InputRichBlockButtonsType,
+			Align:   AlignLeft,
+			Buttons: row,
+		})
 	}
 
 	for _, u := range uIDs {
