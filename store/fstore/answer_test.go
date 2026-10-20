@@ -26,26 +26,39 @@ func TestSaveAnswer(t *testing.T) {
 
 	f := fstore.New(c)
 
-	err := f.SaveAnswer(ctx, 52, "test-q-67", "right1")
-	if err != nil {
-		t.Fatalf("fstore save answer: got err %q; want nil", err)
+	tests := []struct {
+		answer string
+		want   bool
+	}{
+		{"right1", true},
+		{"wrong", false},
+		{"right2", true},
 	}
 
-	d, err := c.Collection("answers").Doc("52:test-q-67").Get(ctx)
-	if err != nil {
-		t.Fatalf("get doc err: %v", err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.answer, func(t *testing.T) {
+			err := f.SaveAnswer(ctx, 52, "test-q-67", tt.answer)
+			if err != nil {
+				t.Fatalf("fstore save answer: got err %q; want nil", err)
+			}
 
-	now := time.Now()
-	want := map[string]any{
-		"question_id": "test-q-67",
-		"user_id":     int64(52),
-		"a":           "right1",
-		"is_right":    true,
-		"answered_at": now,
-	}
-	if diff := cmp.Diff(want, d.Data(), cmpopts.EquateApproxTime(time.Second)); diff != "" {
-		t.Errorf("answer mismatch (-want +got):\n%s", diff)
+			d, err := c.Collection("answers").Doc("52:test-q-67").Get(ctx)
+			if err != nil {
+				t.Fatalf("get doc err: %v", err)
+			}
+
+			now := time.Now()
+			want := map[string]any{
+				"question_id": "test-q-67",
+				"user_id":     int64(52),
+				"a":           tt.answer,
+				"is_right":    tt.want,
+				"answered_at": now,
+			}
+			if diff := cmp.Diff(want, d.Data(), cmpopts.EquateApproxTime(time.Second)); diff != "" {
+				t.Errorf("answer mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
 
