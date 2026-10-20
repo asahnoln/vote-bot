@@ -4,9 +4,9 @@ import (
 	"fmt"
 )
 
-func SpreadButtons(opts map[string]bool, questionID string) (btns [][]RichMessageButton) {
+func SpreadButtons(opts map[string]bool, questionID string, maxPerRow int) (btns [][]RichMessageButton) {
 	n := len(opts)
-	rows := (n + 4 - 1) / 4
+	rows := (n + maxPerRow - 1) / maxPerRow
 	basePerRow := n / rows
 	extraPerRow := n % rows
 

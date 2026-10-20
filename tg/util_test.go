@@ -32,7 +32,7 @@ func TestSpreadButtonsCount(t *testing.T) {
 				opts[strconv.Itoa(i)] = false
 			}
 
-			btns := tg.SpreadButtons(opts, "")
+			btns := tg.SpreadButtons(opts, "", 4)
 
 			if got, want := len(btns), len(tt.wantCnt); got != want {
 				t.Errorf("btn row count: got %v; want %v", got, want)
@@ -50,7 +50,7 @@ func TestSpreadButtonsValues(t *testing.T) {
 	btns := tg.SpreadButtons(map[string]bool{
 		"opt1": true,
 		"opt2": false,
-	}, "q-123")
+	}, "q-123", 5)
 
 	want := [][]tg.RichMessageButton{
 		{
