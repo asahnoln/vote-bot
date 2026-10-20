@@ -9,31 +9,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-// * * * *
-//
-// * * *
-// * *
-//
-// * * *
-// * * *
-//
-// * * * *
-// * * *
-//
-// * * * *
-// * * * *
-//
-// * * *
-// * * *
-// * * *
-//
-// * * * *
-// * * *
-// * * *
-//
-// * * * *
-// * * * *
-// * * *
 func TestSpreadButtonsCount(t *testing.T) {
 	tests := []struct {
 		cnt     int
@@ -41,6 +16,13 @@ func TestSpreadButtonsCount(t *testing.T) {
 	}{
 		{1, []int{1}},
 		{4, []int{4}},
+		{5, []int{3, 2}},
+		{6, []int{3, 3}},
+		{7, []int{4, 3}},
+		{8, []int{4, 4}},
+		{9, []int{3, 3, 3}},
+		{10, []int{4, 3, 3}},
+		{17, []int{4, 4, 3, 3, 3}},
 	}
 
 	for _, tt := range tests {
@@ -53,7 +35,7 @@ func TestSpreadButtonsCount(t *testing.T) {
 			btns := tg.SpreadButtons(opts, "")
 
 			if got, want := len(btns), len(tt.wantCnt); got != want {
-				t.Fatalf("btn row count: got %v; want %v", got, want)
+				t.Errorf("btn row count: got %v; want %v", got, want)
 			}
 			for i, cnt := range tt.wantCnt {
 				if got, want := len(btns[i]), cnt; got != want {
