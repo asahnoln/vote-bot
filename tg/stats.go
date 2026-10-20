@@ -20,6 +20,8 @@ func (h *StatsRichestHandler) Name() string {
 	return "stats_richestusers"
 }
 
+const TextRichest = "Самые богатые"
+
 func (h *StatsRichestHandler) Condition(upd Update) bool {
 	return upd.Message.Text == StatsRichestUsersCommand
 }
@@ -37,7 +39,7 @@ func (h *StatsRichestHandler) Handle(ctx context.Context, upd Update) (msgs []UR
 			Blocks: []InputRichBlock{
 				{
 					Type:      "table",
-					Caption:   "Самые богатые",
+					Caption:   TextRichest,
 					IsStriped: true,
 				},
 			},
