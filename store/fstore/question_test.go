@@ -26,20 +26,17 @@ func TestQuestion(t *testing.T) {
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Set(ctx, store.Question{
 		Q:     "Should not be used?",
-		A:     []int{1},
-		Opts:  []string{"skip", "avoid"},
+		Opts:  map[string]bool{"skip": false, "avoid": true},
 		Order: 0,
 	})
 	col.Doc("test-q-1").Set(ctx, store.Question{
 		Q:     "SaaaS or SoooS?",
-		A:     []int{2, 3},
-		Opts:  []string{"jej", "joj", "sas", "sos"},
+		Opts:  map[string]bool{"jej": false, "joj": false, "sas": true, "sos": true},
 		Order: 1,
 	})
 	col.Doc("test-q-2").Set(ctx, store.Question{
 		Q:     "Should skip in future?",
-		A:     []int{1},
-		Opts:  []string{"SKIP", "FUTURE"},
+		Opts:  map[string]bool{"SKIP": false, "FUTURE": true},
 		Order: 2,
 	})
 
@@ -53,8 +50,7 @@ func TestQuestion(t *testing.T) {
 	want := store.Question{
 		ID:    "test-q-1",
 		Q:     "SaaaS or SoooS?",
-		Opts:  []string{"jej", "joj", "sas", "sos"},
-		A:     []int{2, 3},
+		Opts:  map[string]bool{"jej": false, "joj": false, "sas": true, "sos": true},
 		Order: 1,
 	}
 	if diff := cmp.Diff(want, q); diff != "" {
@@ -160,7 +156,6 @@ func TestSomeQuestionHasNoOpts(t *testing.T) {
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Set(ctx, store.Question{
 		Q:     "NO OPTS???",
-		A:     []int{1},
 		Order: 0,
 	})
 	f := fstore.New(c)
@@ -171,38 +166,26 @@ func TestSomeQuestionHasNoOpts(t *testing.T) {
 	}
 }
 
-func TestSomeQuestionAnswerIndexIsLarger(t *testing.T) {
+func TestQuestionWithoutRightAnswers(t *testing.T) {
 	ctx := context.Background()
 
 	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
-	tests := []struct {
-		a []int
-	}{
-		{[]int{0, 100}},
-		{[]int{-999, 0}},
-	}
-
 	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
 		"idx": 0,
 	})
-	for _, tt := range tests {
-		t.Run(fmt.Sprintf("index %d", tt.a), func(t *testing.T) {
-			col := c.Collection("questions")
-			col.Doc("test-q-0").Set(ctx, store.Question{
-				Q:     "Answer is out of bounds???",
-				A:     tt.a,
-				Opts:  []string{"One answer..."},
-				Order: 0,
-			})
-			f := fstore.New(c)
+	col := c.Collection("questions")
+	col.Doc("test-q-0").Set(ctx, store.Question{
+		Q:     "Answer is out of bounds???",
+		Opts:  map[string]bool{"One answer...": false},
+		Order: 0,
+	})
+	f := fstore.New(c)
 
-			_, err := f.CurrentQuestion(ctx)
-			if got, want := err, store.ErrQuestionAnswerIndexIsOutOfBounds; !errors.Is(got, want) {
-				t.Fatalf("fstore no questions: got err %v; want %v", got, want)
-			}
-		})
+	_, err := f.CurrentQuestion(ctx)
+	if got, want := err, store.ErrQuestionHasNoRightAnswer; !errors.Is(got, want) {
+		t.Fatalf("fstore no questions: got err %v; want %v", got, want)
 	}
 }
 
@@ -218,20 +201,17 @@ func TestCloseCurrentQuestion(t *testing.T) {
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Set(ctx, store.Question{
 		Q:     "Should not be used?",
-		A:     []int{1},
-		Opts:  []string{"skip", "avoid"},
+		Opts:  map[string]bool{"skip": false, "avoid": true},
 		Order: 0,
 	})
 	col.Doc("test-q-1").Set(ctx, store.Question{
 		Q:     "SaaaS or SoooS?",
-		A:     []int{2},
-		Opts:  []string{"jej", "joj", "sas", "sos"},
+		Opts:  map[string]bool{"jej": false, "joj": false, "sas": true, "sos": true},
 		Order: 1,
 	})
 	col.Doc("test-q-2").Set(ctx, store.Question{
 		Q:     "Should skip in future?",
-		A:     []int{1},
-		Opts:  []string{"SKIP", "FUTURE"},
+		Opts:  map[string]bool{"SKIP": false, "FUTURE": true},
 		Order: 2,
 	})
 
@@ -259,8 +239,7 @@ func TestCloseCurrentQuestionIdxBiggerThanQuestionCount(t *testing.T) {
 	})
 	c.Collection("questions").Doc("test-q-0").Set(ctx, store.Question{
 		Q:     "Should not be used?",
-		A:     []int{1},
-		Opts:  []string{"skip", "avoid"},
+		Opts:  map[string]bool{"skip": false, "avoid": true},
 		Order: 0,
 	})
 	f := fstore.New(c)

@@ -3,7 +3,6 @@ package fstore
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"cloud.google.com/go/firestore"
 	"github.com/asahnoln/vote-bot/store"
@@ -17,7 +16,6 @@ func (f *Firestore) SaveAnswer(ctx context.Context, userID int, questionID strin
 		return fmt.Errorf("question: %w", err)
 	}
 
-	i := slices.Index(q.Opts, answer)
 	_, err = f.c.Collection("answers").
 		Doc(answerDocID(userID, questionID)).
 		Set(ctx,
@@ -25,7 +23,7 @@ func (f *Firestore) SaveAnswer(ctx context.Context, userID int, questionID strin
 				"question_id": q.ID,
 				"user_id":     userID,
 				"a":           answer,
-				"is_right":    slices.Index(q.A, i) > -1,
+				"is_right":    q.Opts[answer],
 				"answered_at": firestore.ServerTimestamp,
 			})
 	if err != nil {

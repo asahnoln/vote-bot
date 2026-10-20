@@ -59,7 +59,7 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []URLer,
 			},
 		},
 	}
-	for _, o := range q.Opts {
+	for o := range q.Opts {
 		// TODO: TDD utility for button auto row placement
 		msg.RichMessage.Blocks[1].Buttons = append(
 			msg.RichMessage.Blocks[1].Buttons,

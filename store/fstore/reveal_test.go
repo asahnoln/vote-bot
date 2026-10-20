@@ -21,20 +21,17 @@ func TestLastClosedQuestion(t *testing.T) {
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Set(ctx, store.Question{
 		Q:     "Should not be used?",
-		A:     []int{1},
-		Opts:  []string{"skip", "avoid"},
+		Opts:  map[string]bool{"skip": false, "avoid": true},
 		Order: 0,
 	})
 	col.Doc("test-q-1").Set(ctx, store.Question{
 		Q:     "SaaaS or SoooS?",
-		A:     []int{2},
-		Opts:  []string{"jej", "joj", "sas", "sos"},
+		Opts:  map[string]bool{"jej": false, "joj": false, "sas": true, "sos": true},
 		Order: 1,
 	})
 	col.Doc("test-q-2").Set(ctx, store.Question{
 		Q:     "Should skip in future?",
-		A:     []int{1},
-		Opts:  []string{"SKIP", "FUTURE"},
+		Opts:  map[string]bool{"SKIP": false, "FUTURE": true},
 		Order: 2,
 	})
 
@@ -48,8 +45,7 @@ func TestLastClosedQuestion(t *testing.T) {
 	want := store.Question{
 		ID:    "test-q-1",
 		Q:     "SaaaS or SoooS?",
-		Opts:  []string{"jej", "joj", "sas", "sos"},
-		A:     []int{2},
+		Opts:  map[string]bool{"jej": false, "joj": false, "sas": true, "sos": true},
 		Order: 1,
 	}
 	if diff := cmp.Diff(want, q); diff != "" {

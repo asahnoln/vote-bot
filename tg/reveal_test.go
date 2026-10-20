@@ -262,8 +262,7 @@ func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, er
 	return store.Question{
 		ID:   "last-closed-q-99",
 		Q:    "Да или Нет?",
-		A:    []int{0},
-		Opts: []string{"Да", "Нет"},
+		Opts: map[string]bool{"Да": true, "Нет": false},
 	}, s.lastClosedQuestionErr
 }
 

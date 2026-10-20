@@ -242,7 +242,7 @@ func (s *questionStoreStub) CurrentQuestion(context.Context) (store.Question, er
 	return store.Question{
 		ID:   "opt-q-99",
 		Q:    "X or Y?",
-		Opts: []string{"X", "Y"},
+		Opts: map[string]bool{"X": false, "Y": true},
 	}, s.err
 }
 

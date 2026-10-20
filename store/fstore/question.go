@@ -26,10 +26,16 @@ func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err 
 		return q, store.ErrQuestionHasNoOpts
 	}
 
-	for _, a := range q.A {
-		if a < 0 || a >= len(q.Opts) {
-			return q, store.ErrQuestionAnswerIndexIsOutOfBounds
+	anyAnswerIsTrue := false
+	for _, a := range q.Opts {
+		anyAnswerIsTrue = anyAnswerIsTrue || a
+		if anyAnswerIsTrue {
+			break
 		}
+	}
+
+	if !anyAnswerIsTrue {
+		return q, store.ErrQuestionHasNoRightAnswer
 	}
 
 	return q, nil
