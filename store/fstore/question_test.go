@@ -26,19 +26,19 @@ func TestQuestion(t *testing.T) {
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Set(ctx, store.Question{
 		Q:     "Should not be used?",
-		A:     1,
+		A:     []int{1},
 		Opts:  []string{"skip", "avoid"},
 		Order: 0,
 	})
 	col.Doc("test-q-1").Set(ctx, store.Question{
 		Q:     "SaaaS or SoooS?",
-		A:     2,
+		A:     []int{2, 3},
 		Opts:  []string{"jej", "joj", "sas", "sos"},
 		Order: 1,
 	})
 	col.Doc("test-q-2").Set(ctx, store.Question{
 		Q:     "Should skip in future?",
-		A:     1,
+		A:     []int{1},
 		Opts:  []string{"SKIP", "FUTURE"},
 		Order: 2,
 	})
@@ -54,7 +54,7 @@ func TestQuestion(t *testing.T) {
 		ID:    "test-q-1",
 		Q:     "SaaaS or SoooS?",
 		Opts:  []string{"jej", "joj", "sas", "sos"},
-		A:     2,
+		A:     []int{2, 3},
 		Order: 1,
 	}
 	if diff := cmp.Diff(want, q); diff != "" {
@@ -160,7 +160,7 @@ func TestSomeQuestionHasNoOpts(t *testing.T) {
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Set(ctx, store.Question{
 		Q:     "NO OPTS???",
-		A:     1,
+		A:     []int{1},
 		Order: 0,
 	})
 	f := fstore.New(c)
@@ -178,10 +178,10 @@ func TestSomeQuestionAnswerIndexIsLarger(t *testing.T) {
 	resetDB(ctx, c)
 
 	tests := []struct {
-		a int
+		a []int
 	}{
-		{100},
-		{-999},
+		{[]int{0, 100}},
+		{[]int{-999, 0}},
 	}
 
 	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
@@ -218,19 +218,19 @@ func TestCloseCurrentQuestion(t *testing.T) {
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Set(ctx, store.Question{
 		Q:     "Should not be used?",
-		A:     1,
+		A:     []int{1},
 		Opts:  []string{"skip", "avoid"},
 		Order: 0,
 	})
 	col.Doc("test-q-1").Set(ctx, store.Question{
 		Q:     "SaaaS or SoooS?",
-		A:     2,
+		A:     []int{2},
 		Opts:  []string{"jej", "joj", "sas", "sos"},
 		Order: 1,
 	})
 	col.Doc("test-q-2").Set(ctx, store.Question{
 		Q:     "Should skip in future?",
-		A:     1,
+		A:     []int{1},
 		Opts:  []string{"SKIP", "FUTURE"},
 		Order: 2,
 	})
@@ -259,7 +259,7 @@ func TestCloseCurrentQuestionIdxBiggerThanQuestionCount(t *testing.T) {
 	})
 	c.Collection("questions").Doc("test-q-0").Set(ctx, store.Question{
 		Q:     "Should not be used?",
-		A:     1,
+		A:     []int{1},
 		Opts:  []string{"skip", "avoid"},
 		Order: 0,
 	})

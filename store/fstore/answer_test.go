@@ -19,14 +19,14 @@ func TestSaveAnswer(t *testing.T) {
 	c.Collection("answers").Doc("52:test-q-67").Delete(ctx)
 	c.Collection(fstore.QuestionsCollection).Doc("test-q-67").Set(ctx, store.Question{
 		Q:     "52 or 42?",
-		A:     1,
-		Opts:  []string{"wrong", "right"},
+		A:     []int{1, 2},
+		Opts:  []string{"wrong", "right1", "right2"},
 		Order: 0,
 	})
 
 	f := fstore.New(c)
 
-	err := f.SaveAnswer(ctx, 52, "test-q-67", "right")
+	err := f.SaveAnswer(ctx, 52, "test-q-67", "right1")
 	if err != nil {
 		t.Fatalf("fstore save answer: got err %q; want nil", err)
 	}
@@ -40,7 +40,7 @@ func TestSaveAnswer(t *testing.T) {
 	want := map[string]any{
 		"question_id": "test-q-67",
 		"user_id":     int64(52),
-		"a":           "right",
+		"a":           "right1",
 		"is_right":    true,
 		"answered_at": now,
 	}

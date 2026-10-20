@@ -26,8 +26,10 @@ func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err 
 		return q, store.ErrQuestionHasNoOpts
 	}
 
-	if q.A < 0 || q.A >= len(q.Opts) {
-		return q, store.ErrQuestionAnswerIndexIsOutOfBounds
+	for _, a := range q.A {
+		if a < 0 || a >= len(q.Opts) {
+			return q, store.ErrQuestionAnswerIndexIsOutOfBounds
+		}
 	}
 
 	return q, nil

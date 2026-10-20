@@ -6,7 +6,7 @@ import "errors"
 type Question struct {
 	ID    string   `firestore:"id,omitempty"`
 	Q     string   `firestore:"q,omitempty"`
-	A     int      `firestore:"a,omitempty"`
+	A     []int    `firestore:"a,omitempty"`
 	Opts  []string `firestore:"opts,omitempty"`
 	Order int      `firestore:"order"`
 }

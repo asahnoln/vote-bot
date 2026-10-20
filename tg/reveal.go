@@ -71,8 +71,6 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 			msgs,
 			RevealMessage(
 				a.UserID,
-				q.Q,
-				q.Opts[q.A],
 				a.IsRight,
 				acc,
 			),
@@ -89,7 +87,7 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 	return msgs, nil
 }
 
-func RevealMessage(userID int, question string, answer string, isRight bool, acc int) (msg SendRichMessage) {
+func RevealMessage(userID int, isRight bool, acc int) (msg SendRichMessage) {
 	rightMsg := "Вы ответили правильно!"
 	if !isRight {
 		rightMsg = "Вы ответили неправильно."
@@ -98,11 +96,6 @@ func RevealMessage(userID int, question string, answer string, isRight bool, acc
 		ChatID: userID,
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{
-				{
-					Type: InputRichBlockParagraphType,
-
-					Text: fmt.Sprintf("%s Правильный ответ: %s!", question, answer),
-				},
 				{
 					Type: InputRichBlockParagraphType,
 					Text: rightMsg,

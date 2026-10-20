@@ -86,10 +86,6 @@ func TestReveal(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Да или Нет? Правильный ответ: Да!",
-				},
-				{
-					Type: "paragraph",
 					Text: "Вы ответили правильно!",
 				},
 				{
@@ -106,15 +102,11 @@ func TestReveal(t *testing.T) {
 }
 
 func TestRevealMessage(t *testing.T) {
-	msg := tg.RevealMessage(876, "Poo or Foo?", "Foo", true, 500)
+	msg := tg.RevealMessage(876, true, 500)
 	want := tg.SendRichMessage{
 		ChatID: 876,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
-				{
-					Type: "paragraph",
-					Text: "Poo or Foo? Правильный ответ: Foo!",
-				},
 				{
 					Type: "paragraph",
 					Text: "Вы ответили правильно!",
@@ -132,15 +124,11 @@ func TestRevealMessage(t *testing.T) {
 }
 
 func TestRevealMessageWrongAndBankrupt(t *testing.T) {
-	msg := tg.RevealMessage(877, "Saas or Jooj?", "Zheezh", false, 0)
+	msg := tg.RevealMessage(877, false, 0)
 	want := tg.SendRichMessage{
 		ChatID: 877,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
-				{
-					Type: "paragraph",
-					Text: "Saas or Jooj? Правильный ответ: Zheezh!",
-				},
 				{
 					Type: "paragraph",
 					Text: "Вы ответили неправильно.",
@@ -175,7 +163,7 @@ func TestRevealWrongAnswer(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := data[0].(tg.SendRichMessage).RichMessage.Blocks[1].Text, "Вы ответили неправильно."; got != want {
+	if got, want := data[0].(tg.SendRichMessage).RichMessage.Blocks[0].Text, "Вы ответили неправильно."; got != want {
 		t.Errorf("got %q; want %q", got, want)
 	}
 }
@@ -274,7 +262,7 @@ func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, er
 	return store.Question{
 		ID:   "last-closed-q-99",
 		Q:    "Да или Нет?",
-		A:    0,
+		A:    []int{0},
 		Opts: []string{"Да", "Нет"},
 	}, s.lastClosedQuestionErr
 }
