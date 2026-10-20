@@ -78,6 +78,7 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []URLer,
 }
 
 func (h *QuestionHandler) HandleResponse(ctx context.Context, resp Message) error {
+	// TODO: Check for error
 	h.Store.SaveLastMessageID(ctx, resp.Chat.ID, resp.MessageID)
 	return nil
 }

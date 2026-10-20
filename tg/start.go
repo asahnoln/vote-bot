@@ -29,15 +29,21 @@ func (h *StartHandler) Condition(upd Update) bool {
 	return upd.Message.Text == "/start"
 }
 
+const (
+	TextWelcomeToTheGame     = "Добро пожаловать в игру!"
+	TextMissedFirstQuestion  = "Вы пропустили первый обязательный вопрос и потому не можете быть допущены к игре."
+	TextAlreadyJoinedTheGame = "Вы уже участвуете в игре!"
+)
+
 func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
 	ok, err := h.Store.FirstQuestionMissed(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("first question missed: %w", err)
 	}
 
-	text := "Добро пожаловать в игру!"
+	text := TextWelcomeToTheGame
 	if ok {
-		text = "Вы пропустили первый обязательный вопрос и потому не можете быть допущены к игре."
+		text = TextMissedFirstQuestion
 	} else {
 		err = h.Store.SaveUser(
 			ctx,
@@ -47,7 +53,7 @@ func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, er
 
 		switch {
 		case errors.Is(err, store.ErrUserAlreadySaved):
-			text = "Вы уже участвуете в игре!"
+			text = TextAlreadyJoinedTheGame
 		case err != nil:
 			return nil, fmt.Errorf("save user: %w", err)
 		}

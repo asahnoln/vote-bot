@@ -82,6 +82,13 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, er
 	return msgs, nil
 }
 
+const (
+	TextQuestionClosed          = "Вопрос закрыт!"
+	TextYouMissedBet            = "Вы не успели сделать ставку..."
+	TextYourAnwserIsNotAccepted = "Ваш ответ не засчитан."
+	TextYouMissedAnswer         = "Вы не успели ответить..."
+)
+
 func ClosingMessage(userID int, messageID int, question string, a store.Answer) (msg EditMessageText) {
 	msg = EditMessageText{
 		ChatID:    userID,
@@ -99,34 +106,34 @@ func ClosingMessage(userID int, messageID int, question string, a store.Answer) 
 	if a.A != "" {
 		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
 			Type: InputRichBlockParagraphType,
-			Text: "Ваш ответ: " + a.A,
+			Text: TextYourAnswer + a.A,
 		})
 
 		if a.Bet > 0 {
 			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
 				Type: InputRichBlockParagraphType,
-				Text: fmt.Sprintf("Ваша ставка: %d", a.Bet),
+				Text: fmt.Sprintf("%s%d", TextYourBet, a.Bet),
 			})
 		} else {
 			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
 				Type: InputRichBlockParagraphType,
-				Text: "Вы не успели сделать ставку...",
+				Text: TextYouMissedBet,
 			})
 			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
 				Type: InputRichBlockParagraphType,
-				Text: "Ваш ответ не засчитан.",
+				Text: TextYourAnwserIsNotAccepted,
 			})
 		}
 	} else {
 		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
 			Type: InputRichBlockParagraphType,
-			Text: "Вы не успели ответить...",
+			Text: TextYouMissedAnswer,
 		})
 	}
 
 	msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
 		Type: InputRichBlockParagraphType,
-		Text: "Вопрос закрыт!",
+		Text: TextQuestionClosed,
 	})
 
 	return

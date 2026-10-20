@@ -35,6 +35,11 @@ func (h *AnswerHandler) Name() string {
 	return "answer"
 }
 
+const (
+	TextYourAnswer = "Ваш ответ: "
+	TextChooseBet  = "Выберите ставку:"
+)
+
 func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
 	qID, answer, err := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
 	if err != nil {
@@ -63,11 +68,11 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 				upd.CallbackQuery.Message.RichMessage.Blocks[0],
 				{
 					Type: InputRichBlockParagraphType,
-					Text: "Ваш ответ: " + answer,
+					Text: TextYourAnswer + answer,
 				},
 				{
 					Type: InputRichBlockParagraphType,
-					Text: "Выберите ставку:",
+					Text: TextChooseBet,
 				},
 				{
 					Type:  InputRichBlockButtonsType,
@@ -85,6 +90,7 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 							Text:         "500",
 							CallbackData: prefix + "500",
 						},
+						// TODO: Add all in
 					},
 				},
 			},
@@ -115,6 +121,8 @@ func (h *BetHandler) Name() string {
 	return "bet"
 }
 
+const TextYourBet = "Ваша ставка: "
+
 func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
 	qID, betStr, err := qIDAndData(BetCallbackDataPrefix, upd.CallbackQuery.Data)
 	if err != nil {
@@ -139,7 +147,7 @@ func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err 
 				upd.CallbackQuery.Message.RichMessage.Blocks[1],
 				{
 					Type: "paragraph",
-					Text: "Ваша ставка: " + betStr,
+					Text: TextYourBet + betStr,
 				},
 			},
 		},
