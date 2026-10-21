@@ -17,7 +17,13 @@ var answerCallbackUpdate []byte
 func TestAnswer(t *testing.T) {
 	upd := tg.Update{}
 	json.Unmarshal(answerCallbackUpdate, &upd)
-	storeSpy := &answerStoreSpy{}
+	storeSpy := &answerStoreSpy{
+		accountStoreStub: accountStoreStub{
+			accounts: map[int]int{
+				45030020: 1000,
+			},
+		},
+	}
 
 	h := &tg.AnswerHandler{Store: storeSpy}
 	msgs, err := h.Handle(context.Background(), upd)
@@ -80,6 +86,73 @@ func TestAnswer(t *testing.T) {
 	}
 	if got, want := storeSpy.questionID, "opt-q-67"; got != want {
 		t.Errorf("save question: got %v; want %v", got, want)
+	}
+	if diff := cmp.Diff([]int{45030020}, storeSpy.accountStoreStub.userIDs); diff != "" {
+		t.Errorf("edit message text mismatch (-want +got):%s", diff)
+	}
+}
+
+func TestBetButtons(t *testing.T) {
+	btns := tg.BetButtons(500, []int{100, 200, 500}, "opt-q-67")
+	want := []tg.RichMessageButton{
+		{
+			Text:         "100$",
+			CallbackData: "bet:opt-q-67:100",
+		},
+		{
+			Text:         "200$",
+			CallbackData: "bet:opt-q-67:200",
+		},
+		{
+			Text:         "500$",
+			CallbackData: "bet:opt-q-67:500",
+		},
+		{
+			Text:         "ВА-БАНК!",
+			CallbackData: "bet:opt-q-67:-100",
+		},
+	}
+
+	if diff := cmp.Diff(want, btns); diff != "" {
+		t.Errorf("bet buttons mismatch (-want +got):%s", diff)
+	}
+}
+
+func TestBetButtonsLessThanAcc(t *testing.T) {
+	btns := tg.BetButtons(150, []int{100, 200, 500}, "opt-q-67")
+	want := []tg.RichMessageButton{
+		{
+			Text:         "100$",
+			CallbackData: "bet:opt-q-67:100",
+		},
+		{
+			Text:         "ВА-БАНК!",
+			CallbackData: "bet:opt-q-67:-100",
+		},
+	}
+
+	if diff := cmp.Diff(want, btns); diff != "" {
+		t.Errorf("bet buttons mismatch (-want +got):%s", diff)
+	}
+}
+
+func TestAnswerAccountsError(t *testing.T) {
+	wantErr := errors.New("accounts error")
+
+	storeSpy := &answerStoreSpy{
+		accountStoreStub: accountStoreStub{
+			err: wantErr,
+		},
+	}
+	h := &tg.AnswerHandler{Store: storeSpy}
+	_, err := h.Handle(context.Background(), tg.Update{
+		CallbackQuery: &tg.CallbackQuery{
+			Data: "opt:save-error:data",
+		},
+	})
+
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
 	}
 }
 
@@ -255,6 +328,7 @@ func TestBetNotEnoughMessageFromBefore(t *testing.T) {
 }
 
 type answerStoreSpy struct {
+	accountStoreStub
 	userID     int
 	questionID string
 	answer     string

@@ -69,7 +69,7 @@ func TestReveal(t *testing.T) {
 		t.Errorf("question id for answer: got %q; want %q", got, want)
 	}
 
-	if diff := cmp.Diff([]int{876, 2345, 15789, 15790}, storeSpy.userIDs); diff != "" {
+	if diff := cmp.Diff([]int{876, 2345, 15789, 15790}, storeSpy.accountStoreStub.userIDs); diff != "" {
 		t.Errorf("accounts user IDs mismatch (-want +got):%s", diff)
 	}
 
@@ -233,7 +233,9 @@ func TestRevealAnswersError(t *testing.T) {
 func TestRevealAccountsError(t *testing.T) {
 	wantErr := errors.New("accounts error")
 	h := tg.RevealHandler{Store: &revealStoreSpy{
-		accountsErr: wantErr,
+		accountStoreStub: accountStoreStub{
+			err: wantErr,
+		},
 	}}
 
 	_, err := h.Handle(context.Background(), tg.Update{})
@@ -264,10 +266,8 @@ func TestRevealCondition(t *testing.T) {
 type revealStoreSpy struct {
 	answersStoreStub
 	lostUserStoreStub
+	accountStoreStub
 	lastClosedQuestionErr error
-	userIDs               []int
-	accounts              map[int]int
-	accountsErr           error
 }
 
 func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, error) {
@@ -278,7 +278,13 @@ func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, er
 	}, s.lastClosedQuestionErr
 }
 
-func (s *revealStoreSpy) Accounts(ctx context.Context, userIDs []int) (map[int]int, error) {
+type accountStoreStub struct {
+	userIDs  []int
+	accounts map[int]int
+	err      error
+}
+
+func (s *accountStoreStub) Accounts(ctx context.Context, userIDs []int) (map[int]int, error) {
 	s.userIDs = userIDs
-	return s.accounts, s.accountsErr
+	return s.accounts, s.err
 }

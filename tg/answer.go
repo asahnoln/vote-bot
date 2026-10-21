@@ -19,12 +19,13 @@ var (
 	ErrNotEnoughOriginalMsgBlocks = errors.New("not enough original message blocks")
 )
 
-type AnswerSaver interface {
+type AnswerStore interface {
+	Accountser
 	SaveAnswer(ctx context.Context, userID int, questionID string, answer string) error
 }
 
 type AnswerHandler struct {
-	Store AnswerSaver
+	Store AnswerStore
 }
 
 func (h *AnswerHandler) Condition(upd Update) bool {
@@ -47,6 +48,11 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 		return nil, errors.Join(ErrWrongCallbackData, err)
 	}
 
+	accs, err := h.Store.Accounts(ctx, []int{upd.CallbackQuery.Message.Chat.ID})
+	if err != nil {
+		return nil, fmt.Errorf("accounts: %w", err)
+	}
+
 	err = h.Store.SaveAnswer(ctx,
 		upd.CallbackQuery.Message.Chat.ID,
 		qID,
@@ -60,7 +66,6 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 		return nil, ErrNotEnoughOriginalMsgBlocks
 	}
 
-	prefix := string(BetCallbackDataPrefix) + qID + ":"
 	msg := EditMessageText{
 		ChatID:    upd.CallbackQuery.Message.Chat.ID,
 		MessageID: upd.CallbackQuery.Message.MessageID,
@@ -76,28 +81,9 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 					Text: TextChooseBet,
 				},
 				{
-					Type:  InputRichBlockButtonsType,
-					Align: AlignLeft,
-					Buttons: []RichMessageButton{
-						{
-							Text:         "100$",
-							CallbackData: prefix + "100",
-						},
-						{
-							Text:         "200$",
-							CallbackData: prefix + "200",
-						},
-						{
-							Text:         "500$",
-							CallbackData: prefix + "500",
-						},
-						{
-							Text: TextAllIn,
-							// NOTE: -100 is a special for all-in
-							CallbackData: prefix + "-100",
-						},
-						// TODO: Add all in
-					},
+					Type:    InputRichBlockButtonsType,
+					Align:   AlignLeft,
+					Buttons: BetButtons(accs[upd.CallbackQuery.Message.Chat.ID], []int{100, 200, 500}, qID),
 				},
 			},
 		},
@@ -183,6 +169,27 @@ func BetInputRichBlock(bet string) InputRichBlock {
 		Type: "paragraph",
 		Text: TextYourBet + bet,
 	}
+}
+
+func BetButtons(acc int, bets []int, questionID string) (btns []RichMessageButton) {
+	for _, b := range bets {
+		if b > acc {
+			continue
+		}
+
+		btns = append(btns, RichMessageButton{
+			Text:         fmt.Sprintf("%d$", b),
+			CallbackData: fmt.Sprintf("%s%s:%d", BetCallbackDataPrefix, questionID, b),
+		})
+	}
+
+	btns = append(btns, RichMessageButton{
+		Text: TextAllIn,
+		// NOTE: -100 is a special for all-in
+		CallbackData: fmt.Sprintf("%s%s:%d", BetCallbackDataPrefix, questionID, -100),
+	})
+
+	return btns
 }
 
 func qIDAndData(prefix Prefix, s string) (qID string, data string, err error) {
