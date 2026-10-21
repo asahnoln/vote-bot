@@ -2,6 +2,7 @@ package fstore_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -80,27 +81,43 @@ func TestSaveBet(t *testing.T) {
 	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
-	c.Collection("answers").Doc("234:test-q-111").Set(ctx, map[string]any{
-		"a": "has answer",
-	})
-
-	f := fstore.New(c)
-
-	err := f.SaveBet(ctx, 234, "test-q-111", 500)
-	if err != nil {
-		t.Fatalf("fstore save answer: got err %q; want nil", err)
+	tests := []struct {
+		bet       int
+		wantBet   int64
+		wantAllIn bool
+	}{
+		{500, 500, false},
+		{-100, 1000, true},
 	}
 
-	d, err := c.Collection("answers").Doc("234:test-q-111").Get(ctx)
-	if err != nil {
-		t.Fatalf("get doc err: %v", err)
-	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("bet %d", tt.bet), func(t *testing.T) {
+			c.Collection("answers").Doc("234:test-q-111").Set(ctx, map[string]any{
+				"user_id": 234,
+				"a":       "has answer",
+			})
 
-	want := map[string]any{
-		"a":   "has answer",
-		"bet": int64(500),
-	}
-	if diff := cmp.Diff(want, d.Data(), cmpopts.EquateApproxTime(time.Second)); diff != "" {
-		t.Errorf("bet mismatch (-want +got):\n%s", diff)
+			f := fstore.New(c)
+
+			err := f.SaveBet(ctx, 234, "test-q-111", tt.bet)
+			if err != nil {
+				t.Fatalf("fstore save bet: got err %q; want nil", err)
+			}
+
+			d, err := c.Collection("answers").Doc("234:test-q-111").Get(ctx)
+			if err != nil {
+				t.Fatalf("get doc err: %v", err)
+			}
+
+			want := map[string]any{
+				"user_id": int64(234),
+				"a":       "has answer",
+				"bet":     tt.wantBet,
+				"all_in":  tt.wantAllIn,
+			}
+			if diff := cmp.Diff(want, d.Data(), cmpopts.EquateApproxTime(time.Second)); diff != "" {
+				t.Errorf("bet mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
 }

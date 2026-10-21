@@ -57,6 +57,11 @@ func (f *Firestore) Accounts(ctx context.Context, userIDs []int) (accs map[int]i
 	}).Documents(ctx)
 
 	accs = make(map[int]int)
+
+	for _, u := range userIDs {
+		accs[u] = ACCOUNT_START_MONEY
+	}
+
 loop:
 	for {
 		d, err := iter.Next()
@@ -73,10 +78,6 @@ loop:
 			return nil, fmt.Errorf("data %#v to answer: %w", d, err)
 		}
 
-		if a.Bet == -100 {
-			a.Bet = ACCOUNT_START_MONEY + accs[a.UserID]
-		}
-
 		if !a.IsRight {
 			a.Bet *= -1
 		}
@@ -84,8 +85,5 @@ loop:
 		accs[a.UserID] += int(a.Bet)
 	}
 
-	for u := range accs {
-		accs[u] += ACCOUNT_START_MONEY
-	}
 	return accs, nil
 }

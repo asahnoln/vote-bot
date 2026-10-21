@@ -49,11 +49,21 @@ func (f *Firestore) question(ctx context.Context, questionID string) (q store.Qu
 }
 
 func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, bet int) error {
+	allIn := false
+	if bet == -100 {
+		accs, err := f.Accounts(ctx, []int{userID})
+		if err != nil {
+			return fmt.Errorf("accounts: %w", err)
+		}
+		bet = accs[userID]
+		allIn = true
+	}
 	_, err := f.c.Collection(AnswersCollection).
 		Doc(answerDocID(userID, questionID)).
 		Set(ctx,
 			map[string]any{
-				"bet": bet,
+				"bet":    bet,
+				"all_in": allIn,
 			}, firestore.MergeAll)
 	if err != nil {
 		return fmt.Errorf("doc set: %w", err)

@@ -308,28 +308,3 @@ func TestRichestUsersNoUsersStop(t *testing.T) {
 		t.Fatalf("fstore richest users: got err %v; want nil", err)
 	}
 }
-
-func TestRichestUsersNoAccsNoUsers(t *testing.T) {
-	ctx := context.Background()
-
-	c := firestoreMemoryEmulatorClient(t, ctx)
-	resetDB(ctx, c)
-
-	col := c.Collection("users")
-	col.Doc("1").Set(ctx, map[string]any{
-		"user_id": 1,
-		"name":    "no acc",
-		"lost":    false,
-	})
-
-	f := fstore.New(c)
-
-	users, err := f.RichestUsers(ctx)
-	if err != nil {
-		t.Fatalf("fstore richest users: got err %v; want nil", err)
-	}
-
-	if got, want := len(users), 0; got != want {
-		t.Errorf("users count: got %v; want %v", got, want)
-	}
-}
