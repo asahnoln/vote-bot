@@ -74,6 +74,7 @@ Each user has an account. (At the start they have 1000$)
 - [x] Bot commands must be scoped to admins
 - [x] VABANK ALL IN
 - [x] Delete incoming user messages
+- [ ] Check whole code flow for a more efficient data/db handling
 - [ ] Robust handling response from tg...
 - [ ] Check default behaviour of bot without handlers (no condition met)
 - [ ] Right now all in is a little hacky in callback...
