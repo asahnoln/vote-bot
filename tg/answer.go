@@ -150,10 +150,7 @@ func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err 
 			Blocks: []InputRichBlock{
 				upd.CallbackQuery.Message.RichMessage.Blocks[0],
 				upd.CallbackQuery.Message.RichMessage.Blocks[1],
-				{
-					Type: "paragraph",
-					Text: TextYourBet + betStr,
-				},
+				BetInputRichBlock(betStr),
 			},
 		},
 	}
@@ -173,6 +170,16 @@ func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err 
 
 func (h *BetHandler) HandleResponse(ctx context.Context, resp Message) error {
 	return nil
+}
+
+func BetInputRichBlock(bet string) InputRichBlock {
+	if bet == "-100" {
+		bet = "ВА-БАНК!"
+	}
+	return InputRichBlock{
+		Type: "paragraph",
+		Text: TextYourBet + bet,
+	}
 }
 
 func qIDAndData(prefix Prefix, s string) (qID string, data string, err error) {

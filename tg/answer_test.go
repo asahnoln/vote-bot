@@ -178,6 +178,18 @@ func TestBet(t *testing.T) {
 	}
 }
 
+func TestBetMessage(t *testing.T) {
+	got := tg.BetInputRichBlock("-100")
+	want := tg.InputRichBlock{
+		Type: "paragraph",
+		Text: "Ваша ставка: ВА-БАНК!",
+	}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("bet input rich block mismatch (-want +got):%s", diff)
+	}
+}
+
 func TestBetSaveError(t *testing.T) {
 	wantErr := errors.New("save error")
 	h := tg.BetHandler{

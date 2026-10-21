@@ -72,7 +72,8 @@ Each user has an account. (At the start they have 1000$)
 - [x] If user misses a question - he looses
 - [x] Part of errors can be returned to admin without problems
 - [x] Bot commands must be scoped to admins
-- [ ] VABANK ALL IN
+- [x] VABANK ALL IN
+- [ ] Right now all in is a little hacky in callback...
 - [ ] Stats MOLNIYA - most fastest right answers (even with 0 account)
 - [ ] Stats SHERLOCK - most right answers (even with 0 account)
 - [ ] Stats IGROK VA-BANK - most vabank uses
