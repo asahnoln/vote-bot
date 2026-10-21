@@ -176,6 +176,8 @@ func (h *BetHandler) HandleResponse(ctx context.Context, resp Message) error {
 func BetInputRichBlock(bet string) InputRichBlock {
 	if bet == "-100" {
 		bet = TextAllIn
+	} else {
+		bet += "$"
 	}
 	return InputRichBlock{
 		Type: "paragraph",

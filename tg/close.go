@@ -116,7 +116,7 @@ func ClosingMessage(userID int, messageID int, question string, a store.Answer) 
 			if a.AllIn {
 				betBlock.Text = TextYourBet + TextAllIn
 			} else {
-				betBlock.Text = fmt.Sprintf("%s%d", TextYourBet, a.Bet)
+				betBlock.Text = fmt.Sprintf("%s%d$", TextYourBet, a.Bet)
 			}
 
 			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, betBlock)

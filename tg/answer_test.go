@@ -158,7 +158,7 @@ func TestBet(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваша ставка: 500",
+					Text: "Ваша ставка: 500$",
 				},
 			},
 		},

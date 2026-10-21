@@ -65,7 +65,7 @@ func TestCloseHandler(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваша ставка: 900",
+					Text: "Ваша ставка: 900$",
 				},
 				{
 					Type: "paragraph",
@@ -100,7 +100,7 @@ func TestClosingMessage(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваша ставка: 1900",
+					Text: "Ваша ставка: 1900$",
 				},
 				{
 					Type: "paragraph",
