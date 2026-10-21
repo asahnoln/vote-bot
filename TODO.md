@@ -73,14 +73,14 @@ Each user has an account. (At the start they have 1000$)
 - [x] Part of errors can be returned to admin without problems
 - [x] Bot commands must be scoped to admins
 - [x] VABANK ALL IN
+- [x] Delete incoming user messages
+- [ ] Check default behaviour of bot without handlers (no condition met)
 - [ ] Right now all in is a little hacky in callback...
 - [ ] Stats MOLNIYA - most fastest right answers (even with 0 account)
 - [ ] Stats SHERLOCK - most right answers (even with 0 account)
 - [ ] Stats IGROK VA-BANK - most vabank uses
 - [ ] Start bot with secret token from QR
-- [ ] Delete incoming user messages
 - [ ] Think on misclicks on commands - suddenly close a question, or send answer again etc
-- [ ] Check default behaviour of bot without handlers (no condition met)
 - [ ] Check out whole code and refactor things if necessary
 - [ ] Refactor testing destination called
 - [ ] Auto register webhook?
