@@ -68,6 +68,20 @@ func TestStatsRichest(t *testing.T) {
 	}
 }
 
+func TestStatsRichestAllUsersEror(t *testing.T) {
+	wantErr := errors.New("all users error")
+	h := tg.StatsRichestHandler{
+		Store: &richestStoreStub{
+			usersErr: wantErr,
+		},
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %q; want %q", got, want)
+	}
+}
+
 func TestStatsRichestStoreErr(t *testing.T) {
 	wantErr := errors.New("store error")
 	h := tg.StatsRichestHandler{

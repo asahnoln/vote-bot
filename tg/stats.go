@@ -27,7 +27,10 @@ func (h *StatsRichestHandler) Condition(upd Update) bool {
 }
 
 func (h *StatsRichestHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
-	allUsers, _ := h.Store.AllUsers(ctx)
+	allUsers, err := h.Store.AllUsers(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("all users: %w", err)
+	}
 
 	richestUsers, err := h.Store.RichestUsers(ctx)
 	if err != nil {
