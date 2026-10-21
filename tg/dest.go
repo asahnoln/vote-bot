@@ -9,14 +9,6 @@ import (
 	"net/http"
 )
 
-type Dest struct {
-	URL string
-}
-
-func NewDest(url string) Dest {
-	return Dest{URL: url}
-}
-
 type URLer interface {
 	URL() string
 }
@@ -37,6 +29,23 @@ type EditMessageText struct {
 
 func (EditMessageText) URL() string {
 	return "editMessageText"
+}
+
+type DeleteMessage struct {
+	ChatID    int `json:"chat_id"`
+	MessageID int `json:"message_id"`
+}
+
+func (DeleteMessage) URL() string {
+	return "deleteMessage"
+}
+
+type Dest struct {
+	URL string
+}
+
+func NewDest(url string) Dest {
+	return Dest{URL: url}
 }
 
 func (d Dest) Send(ctx context.Context, data URLer) (m any, err error) {

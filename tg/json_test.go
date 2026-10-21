@@ -56,7 +56,7 @@ func TestSendRichMessageStr(t *testing.T) {
 //go:embed testdata/editMessageText.json
 var editMessageText string
 
-func TestEditMessageText(t *testing.T) {
+func TestEditMessageTextJSON(t *testing.T) {
 	msg := tg.EditMessageText{
 		ChatID:    12,
 		MessageID: 13,
@@ -119,6 +119,25 @@ func TestSetMyCommandsJSON(t *testing.T) {
 	}
 
 	want := strings.TrimSpace(setMyCommands)
+	if diff := cmp.Diff(want, string(got)); diff != "" {
+		t.Errorf("set my commands mismatch (-want +got):\n%s", diff)
+	}
+}
+
+//go:embed testdata/deleteMessage.json
+var deleteMessage string
+
+func TestDeleteMessageJSON(t *testing.T) {
+	msg := tg.DeleteMessage{
+		ChatID:    299,
+		MessageID: 12,
+	}
+	got, err := json.MarshalIndent(&msg, "", "  ")
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	want := strings.TrimSpace(deleteMessage)
 	if diff := cmp.Diff(want, string(got)); diff != "" {
 		t.Errorf("set my commands mismatch (-want +got):\n%s", diff)
 	}
