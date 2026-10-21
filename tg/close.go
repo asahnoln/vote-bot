@@ -110,10 +110,17 @@ func ClosingMessage(userID int, messageID int, question string, a store.Answer) 
 		})
 
 		if a.Bet > 0 {
-			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
-				Type: InputRichBlockParagraphType,
-				Text: fmt.Sprintf("%s%d", TextYourBet, a.Bet),
-			})
+			if a.AllIn {
+				msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+					Type: InputRichBlockParagraphType,
+					Text: fmt.Sprintf("%s%s", TextYourBet, "ВА-БАНК!"),
+				})
+			} else {
+				msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+					Type: InputRichBlockParagraphType,
+					Text: fmt.Sprintf("%s%d", TextYourBet, a.Bet),
+				})
+			}
 		} else {
 			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
 				Type: InputRichBlockParagraphType,

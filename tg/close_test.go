@@ -114,6 +114,37 @@ func TestClosingMessage(t *testing.T) {
 	}
 }
 
+func TestClosingMessageAllIn(t *testing.T) {
+	msg := tg.ClosingMessage(191, 167521, "Q or W?", store.Answer{A: "WWW!!!", Bet: 999, AllIn: true})
+	want := tg.EditMessageText{
+		ChatID:    191,
+		MessageID: 167521,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Q or W?",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш ответ: WWW!!!",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваша ставка: ВА-БАНК!",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вопрос закрыт!",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, msg); diff != "" {
+		t.Errorf("request mismatch (-want +got):%s", diff)
+	}
+}
+
 func TestClosingMessageNoBet(t *testing.T) {
 	msg := tg.ClosingMessage(124, 110003, "Cool question", store.Answer{A: "Cool answer"})
 	want := tg.EditMessageText{

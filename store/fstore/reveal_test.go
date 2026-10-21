@@ -63,11 +63,13 @@ func TestAnswers(t *testing.T) {
 	col.Doc("8292:answer-q-51").Set(ctx, map[string]any{
 		"user_id":     8292,
 		"question_id": "answer-q-51",
+		"bet":         100,
 		"is_right":    true,
 	})
 	col.Doc("156:answer-q-51").Set(ctx, map[string]any{
 		"user_id":     156,
 		"question_id": "answer-q-51",
+		"all_in":      true,
 		"is_right":    false,
 	})
 	col.Doc("928:skip-this-q-999").Set(ctx, map[string]any{
@@ -84,8 +86,8 @@ func TestAnswers(t *testing.T) {
 	}
 
 	want := []store.Answer{
-		{UserID: 156, IsRight: false},
-		{UserID: 8292, IsRight: true},
+		{UserID: 156, IsRight: false, AllIn: true},
+		{UserID: 8292, Bet: 100, IsRight: true},
 	}
 	if diff := cmp.Diff(want, answers); diff != "" {
 		t.Errorf("answers mismatch (-want +got):\n%s", diff)
