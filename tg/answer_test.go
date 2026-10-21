@@ -47,19 +47,19 @@ func TestAnswer(t *testing.T) {
 					Align: "left",
 					Buttons: []tg.RichMessageButton{
 						{
-							Text:         "100",
+							Text:         "100$",
 							CallbackData: "bet:opt-q-67:100",
 						},
 						{
-							Text:         "200",
+							Text:         "200$",
 							CallbackData: "bet:opt-q-67:200",
 						},
 						{
-							Text:         "500",
+							Text:         "500$",
 							CallbackData: "bet:opt-q-67:500",
 						},
 						{
-							Text: "Ва-банк!",
+							Text: "ВА-БАНК!",
 							// NOTE: -100 is a special for all-in
 							CallbackData: "bet:opt-q-67:-100",
 						},

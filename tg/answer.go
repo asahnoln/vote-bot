@@ -38,6 +38,7 @@ func (h *AnswerHandler) Name() string {
 const (
 	TextYourAnswer = "Ваш ответ: "
 	TextChooseBet  = "Выберите ставку:"
+	TextAllIn      = "ВА-БАНК!"
 )
 
 func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
@@ -79,19 +80,19 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 					Align: AlignLeft,
 					Buttons: []RichMessageButton{
 						{
-							Text:         "100",
+							Text:         "100$",
 							CallbackData: prefix + "100",
 						},
 						{
-							Text:         "200",
+							Text:         "200$",
 							CallbackData: prefix + "200",
 						},
 						{
-							Text:         "500",
+							Text:         "500$",
 							CallbackData: prefix + "500",
 						},
 						{
-							Text: "Ва-банк!",
+							Text: TextAllIn,
 							// NOTE: -100 is a special for all-in
 							CallbackData: prefix + "-100",
 						},
@@ -174,7 +175,7 @@ func (h *BetHandler) HandleResponse(ctx context.Context, resp Message) error {
 
 func BetInputRichBlock(bet string) InputRichBlock {
 	if bet == "-100" {
-		bet = "ВА-БАНК!"
+		bet = TextAllIn
 	}
 	return InputRichBlock{
 		Type: "paragraph",
