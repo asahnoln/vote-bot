@@ -58,6 +58,11 @@ func TestAnswer(t *testing.T) {
 							Text:         "500",
 							CallbackData: "bet:opt-q-67:500",
 						},
+						{
+							Text: "Ва-банк!",
+							// NOTE: -100 is a special for all-in
+							CallbackData: "bet:opt-q-67:-100",
+						},
 					},
 				},
 			},

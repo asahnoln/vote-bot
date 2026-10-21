@@ -90,6 +90,11 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 							Text:         "500",
 							CallbackData: prefix + "500",
 						},
+						{
+							Text: "Ва-банк!",
+							// NOTE: -100 is a special for all-in
+							CallbackData: prefix + "-100",
+						},
 						// TODO: Add all in
 					},
 				},

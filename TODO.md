@@ -71,11 +71,11 @@ Each user has an account. (At the start they have 1000$)
 - [x] On reveal we have to define who lost
 - [x] If user misses a question - he looses
 - [x] Part of errors can be returned to admin without problems
+- [x] Bot commands must be scoped to admins
 - [ ] VABANK ALL IN
 - [ ] Stats MOLNIYA - most fastest right answers (even with 0 account)
 - [ ] Stats SHERLOCK - most right answers (even with 0 account)
 - [ ] Stats IGROK VA-BANK - most vabank uses
-- [ ] Bot commands must be scoped to admins
 - [ ] Start bot with secret token from QR
 - [ ] Delete incoming user messages
 - [ ] Think on misclicks on commands - suddenly close a question, or send answer again etc

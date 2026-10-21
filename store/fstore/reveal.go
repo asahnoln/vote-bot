@@ -73,6 +73,10 @@ loop:
 			return nil, fmt.Errorf("data %#v to answer: %w", d, err)
 		}
 
+		if a.Bet == -100 {
+			a.Bet = ACCOUNT_START_MONEY + accs[a.UserID]
+		}
+
 		if !a.IsRight {
 			a.Bet *= -1
 		}
