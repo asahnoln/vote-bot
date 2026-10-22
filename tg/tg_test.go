@@ -79,9 +79,9 @@ func TestBotDestError(t *testing.T) {
 		b.Handle(&handlerStub{})
 		b.ServeHTTP(w, r)
 
-		// if got, want := w.Code, http.StatusInternalServerError; got != want {
-		// 	t.Errorf("bot response code: got %v; want %v", got, want)
-		// }
+		if got, want := w.Code, http.StatusOK; got != want {
+			t.Errorf("bot response code: got %v; want %v", got, want)
+		}
 	})
 }
 
@@ -198,8 +198,8 @@ func TestBotHandler(t *testing.T) {
 			msgs = append(msgs, tg.SendRichMessage{})
 			return
 		},
-		handleRespFunc: func(ctx context.Context, m tg.Message) error {
-			gotM = m
+		handleRespFunc: func(ctx context.Context, m any) error {
+			gotM = m.(tg.Message)
 			return nil
 		},
 		nameFunc: func() string {
@@ -222,6 +222,55 @@ func TestBotHandler(t *testing.T) {
 
 	if got, want := gotM.MessageID, 1853; got != want {
 		t.Errorf("last message handled: got %v; want %v", got, want)
+	}
+}
+
+func TestBotMessagesSentWhenDestErrorsAnytime(t *testing.T) {
+	upd := tg.Update{
+		Message: tg.Message{
+			Text: "specialText",
+		},
+	}
+	body, err := json.Marshal(&upd)
+	if err != nil {
+		t.Fatalf("marshal err: %v", err)
+	}
+
+	r := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	destSpy := &destSpy{
+		err: errors.New("dest error"),
+	}
+	b := tg.Bot{
+		Dest: destSpy,
+	}
+
+	b.Handle(&handlerCustomStub{
+		conditionFunc: func(u tg.Update) bool {
+			return u.Message.Text == "specialText"
+		},
+		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.URLer, err error) {
+			msgs = append(msgs, tg.SendRichMessage{
+				ChatID: 96712,
+			})
+			msgs = append(msgs, tg.EditMessageText{
+				ChatID: 602,
+			})
+			msgs = append(msgs, tg.DeleteMessage{})
+			return
+		},
+		handleRespFunc: func(ctx context.Context, m any) error {
+			return nil
+		},
+		nameFunc: func() string {
+			return "customStub"
+		},
+	})
+	b.ServeHTTP(w, r)
+
+	if got, want := len(destSpy.got), 3; got != want {
+		t.Fatalf("dest requests count got %d; want %d", got, want)
 	}
 }
 
@@ -270,7 +319,7 @@ func (s *handlerStub) Handle(context.Context, tg.Update) (msgs []tg.URLer, err e
 	return
 }
 
-func (s *handlerStub) HandleResponse(context.Context, tg.Message) error {
+func (s *handlerStub) HandleResponse(context.Context, any) error {
 	return nil
 }
 
@@ -281,7 +330,7 @@ func (s *handlerStub) Name() string {
 type handlerCustomStub struct {
 	conditionFunc  func(tg.Update) bool
 	handleFunc     func(context.Context, tg.Update) ([]tg.URLer, error)
-	handleRespFunc func(context.Context, tg.Message) error
+	handleRespFunc func(context.Context, any) error
 	nameFunc       func() string
 }
 
@@ -293,7 +342,7 @@ func (s *handlerCustomStub) Handle(ctx context.Context, upd tg.Update) (msgs []t
 	return s.handleFunc(ctx, upd)
 }
 
-func (s *handlerCustomStub) HandleResponse(ctx context.Context, m tg.Message) error {
+func (s *handlerCustomStub) HandleResponse(ctx context.Context, m any) error {
 	return s.handleRespFunc(ctx, m)
 }
 

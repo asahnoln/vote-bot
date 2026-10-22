@@ -26,7 +26,7 @@ type RevealHandler struct {
 	Store RevealStore
 }
 
-func (h *RevealHandler) HandleResponse(context.Context, Message) error {
+func (h *RevealHandler) HandleResponse(context.Context, any) error {
 	return nil
 }
 

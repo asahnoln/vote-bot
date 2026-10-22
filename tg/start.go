@@ -17,7 +17,7 @@ type StartHandler struct {
 	Store StartStore
 }
 
-func (h *StartHandler) HandleResponse(context.Context, Message) error {
+func (h *StartHandler) HandleResponse(context.Context, any) error {
 	return nil
 }
 

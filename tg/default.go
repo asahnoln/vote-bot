@@ -8,7 +8,7 @@ func (h *DefaultHandler) Condition(Update) bool {
 	return true
 }
 
-func (h *DefaultHandler) HandleResponse(context.Context, Message) error {
+func (h *DefaultHandler) HandleResponse(context.Context, any) error {
 	return nil
 }
 

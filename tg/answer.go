@@ -93,7 +93,7 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, e
 	return msgs, nil
 }
 
-func (h *AnswerHandler) HandleResponse(ctx context.Context, resp Message) error {
+func (h *AnswerHandler) HandleResponse(ctx context.Context, resp any) error {
 	return nil
 }
 
@@ -155,7 +155,7 @@ func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err 
 	return msgs, nil
 }
 
-func (h *BetHandler) HandleResponse(ctx context.Context, resp Message) error {
+func (h *BetHandler) HandleResponse(ctx context.Context, resp any) error {
 	return nil
 }
 

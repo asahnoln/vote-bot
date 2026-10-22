@@ -64,6 +64,6 @@ func (h *StatsRichestHandler) Handle(ctx context.Context, upd Update) (msgs []UR
 	return msgs, nil
 }
 
-func (h *StatsRichestHandler) HandleResponse(context.Context, Message) error {
+func (h *StatsRichestHandler) HandleResponse(context.Context, any) error {
 	return nil
 }

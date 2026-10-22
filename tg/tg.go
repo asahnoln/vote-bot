@@ -94,7 +94,7 @@ type Handler interface {
 	Name() string
 	Condition(Update) bool
 	Handle(context.Context, Update) (msgs []URLer, err error)
-	HandleResponse(context.Context, Message) error
+	HandleResponse(context.Context, any) error
 }
 
 func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -142,10 +142,10 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 		resp, err := b.Dest.Send(ctx, m)
 		if err != nil {
 			b.error(fmt.Errorf("dest send: %w", err), w, http.StatusInternalServerError)
-			break
+			continue
 		}
 
-		err = handler.HandleResponse(ctx, resp.(Message))
+		err = handler.HandleResponse(ctx, resp)
 		if err != nil {
 			b.error(fmt.Errorf("dest resp save: %w", err), w, http.StatusInternalServerError)
 			break
