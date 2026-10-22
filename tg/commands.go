@@ -1,10 +1,5 @@
 package tg
 
-type SetMyCommands struct {
-	Commands []BotCommand    `json:"commands"`
-	Scope    BotCommandScope `json:"scope"`
-}
-
 type BotCommand struct {
 	Command     string `json:"command"`
 	Description string `json:"description"`
@@ -19,8 +14,17 @@ type BotCommandScope struct {
 	ChatID int                 `json:"chat_id"`
 }
 
+type SetMyCommands struct {
+	Commands []BotCommand    `json:"commands"`
+	Scope    BotCommandScope `json:"scope"`
+}
+
 func (SetMyCommands) URL() string {
 	return "setMyCommands"
+}
+
+func (SetMyCommands) UnmarshalResult(data []byte) (any, error) {
+	return nil, nil
 }
 
 const (

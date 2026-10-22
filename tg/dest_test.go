@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -188,4 +189,60 @@ func TestDestinationReturnsTrueForResult(t *testing.T) {
 	if got, want := m.(bool), true; got != want {
 		t.Errorf("response message: got %v; want %v", got, want)
 	}
+}
+
+func TestDestinationReturnsWhateverRequestsNeeds(t *testing.T) {
+	wantResult := tgResultStub{
+		SomeData: 1,
+	}
+	tgSrvStub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp := tg.Response{
+			OK:     true,
+			Result: wantResult,
+		}
+
+		err := json.NewEncoder(w).Encode(resp)
+		if err != nil {
+			t.Fatalf("tg srv resp err: %v", err)
+		}
+	}))
+	defer tgSrvStub.Close()
+
+	d := tg.NewDest(tgSrvStub.URL)
+
+	r, err := d.Send(context.Background(), &requestStub{})
+	if err != nil {
+		t.Fatalf("send err: got %v; want nil", err)
+	}
+
+	got, ok := r.(tgResultStub)
+	if got, want := ok, true; got != want {
+		t.Fatalf("type of result must be tgResultStub: got %v; want %v", got, want)
+	}
+
+	if got, want := got.SomeData, wantResult.SomeData; got != want {
+		t.Fatalf("data in stub: got %v; want %v", got, want)
+	}
+}
+
+type tgResultStub struct {
+	SomeData int
+}
+
+type requestStub struct {
+	err error
+}
+
+func (r *requestStub) URL() string {
+	return "requestStub"
+}
+
+func (r *requestStub) UnmarshalResult(data []byte) (any, error) {
+	result := tgResultStub{}
+	err := json.Unmarshal(data, &result)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal: %w", err)
+	}
+
+	return result, r.err
 }

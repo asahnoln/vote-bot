@@ -148,7 +148,6 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 		err = handler.HandleResponse(ctx, resp)
 		if err != nil {
 			b.error(fmt.Errorf("dest resp save: %w", err), w, http.StatusInternalServerError)
-			break
 		}
 	}
 }

@@ -11,6 +11,7 @@ import (
 
 type URLer interface {
 	URL() string
+	UnmarshalResult(data []byte) (any, error)
 }
 type SendRichMessage struct {
 	ChatID      int              `json:"chat_id"`
@@ -19,6 +20,10 @@ type SendRichMessage struct {
 
 func (SendRichMessage) URL() string {
 	return "sendRichMessage"
+}
+
+func (SendRichMessage) UnmarshalResult(data []byte) (any, error) {
+	return nil, nil
 }
 
 type EditMessageText struct {
@@ -31,6 +36,10 @@ func (EditMessageText) URL() string {
 	return "editMessageText"
 }
 
+func (EditMessageText) UnmarshalResult(data []byte) (any, error) {
+	return nil, nil
+}
+
 type DeleteMessage struct {
 	ChatID    int `json:"chat_id"`
 	MessageID int `json:"message_id"`
@@ -38,6 +47,10 @@ type DeleteMessage struct {
 
 func (DeleteMessage) URL() string {
 	return "deleteMessage"
+}
+
+func (DeleteMessage) UnmarshalResult(data []byte) (any, error) {
+	return nil, nil
 }
 
 type Dest struct {
@@ -48,7 +61,7 @@ func NewDest(url string) Dest {
 	return Dest{URL: url}
 }
 
-func (d Dest) Send(ctx context.Context, data URLer) (m any, err error) {
+func (d Dest) Send(ctx context.Context, data URLer) (result any, err error) {
 	if data == nil {
 		return
 	}
@@ -59,43 +72,57 @@ func (d Dest) Send(ctx context.Context, data URLer) (m any, err error) {
 
 	body, err := json.Marshal(&data)
 	if err != nil {
-		return m, fmt.Errorf("message marshal: %w", err)
+		return result, fmt.Errorf("message marshal: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx,
 		http.MethodPost, d.URL+"/"+methodURL, bytes.NewReader(body))
 	req.Header.Set("Content-Type", ApplicationJSONContentType)
 	if err != nil {
-		return m, fmt.Errorf("request creation: %w", err)
+		return result, fmt.Errorf("request creation: %w", err)
 	}
 
 	// TODO: Test for this err
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return m, fmt.Errorf("http client do: %w", err)
+		return result, fmt.Errorf("http client do: %w", err)
 	}
 	defer response.Body.Close()
 
 	resp := Response{}
 	err = json.NewDecoder(response.Body).Decode(&resp)
 	if err != nil {
-		return m, fmt.Errorf("tg srv response decode: %w", err)
+		return result, fmt.Errorf("tg srv response decode: %w", err)
 	}
 
 	if !resp.OK {
-		return m, fmt.Errorf("tg srv not ok: %s", resp.Description)
+		return result, fmt.Errorf("tg srv not ok: %s", resp.Description)
+	}
+
+	resultBytes, err := json.Marshal(resp.Result)
+	if err != nil {
+		return result, fmt.Errorf("result marshal: %w", err)
+	}
+
+	result, err = data.UnmarshalResult(resultBytes)
+	if err != nil {
+		return result, fmt.Errorf("data unmarshal result: %w", err)
+	}
+
+	if result != nil {
+		return result, nil
 	}
 
 	if _, ok := resp.Result.(map[string]any); ok {
 		data, err := json.Marshal(resp.Result)
 		if err != nil {
-			return m, fmt.Errorf("result marshal: %w", err)
+			return result, fmt.Errorf("result marshal: %w", err)
 		}
 
 		msg := Message{}
 		err = json.Unmarshal(data, &msg)
 		if err != nil {
-			return m, fmt.Errorf("result marshal: %w", err)
+			return result, fmt.Errorf("result marshal: %w", err)
 		}
 
 		resp.Result = msg
