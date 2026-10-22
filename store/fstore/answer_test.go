@@ -121,3 +121,37 @@ func TestSaveBet(t *testing.T) {
 		})
 	}
 }
+
+func TestSaveBetWithSpeedData(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("answers").Doc("235:test-q-111").Set(ctx, map[string]any{
+		"user_id":  235,
+		"a":        "has answer",
+		"is_right": true,
+	})
+
+	c.Collection("users").Doc("235").Set(ctx, map[string]any{
+		"avg_speed": 1.5,
+		"speed_cnt": 2,
+	})
+
+	f := fstore.New(c)
+
+	err := f.SaveBet(ctx, 235, "test-q-109", 10)
+	if err != nil {
+		t.Fatalf("fstore save bet: got err %q; want nil", err)
+	}
+
+	d, _ := c.Collection("users").Doc("235").Get(ctx)
+
+	if got, want := d.Data()["avg_speed"].(float64), float64(2); got != want {
+		t.Errorf("avg speed: got %v; want %v", got, want)
+	}
+	if got, want := d.Data()["speed_cnt"].(int64), int64(3); got != want {
+		t.Errorf("avg speed: got %v; want %v", got, want)
+	}
+}

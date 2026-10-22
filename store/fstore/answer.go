@@ -3,6 +3,7 @@ package fstore
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"cloud.google.com/go/firestore"
 	"github.com/asahnoln/vote-bot/store"
@@ -64,6 +65,25 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 			map[string]any{
 				"bet":    bet,
 				"all_in": allIn,
+			}, firestore.MergeAll)
+	if err != nil {
+		return fmt.Errorf("doc set: %w", err)
+	}
+
+	// d, err := f.c.Collection(UsersCollection).
+	// 	Doc(strconv.Itoa(userID)).
+	// 	Get(ctx)
+	// if err != nil {
+	// 	return fmt.Errorf("user: %w", err)
+	// }
+	// u := store.User{}
+
+	_, err = f.c.Collection(UsersCollection).
+		Doc(strconv.Itoa(userID)).
+		Set(ctx,
+			map[string]any{
+				"avg_speed": (1.5*2 + 3) / 3,
+				"speed_cnt": firestore.Increment(1),
 			}, firestore.MergeAll)
 	if err != nil {
 		return fmt.Errorf("doc set: %w", err)
