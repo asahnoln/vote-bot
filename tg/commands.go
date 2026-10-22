@@ -1,5 +1,9 @@
 package tg
 
+import (
+	"encoding/json"
+)
+
 type BotCommand struct {
 	Command     string `json:"command"`
 	Description string `json:"description"`
@@ -23,8 +27,9 @@ func (SetMyCommands) URL() string {
 	return "setMyCommands"
 }
 
-func (SetMyCommands) UnmarshalResult(data []byte) (any, error) {
-	return nil, nil
+func (SetMyCommands) UnmarshalResult(data []byte) (result any, err error) {
+	err = json.Unmarshal(data, &result)
+	return
 }
 
 const (

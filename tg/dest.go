@@ -23,7 +23,7 @@ func (SendRichMessage) URL() string {
 }
 
 func (SendRichMessage) UnmarshalResult(data []byte) (any, error) {
-	return nil, nil
+	return baseUnmarshal[Message](data)
 }
 
 type EditMessageText struct {
@@ -37,7 +37,12 @@ func (EditMessageText) URL() string {
 }
 
 func (EditMessageText) UnmarshalResult(data []byte) (any, error) {
-	return nil, nil
+	return baseUnmarshal[Message](data)
+}
+
+func baseUnmarshal[T any](data []byte) (result T, err error) {
+	err = json.Unmarshal(data, &result)
+	return
 }
 
 type DeleteMessage struct {
@@ -49,8 +54,9 @@ func (DeleteMessage) URL() string {
 	return "deleteMessage"
 }
 
-func (DeleteMessage) UnmarshalResult(data []byte) (any, error) {
-	return nil, nil
+func (DeleteMessage) UnmarshalResult(data []byte) (result any, err error) {
+	err = json.Unmarshal(data, &result)
+	return
 }
 
 type Dest struct {
@@ -89,6 +95,7 @@ func (d Dest) Send(ctx context.Context, data URLer) (result any, err error) {
 	}
 	defer response.Body.Close()
 
+	// TODO: Use whole response object for UnmarshalResult?
 	resp := Response{}
 	err = json.NewDecoder(response.Body).Decode(&resp)
 	if err != nil {
@@ -109,24 +116,5 @@ func (d Dest) Send(ctx context.Context, data URLer) (result any, err error) {
 		return result, fmt.Errorf("data unmarshal result: %w", err)
 	}
 
-	if result != nil {
-		return result, nil
-	}
-
-	if _, ok := resp.Result.(map[string]any); ok {
-		data, err := json.Marshal(resp.Result)
-		if err != nil {
-			return result, fmt.Errorf("result marshal: %w", err)
-		}
-
-		msg := Message{}
-		err = json.Unmarshal(data, &msg)
-		if err != nil {
-			return result, fmt.Errorf("result marshal: %w", err)
-		}
-
-		resp.Result = msg
-	}
-
-	return resp.Result, nil
+	return result, nil
 }

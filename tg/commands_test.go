@@ -7,13 +7,30 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestSetMyCommands(t *testing.T) {
+func TestSetMyCommandsURL(t *testing.T) {
 	msg := tg.SetMyCommands{}
 
 	url := msg.URL()
 
 	if got, want := url, "setMyCommands"; got != want {
 		t.Errorf("url: got %q; want %q", got, want)
+	}
+}
+
+func TestSetMyCommandsUnmarshal(t *testing.T) {
+	m := tg.SetMyCommands{}
+
+	r, err := m.UnmarshalResult([]byte("true"))
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	got, ok := r.(bool)
+	if got, want := ok, true; got != want {
+		t.Fatalf("proper type: got %v; want %v", got, want)
+	}
+	if got, want := got, true; got != want {
+		t.Errorf("got %v; want %v", got, want)
 	}
 }
 

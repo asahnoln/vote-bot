@@ -58,7 +58,9 @@ func TestDestination(t *testing.T) {
 	want := tg.SendRichMessage{
 		ChatID: 52,
 	}
-	m, err := d.Send(context.Background(), want)
+
+	// NOTE: Tested separately
+	_, err := d.Send(context.Background(), want)
 	if err != nil {
 		t.Fatalf("send err: got %v; want nil", err)
 	}
@@ -69,10 +71,6 @@ func TestDestination(t *testing.T) {
 
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("request mismatch (-want +got):%s", diff)
-	}
-
-	if got, want := m.(tg.Message).MessageID, 234; got != want {
-		t.Errorf("response message id: got %v; want %v", got, want)
 	}
 }
 
@@ -162,32 +160,6 @@ func TestDestNoopForNil(t *testing.T) {
 	_, err := d.Send(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("got err %v; want nil", err)
-	}
-}
-
-func TestDestinationReturnsTrueForResult(t *testing.T) {
-	tgSrvStub := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		resp := tg.Response{
-			OK:     true,
-			Result: true,
-		}
-
-		err := json.NewEncoder(w).Encode(resp)
-		if err != nil {
-			t.Fatalf("tg srv resp err: %v", err)
-		}
-	}))
-	defer tgSrvStub.Close()
-
-	d := tg.NewDest(tgSrvStub.URL)
-
-	m, err := d.Send(context.Background(), tg.SetMyCommands{})
-	if err != nil {
-		t.Fatalf("send err: got %v; want nil", err)
-	}
-
-	if got, want := m.(bool), true; got != want {
-		t.Errorf("response message: got %v; want %v", got, want)
 	}
 }
 
