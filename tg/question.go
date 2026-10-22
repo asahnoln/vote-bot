@@ -34,7 +34,7 @@ func (h *QuestionHandler) Name() string {
 	return "question"
 }
 
-func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
+func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
 	uIDs, err := h.Store.Users(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("users: %w", err)

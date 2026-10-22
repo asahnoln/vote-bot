@@ -35,7 +35,7 @@ func (h *CloseHandler) Condition(upd Update) bool {
 	return upd.Message.Text == CloseCurrentQuestionCommand
 }
 
-func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
+func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
 	users, err := h.Store.Users(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("users: %w", err)

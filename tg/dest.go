@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-type URLer interface {
+type Request interface {
 	URL() string
 	UnmarshalResult(data []byte) (any, error)
 }
@@ -67,7 +67,7 @@ func NewDest(url string) Dest {
 	return Dest{URL: url}
 }
 
-func (d Dest) Send(ctx context.Context, data URLer) (result any, err error) {
+func (d Dest) Send(ctx context.Context, data Request) (result any, err error) {
 	if data == nil {
 		return
 	}

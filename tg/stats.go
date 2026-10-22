@@ -26,7 +26,7 @@ func (h *StatsRichestHandler) Condition(upd Update) bool {
 	return upd.Message.Text == StatsRichestUsersCommand
 }
 
-func (h *StatsRichestHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
+func (h *StatsRichestHandler) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
 	allUsers, err := h.Store.AllUsers(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("all users: %w", err)

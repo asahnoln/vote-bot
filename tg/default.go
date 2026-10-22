@@ -16,7 +16,7 @@ func (h *DefaultHandler) Name() string {
 	return "default"
 }
 
-func (h *DefaultHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
+func (h *DefaultHandler) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
 	msgs = append(msgs, DeleteMessage{
 		ChatID:    upd.Message.Chat.ID,
 		MessageID: upd.Message.MessageID,

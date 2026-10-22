@@ -35,7 +35,7 @@ const (
 	TextAlreadyJoinedTheGame = "Вы уже участвуете в игре!"
 )
 
-func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
+func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
 	ok, err := h.Store.FirstQuestionMissed(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("first question missed: %w", err)

@@ -42,7 +42,7 @@ const (
 	TextAllIn      = "ВА-БАНК!"
 )
 
-func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
+func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
 	qID, answer, err := qIDAndData(OptCallbackDataPrefix, upd.CallbackQuery.Data)
 	if err != nil {
 		return nil, errors.Join(ErrWrongCallbackData, err)
@@ -115,7 +115,7 @@ func (h *BetHandler) Name() string {
 
 const TextYourBet = "Ваша ставка: "
 
-func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []URLer, err error) {
+func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
 	qID, betStr, err := qIDAndData(BetCallbackDataPrefix, upd.CallbackQuery.Data)
 	if err != nil {
 		return nil, err

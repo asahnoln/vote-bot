@@ -81,7 +81,7 @@ type Response struct {
 }
 
 type Sender interface {
-	Send(ctx context.Context, data URLer) (any, error)
+	Send(ctx context.Context, data Request) (any, error)
 }
 
 type Bot struct {
@@ -93,7 +93,7 @@ type Bot struct {
 type Handler interface {
 	Name() string
 	Condition(Update) bool
-	Handle(context.Context, Update) (msgs []URLer, err error)
+	Handle(context.Context, Update) (msgs []Request, err error)
 	HandleResponse(context.Context, any) error
 }
 

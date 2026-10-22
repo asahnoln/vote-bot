@@ -99,7 +99,7 @@ func TestBotHandlers(t *testing.T) {
 		conditionFunc: func(u tg.Update) bool {
 			return u.Message.Text == "handler1"
 		},
-		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.URLer, err error) {
+		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.Request, err error) {
 			msgs = append(msgs, tg.SendRichMessage{
 				ChatID: 10,
 			})
@@ -112,7 +112,7 @@ func TestBotHandlers(t *testing.T) {
 		conditionFunc: func(u tg.Update) bool {
 			return u.Message.Text == "handler2"
 		},
-		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.URLer, err error) {
+		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.Request, err error) {
 			msgs = append(msgs, tg.SendRichMessage{
 				ChatID: 20,
 			})
@@ -188,7 +188,7 @@ func TestBotHandler(t *testing.T) {
 		conditionFunc: func(u tg.Update) bool {
 			return u.Message.Text == "specialText"
 		},
-		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.URLer, err error) {
+		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.Request, err error) {
 			msgs = append(msgs, tg.SendRichMessage{
 				ChatID: 96712,
 			})
@@ -250,7 +250,7 @@ func TestBotMessagesSentWhenDestErrorsAnytime(t *testing.T) {
 		conditionFunc: func(u tg.Update) bool {
 			return u.Message.Text == "specialText"
 		},
-		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.URLer, err error) {
+		handleFunc: func(ctx context.Context, u tg.Update) (msgs []tg.Request, err error) {
 			msgs = append(msgs, tg.SendRichMessage{
 				ChatID: 96712,
 			})
@@ -314,7 +314,7 @@ func (s *handlerStub) Condition(tg.Update) bool {
 	return true
 }
 
-func (s *handlerStub) Handle(context.Context, tg.Update) (msgs []tg.URLer, err error) {
+func (s *handlerStub) Handle(context.Context, tg.Update) (msgs []tg.Request, err error) {
 	msgs = append(msgs, tg.EditMessageText{})
 	return
 }
@@ -329,7 +329,7 @@ func (s *handlerStub) Name() string {
 
 type handlerCustomStub struct {
 	conditionFunc  func(tg.Update) bool
-	handleFunc     func(context.Context, tg.Update) ([]tg.URLer, error)
+	handleFunc     func(context.Context, tg.Update) ([]tg.Request, error)
 	handleRespFunc func(context.Context, any) error
 	nameFunc       func() string
 }
@@ -338,7 +338,7 @@ func (s *handlerCustomStub) Condition(upd tg.Update) bool {
 	return s.conditionFunc(upd)
 }
 
-func (s *handlerCustomStub) Handle(ctx context.Context, upd tg.Update) (msgs []tg.URLer, err error) {
+func (s *handlerCustomStub) Handle(ctx context.Context, upd tg.Update) (msgs []tg.Request, err error) {
 	return s.handleFunc(ctx, upd)
 }
 
@@ -356,7 +356,7 @@ type destSpy struct {
 	returnMsg tg.Message
 }
 
-func (d *destSpy) Send(ctx context.Context, data tg.URLer) (m any, err error) {
+func (d *destSpy) Send(ctx context.Context, data tg.Request) (m any, err error) {
 	d.got = append(d.got, data)
 	return d.returnMsg, d.err
 }
