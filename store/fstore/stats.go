@@ -9,10 +9,16 @@ import (
 )
 
 // TODO: Use this for stats handler
-func (f *Firestore) StatsFastestUsers(ctx context.Context) (users []store.User, err error) {
+func (f *Firestore) Stats(ctx context.Context) (users []store.User, err error) {
 	docs, err := f.c.Collection(UsersCollection).
+		WhereEntity(firestore.PropertyFilter{
+			Path:     "lost",
+			Operator: EqualOp,
+			Value:    false,
+		}).
+		OrderBy("right_answer_cnt", firestore.Desc).
+		OrderBy("acc", firestore.Desc).
 		OrderBy("avg_speed", firestore.Asc).
-		Limit(3).
 		Documents(ctx).GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("get all: %w", err)

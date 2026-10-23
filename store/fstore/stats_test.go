@@ -77,7 +77,7 @@ func TestStatsFastest(t *testing.T) {
 		{UserID: 11, Name: "2nd", RightAnswerCnt: 9, Acc: 1000, AvgSpeed: 2},
 		{UserID: 12, Name: "3rd", RightAnswerCnt: 9, Acc: 999, AvgSpeed: 0.5},
 		{UserID: 13, Name: "4th", RightAnswerCnt: 9, Acc: 999, AvgSpeed: 1},
-		{UserID: 13, Name: "5th", RightAnswerCnt: 8, Acc: 1000, AvgSpeed: 0.25},
+		{UserID: 14, Name: "5th", RightAnswerCnt: 8, Acc: 1000, AvgSpeed: 0.25},
 	}
 	if diff := cmp.Diff(want, users); diff != "" {
 		t.Errorf("stats fastest users mismatch (-want +got):\n%s", diff)
