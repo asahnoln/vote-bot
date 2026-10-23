@@ -71,41 +71,19 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("doc set: %w", err)
 	}
 
-	d, err := f.c.Collection(QuestionsCollection).Doc(questionID).Get(ctx)
+	q, err := f.queryAndMap[store.Question](ctx, QuestionsCollection, questionID)
 	if err != nil {
-		return fmt.Errorf("question: %w", err)
+		return fmt.Errorf("user query: %w", err)
 	}
 
-	q := store.Question{}
-	err = d.DataTo(&q)
+	u, err := f.queryAndMap[store.User](ctx, UsersCollection, strconv.Itoa(userID))
 	if err != nil {
-		return fmt.Errorf("question data to: %w", err)
+		return fmt.Errorf("user query: %w", err)
 	}
 
-	d, err = f.c.Collection(UsersCollection).
-		Doc(strconv.Itoa(userID)).
-		Get(ctx)
+	a, err := f.queryAndMap[store.Answer](ctx, AnswersCollection, answerDocID(userID, questionID))
 	if err != nil {
-		return fmt.Errorf("user: %w", err)
-	}
-
-	u := store.User{}
-	err = d.DataTo(&u)
-	if err != nil {
-		return fmt.Errorf("user data to: %w", err)
-	}
-
-	d, err = f.c.Collection(AnswersCollection).
-		Doc(answerDocID(userID, questionID)).
-		Get(ctx)
-	if err != nil {
-		return fmt.Errorf("answer: %w", err)
-	}
-
-	a := store.Answer{}
-	err = d.DataTo(&a)
-	if err != nil {
-		return fmt.Errorf("answer data to: %w", err)
+		return fmt.Errorf("answer query: %w", err)
 	}
 
 	if a.IsRight {
@@ -126,4 +104,20 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 
 func answerDocID(userID int, questionID string) string {
 	return fmt.Sprintf("%d:%s", userID, questionID)
+}
+
+func (f *Firestore) queryAndMap[T any](ctx context.Context, col string, id string) (t T, err error) {
+	d, err := f.c.Collection(col).
+		Doc(id).
+		Get(ctx)
+	if err != nil {
+		return t, fmt.Errorf("get: %w", err)
+	}
+
+	err = d.DataTo(&t)
+	if err != nil {
+		return t, fmt.Errorf("data to: %w", err)
+	}
+
+	return t, nil
 }

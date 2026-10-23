@@ -166,7 +166,7 @@ func TestSaveBetWithStatsData(t *testing.T) {
 	}
 }
 
-func TestSaveBetWithStatsDataWrongAnswer(t *testing.T) {
+func TestSaveBetWrongAnswerWontSaveStats(t *testing.T) {
 	ctx := context.Background()
 
 	c := firestoreMemoryEmulatorClient(t, ctx)
