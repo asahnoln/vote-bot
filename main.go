@@ -56,7 +56,7 @@ func main() {
 	b.Handle(&tg.BetHandler{Store: store})
 	b.Handle(&tg.CloseHandler{Store: store})
 	b.Handle(&tg.RevealHandler{Store: store})
-	// b.Handle(&tg.StatsRichestHandler{Store: store})
+	b.Handle(&tg.StatsHandler{Store: store})
 	b.Handle(&tg.DefaultHandler{})
 
 	// TODO: Create http server for context
