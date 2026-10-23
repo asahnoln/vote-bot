@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/store/fstore"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -295,5 +297,49 @@ func TestFirstQuestionMissedError(t *testing.T) {
 	_, err := f.FirstQuestionMissed(ctx)
 	if got, want := status.Code(err), codes.NotFound; err == nil || got != want {
 		t.Fatalf("fstore first question missed idx: got err %v; want %v", got, want)
+	}
+}
+
+func TestSaveQuestionSentAt(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": 1,
+	})
+	col := c.Collection("questions")
+	col.Doc("test-q-0").Set(ctx, store.Question{
+		Q:     "Should not be used?",
+		Opts:  map[string]bool{"skip": false, "avoid": true},
+		Order: 0,
+	})
+	col.Doc("test-q-1").Set(ctx, store.Question{
+		Q:     "SaaaS or SoooS?",
+		Opts:  map[string]bool{"jej": false, "joj": false, "sas": true, "sos": true},
+		Order: 1,
+	})
+
+	f := fstore.New(c)
+
+	err := f.SaveCurrentQuestionSentAt(ctx)
+	if err != nil {
+		t.Fatalf("fstore question: got err %v; want nil", err)
+	}
+
+	d, _ := c.Collection("questions").Doc("test-q-1").Get(ctx)
+
+	got := store.Question{}
+	d.DataTo(&got)
+
+	want := store.Question{
+		Q:      "SaaaS or SoooS?",
+		Opts:   map[string]bool{"jej": false, "joj": false, "sas": true, "sos": true},
+		Order:  1,
+		SentAt: time.Now(),
+	}
+	if diff := cmp.Diff(want, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
+		t.Errorf("question mismatch (-want +got):\n%s", diff)
 	}
 }

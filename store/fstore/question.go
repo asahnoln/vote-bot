@@ -3,6 +3,7 @@ package fstore
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/firestore/apiv1/firestorepb"
@@ -81,6 +82,22 @@ func (f *Firestore) FirstQuestionMissed(ctx context.Context) (ok bool, err error
 	}
 
 	return idx > 0, nil
+}
+
+func (f *Firestore) SaveCurrentQuestionSentAt(ctx context.Context) error {
+	q, err := f.getQuestionByCurrentIdx(ctx, 0)
+	if err != nil {
+		return fmt.Errorf("current question by idx: %w", err)
+	}
+
+	_, err = f.c.Collection(QuestionsCollection).Doc(q.ID).Update(ctx,
+		[]firestore.Update{
+			{Path: "sent_at", Value: time.Now()},
+		})
+	if err != nil {
+		return fmt.Errorf("current question update: %w", err)
+	}
+	return nil
 }
 
 func (f *Firestore) getQuestionByCurrentIdx(ctx context.Context, n int) (q store.Question, err error) {
