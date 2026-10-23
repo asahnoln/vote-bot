@@ -17,7 +17,8 @@
           [
             {
               "text": "edit table cell 1",
-              "align": "center"
+              "align": "center",
+              "is_header": true
             }
           ]
         ],

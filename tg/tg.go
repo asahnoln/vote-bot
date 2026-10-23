@@ -46,8 +46,9 @@ type RichMessageButton struct {
 }
 
 type RichBlockTableCell struct {
-	Text  string `json:"text"`
-	Align Align  `json:"align"`
+	Text     string `json:"text"`
+	Align    Align  `json:"align"`
+	IsHeader bool   `json:"is_header"`
 }
 
 type Update struct {

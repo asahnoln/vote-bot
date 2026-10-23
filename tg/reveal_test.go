@@ -49,11 +49,13 @@ func TestReveal(t *testing.T) {
 				},
 			},
 		},
-		accounts: map[int]int{
-			876:   500,
-			2345:  300,
-			15789: 0,
-			15790: -200,
+		accountStoreStub: accountStoreStub{
+			accounts: map[int]int{
+				876:   500,
+				2345:  300,
+				15789: 0,
+				15790: -200,
+			},
 		},
 	}
 	h := &tg.RevealHandler{Store: storeSpy}
@@ -205,8 +207,10 @@ func TestRevealLostUserError(t *testing.T) {
 		lostUserStoreStub: lostUserStoreStub{
 			err: wantErr,
 		},
-		accounts: map[int]int{
-			100: 0,
+		accountStoreStub: accountStoreStub{
+			accounts: map[int]int{
+				100: 0,
+			},
 		},
 	}}
 

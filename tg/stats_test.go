@@ -10,9 +10,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestStatsRichest(t *testing.T) {
-	h := tg.StatsRichestHandler{
-		Store: &richestStoreStub{},
+func TestStats(t *testing.T) {
+	h := tg.StatsHandler{
+		Store: &statsStoreStub{},
 	}
 
 	msgs, err := h.Handle(context.Background(), tg.Update{})
@@ -30,16 +30,42 @@ func TestStatsRichest(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type:      "table",
-					Caption:   "Самые богатые",
+					Caption:   "Победители",
 					IsStriped: true,
 					Cells: [][]tg.RichBlockTableCell{
+						{
+							{
+								IsHeader: true,
+								Text:     "Имя",
+							},
+							{
+								IsHeader: true,
+								Text:     "Кол-во правильных ответов",
+							},
+							{
+								IsHeader: true,
+								Text:     "Баланс",
+							},
+							{
+								IsHeader: true,
+								Text:     "Среднее время ответа (в секундах)",
+							},
+						},
 						{
 							{
 								Text:  "Cool name",
 								Align: "center",
 							},
 							{
+								Text:  "9",
+								Align: "center",
+							},
+							{
 								Text:  "9999$",
+								Align: "center",
+							},
+							{
+								Text:  "1.50",
 								Align: "center",
 							},
 						},
@@ -49,7 +75,15 @@ func TestStatsRichest(t *testing.T) {
 								Align: "center",
 							},
 							{
+								Text:  "8",
+								Align: "center",
+							},
+							{
 								Text:  "9999$",
+								Align: "center",
+							},
+							{
+								Text:  "5.50",
 								Align: "center",
 							},
 						},
@@ -70,8 +104,8 @@ func TestStatsRichest(t *testing.T) {
 
 func TestStatsRichestAllUsersEror(t *testing.T) {
 	wantErr := errors.New("all users error")
-	h := tg.StatsRichestHandler{
-		Store: &richestStoreStub{
+	h := tg.StatsHandler{
+		Store: &statsStoreStub{
 			usersErr: wantErr,
 		},
 	}
@@ -84,8 +118,8 @@ func TestStatsRichestAllUsersEror(t *testing.T) {
 
 func TestStatsRichestStoreErr(t *testing.T) {
 	wantErr := errors.New("store error")
-	h := tg.StatsRichestHandler{
-		Store: &richestStoreStub{
+	h := tg.StatsHandler{
+		Store: &statsStoreStub{
 			err: wantErr,
 		},
 	}
@@ -97,7 +131,7 @@ func TestStatsRichestStoreErr(t *testing.T) {
 }
 
 func TestStatsRichestCondition(t *testing.T) {
-	h := tg.StatsRichestHandler{}
+	h := tg.StatsHandler{}
 
 	ok := h.Condition(tg.Update{
 		Message: tg.Message{
@@ -116,21 +150,21 @@ func TestStatsRichestCondition(t *testing.T) {
 }
 
 func TestStatsRichestUsersName(t *testing.T) {
-	h := tg.StatsRichestHandler{}
+	h := tg.StatsHandler{}
 
 	n := h.Name()
 
-	if got, want := n, "stats_richestusers"; got != want {
+	if got, want := n, "stats"; got != want {
 		t.Errorf("got name %q; want %q", got, want)
 	}
 }
 
-type richestStoreStub struct {
+type statsStoreStub struct {
 	err      error
 	usersErr error
 }
 
-func (s *richestStoreStub) AllUsers(context.Context) ([]store.User, error) {
+func (s *statsStoreStub) AllUsers(context.Context) ([]store.User, error) {
 	return []store.User{
 		{UserID: 500},
 		{UserID: 501},
@@ -138,9 +172,9 @@ func (s *richestStoreStub) AllUsers(context.Context) ([]store.User, error) {
 	}, s.usersErr
 }
 
-func (s *richestStoreStub) RichestUsers(context.Context) ([]store.User, error) {
+func (s *statsStoreStub) Stats(context.Context) ([]store.User, error) {
 	return []store.User{
-		{Name: "Cool name", Acc: 9999},
-		{Name: "Other name", Acc: 9999},
+		{Name: "Cool name", RightAnswerCnt: 9, Acc: 9999, AvgSpeed: 1.5},
+		{Name: "Other name", RightAnswerCnt: 8, Acc: 9999, AvgSpeed: 5.5},
 	}, s.err
 }

@@ -16,7 +16,8 @@
           [
             {
               "text": "table cell 1",
-              "align": "left"
+              "align": "left",
+              "is_header": true
             }
           ]
         ],

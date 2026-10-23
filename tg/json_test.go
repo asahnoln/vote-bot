@@ -31,8 +31,9 @@ func TestSendRichMessageStr(t *testing.T) {
 					Cells: [][]tg.RichBlockTableCell{
 						{
 							{
-								Text:  "table cell 1",
-								Align: "left",
+								Text:     "table cell 1",
+								Align:    "left",
+								IsHeader: true,
 							},
 						},
 					},
@@ -75,8 +76,9 @@ func TestEditMessageTextJSON(t *testing.T) {
 					Cells: [][]tg.RichBlockTableCell{
 						{
 							{
-								Text:  "edit table cell 1",
-								Align: "center",
+								Text:     "edit table cell 1",
+								Align:    "center",
+								IsHeader: true,
 							},
 						},
 					},
