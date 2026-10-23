@@ -15,6 +15,7 @@ func TestStartHandler(t *testing.T) {
 	spy := &usersStoreSpy{}
 	h := tg.StartHandler{
 		Store: spy,
+		Text:  &textStub{},
 	}
 
 	upd := tg.Update{}
@@ -37,8 +38,7 @@ func TestStartHandler(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					// TODO: Какое сообщение?
-					Text: "Добро пожаловать в игру! Ваш стартовый капитал - 1000$.",
+					Text: "TextWelcomeToTheGame",
 				},
 			},
 		},
@@ -55,6 +55,7 @@ func TestStartHandlerStoreError(t *testing.T) {
 	}
 	h := tg.StartHandler{
 		Store: spy,
+		Text:  &textStub{},
 	}
 
 	_, err := h.Handle(context.Background(), tg.Update{})
@@ -69,6 +70,7 @@ func TestStartDontSaveIfQuestionMissed(t *testing.T) {
 	}
 	h := tg.StartHandler{
 		Store: spy,
+		Text:  &textStub{},
 	}
 
 	msgs, err := h.Handle(context.Background(), tg.Update{
@@ -93,8 +95,7 @@ func TestStartDontSaveIfQuestionMissed(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					// TODO: Какое сообщение?
-					Text: "Вы пропустили первый обязательный вопрос и потому не можете быть допущены к игре.",
+					Text: "TextMissedFirstQuestion",
 				},
 			},
 		},
@@ -125,6 +126,7 @@ func TestStartDontSaveIfUserAlreadyJoined(t *testing.T) {
 	}
 	h := tg.StartHandler{
 		Store: spy,
+		Text:  &textStub{},
 	}
 
 	msgs, err := h.Handle(context.Background(), tg.Update{
@@ -140,7 +142,7 @@ func TestStartDontSaveIfUserAlreadyJoined(t *testing.T) {
 	}
 
 	// TODO: What text should be used?
-	if got, want := msgs[0].(tg.SendRichMessage).RichMessage.Blocks[0].Text, "Вы уже участвуете в игре!"; got != want {
+	if got, want := msgs[0].(tg.SendRichMessage).RichMessage.Blocks[0].Text, "TextAlreadyJoinedTheGame"; got != want {
 		t.Errorf("text: got %v; want %v", got, want)
 	}
 }

@@ -360,3 +360,17 @@ func (d *destSpy) Send(ctx context.Context, data tg.Request) (m any, err error) 
 	d.got = append(d.got, data)
 	return d.returnMsg, d.err
 }
+
+type textStub struct{}
+
+func (t *textStub) TextWelcomeToTheGame() string {
+	return "TextWelcomeToTheGame"
+}
+
+func (t *textStub) TextMissedFirstQuestion() string {
+	return "TextMissedFirstQuestion"
+}
+
+func (t *textStub) TextAlreadyJoinedTheGame() string {
+	return "TextAlreadyJoinedTheGame"
+}

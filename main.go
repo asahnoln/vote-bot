@@ -50,7 +50,7 @@ func main() {
 		Dest:      dest,
 		ErrorChan: errCh,
 	}
-	b.Handle(&tg.StartHandler{Store: store})
+	b.Handle(&tg.StartHandler{Store: store, Text: tg.StartHandlerText{}})
 	b.Handle(&tg.QuestionHandler{Store: store})
 	b.Handle(&tg.AnswerHandler{Store: store})
 	b.Handle(&tg.BetHandler{Store: store})

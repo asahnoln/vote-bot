@@ -13,8 +13,15 @@ type StartStore interface {
 	SaveUser(ctx context.Context, userID int, name string) error
 }
 
+type StartTextStore interface {
+	TextWelcomeToTheGame() string
+	TextMissedFirstQuestion() string
+	TextAlreadyJoinedTheGame() string
+}
+
 type StartHandler struct {
 	Store StartStore
+	Text  StartTextStore
 }
 
 func (h *StartHandler) HandleResponse(context.Context, any) error {
@@ -29,11 +36,19 @@ func (h *StartHandler) Condition(upd Update) bool {
 	return upd.Message.Text == "/start"
 }
 
-const (
-	TextWelcomeToTheGame     = "Добро пожаловать в игру! Ваш стартовый капитал - 1000$."
-	TextMissedFirstQuestion  = "Вы пропустили первый обязательный вопрос и потому не можете быть допущены к игре."
-	TextAlreadyJoinedTheGame = "Вы уже участвуете в игре!"
-)
+type StartHandlerText struct{}
+
+func (StartHandlerText) TextWelcomeToTheGame() string {
+	return "💸 Ваш стартовый капитал 1000$\nСтавьте с умом, играйте смело — и пусть удача будет на вашей стороне!"
+}
+
+func (StartHandlerText) TextMissedFirstQuestion() string {
+	return "Вы пропустили первый вопрос. Правила есть правила: в этот раз вы не участвуете."
+}
+
+func (StartHandlerText) TextAlreadyJoinedTheGame() string {
+	return "Вы уже участвуете в игре!"
+}
 
 func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
 	ok, err := h.Store.FirstQuestionMissed(ctx)
@@ -41,9 +56,9 @@ func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []Request, 
 		return nil, fmt.Errorf("first question missed: %w", err)
 	}
 
-	text := TextWelcomeToTheGame
+	text := h.Text.TextWelcomeToTheGame()
 	if ok {
-		text = TextMissedFirstQuestion
+		text = h.Text.TextMissedFirstQuestion()
 	} else {
 		err = h.Store.SaveUser(
 			ctx,
@@ -53,7 +68,7 @@ func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []Request, 
 
 		switch {
 		case errors.Is(err, store.ErrUserAlreadySaved):
-			text = TextAlreadyJoinedTheGame
+			text = h.Text.TextAlreadyJoinedTheGame()
 		case err != nil:
 			return nil, fmt.Errorf("save user: %w", err)
 		}
