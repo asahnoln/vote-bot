@@ -20,6 +20,7 @@ type QuestionStore interface {
 	Userser
 	CurrentQuestioner
 	SaveLastMessageID(ctx context.Context, userID int, msgID int) error
+	SaveCurrentQuestionSentAt(context.Context) error
 }
 
 type QuestionHandler struct {
@@ -43,6 +44,11 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []Reques
 	q, err := h.Store.CurrentQuestion(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("question store: obj %#v: %w", q, err)
+	}
+
+	err = h.Store.SaveCurrentQuestionSentAt(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("question sent at store: obj %#v: %w", q, err)
 	}
 
 	msg := SendRichMessage{

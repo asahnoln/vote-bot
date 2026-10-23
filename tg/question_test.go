@@ -12,21 +12,13 @@ import (
 
 // TODO: Limit to admins
 
+// TODO: Check command scope
 func TestQuestion(t *testing.T) {
-	upd := tg.Update{
-		Message: tg.Message{
-			Chat: tg.Chat{
-				// TODO: Check command scope
-				ID: 123,
-			},
-			Text: "/sendcurrentquestion",
-		},
-	}
-
 	storeSpy := &struct {
 		usersStoreStub
 		questionStoreStub
 		lastMessageStoreSpy
+		questionSentAtStoreSpy
 	}{
 		usersStoreStub: usersStoreStub{
 			users: []store.User{
@@ -38,7 +30,13 @@ func TestQuestion(t *testing.T) {
 	}
 
 	h := &tg.QuestionHandler{Store: storeSpy}
-	msgs, err := h.Handle(context.Background(), upd)
+	msgs, err := h.Handle(context.Background(), tg.Update{
+		Message: tg.Message{
+			Chat: tg.Chat{
+				ID: 123,
+			},
+		},
+	})
 	if err != nil {
 		t.Fatalf("got err %v; want nil", err)
 	}
@@ -78,6 +76,10 @@ func TestQuestion(t *testing.T) {
 	if got, want := msgs[1].(tg.SendRichMessage).ChatID, 602; got != want {
 		t.Errorf("request 2nd user id: got %v; want %v", got, want)
 	}
+
+	if got, want := storeSpy.questionSentAtStoreSpy.called, true; got != want {
+		t.Errorf("question save sent at called: got %v; want %v", got, want)
+	}
 }
 
 func TestQuestionHandleResponse(t *testing.T) {
@@ -85,6 +87,7 @@ func TestQuestionHandleResponse(t *testing.T) {
 		usersStoreStub
 		questionStoreStub
 		lastMessageStoreSpy
+		questionSentAtStoreSpy
 	}{}
 	h := tg.QuestionHandler{Store: spy}
 
@@ -130,6 +133,7 @@ func TestQuestionStoreError(t *testing.T) {
 		usersStoreStub
 		questionStoreStub
 		lastMessageStoreSpy
+		questionSentAtStoreSpy
 	}{
 		questionStoreStub: questionStoreStub{
 			err: wantErr,
@@ -151,6 +155,7 @@ func TestQuestionUsersError(t *testing.T) {
 		usersStoreStub
 		questionStoreStub
 		lastMessageStoreSpy
+		questionSentAtStoreSpy
 	}{
 		usersStoreStub: usersStoreStub{
 			err: wantErr,
@@ -164,4 +169,36 @@ func TestQuestionUsersError(t *testing.T) {
 	if got, want := err, wantErr; !errors.Is(got, want) {
 		t.Fatalf("got err %v; want %v", got, want)
 	}
+}
+
+func TestQuestionSaveSentAtError(t *testing.T) {
+	wantErr := errors.New("question sent at error")
+	stub := &struct {
+		usersStoreStub
+		questionStoreStub
+		lastMessageStoreSpy
+		questionSentAtStoreSpy
+	}{
+		questionSentAtStoreSpy: questionSentAtStoreSpy{
+			err: wantErr,
+		},
+	}
+	h := tg.QuestionHandler{
+		Store: stub,
+	}
+	_, err := h.Handle(context.Background(), tg.Update{})
+
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
+}
+
+type questionSentAtStoreSpy struct {
+	called bool
+	err    error
+}
+
+func (s *questionSentAtStoreSpy) SaveCurrentQuestionSentAt(context.Context) error {
+	s.called = true
+	return s.err
 }
