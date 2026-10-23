@@ -23,9 +23,9 @@ type Answer struct {
 }
 
 type User struct {
-	UserID         int    `firestore:"user_id"`
-	Name           string `firestore:"name"`
-	Acc            int
+	UserID         int     `firestore:"user_id"`
+	Name           string  `firestore:"name"`
+	Acc            int     `firestore:"acc"`
 	LastMessageID  int     `firestore:"last_message_id"`
 	Lost           bool    `firestore:"lost"`
 	RightAnswerCnt int     `firestore:"right_answer_cnt"`

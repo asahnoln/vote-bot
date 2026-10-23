@@ -52,12 +52,15 @@ func (f *Firestore) users(ctx context.Context, efs ...firestore.EntityFilter) (u
 	return users, nil
 }
 
+const ACCOUNT_START_MONEY = 1000
+
 func (f *Firestore) SaveUser(ctx context.Context, userID int, name string) error {
 	_, err := f.c.Collection(UsersCollection).
 		Doc(strconv.Itoa(userID)).
 		Create(ctx, store.User{
 			UserID: userID,
 			Name:   name,
+			Acc:    ACCOUNT_START_MONEY,
 		})
 	if err != nil {
 		if status.Code(err) == codes.AlreadyExists {

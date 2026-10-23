@@ -130,6 +130,9 @@ func TestSaveUser(t *testing.T) {
 	if got, want := d.Data()["name"].(string), "Cool name"; got != want {
 		t.Errorf("got doc name %q; want %q", got, want)
 	}
+	if got, want := d.Data()["acc"].(int64), int64(1000); got != want {
+		t.Errorf("got doc acc %v; want %v", got, want)
+	}
 }
 
 func TestSaveUserAlreadySavedError(t *testing.T) {

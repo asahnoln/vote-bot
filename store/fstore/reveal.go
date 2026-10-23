@@ -47,8 +47,6 @@ loop:
 	return answers, nil
 }
 
-const ACCOUNT_START_MONEY = 1000
-
 func (f *Firestore) Accounts(ctx context.Context, userIDs []int) (accs map[int]int, err error) {
 	iter := f.c.Collection(UsersCollection).WhereEntity(firestore.PropertyFilter{
 		Path:     "user_id",
