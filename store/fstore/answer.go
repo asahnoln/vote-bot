@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/asahnoln/vote-bot/store"
@@ -70,24 +71,56 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("doc set: %w", err)
 	}
 
-	// d, err := f.c.Collection(UsersCollection).
-	// 	Doc(strconv.Itoa(userID)).
-	// 	Get(ctx)
-	// if err != nil {
-	// 	return fmt.Errorf("user: %w", err)
-	// }
-	// u := store.User{}
-
-	_, err = f.c.Collection(UsersCollection).
-		Doc(strconv.Itoa(userID)).
-		Set(ctx,
-			map[string]any{
-				"avg_speed": (1.5*2 + 3) / 3,
-				"speed_cnt": firestore.Increment(1),
-			}, firestore.MergeAll)
+	d, err := f.c.Collection(QuestionsCollection).Doc(questionID).Get(ctx)
 	if err != nil {
-		return fmt.Errorf("doc set: %w", err)
+		return fmt.Errorf("question: %w", err)
 	}
+
+	q := store.Question{}
+	err = d.DataTo(&q)
+	if err != nil {
+		return fmt.Errorf("question data to: %w", err)
+	}
+
+	d, err = f.c.Collection(UsersCollection).
+		Doc(strconv.Itoa(userID)).
+		Get(ctx)
+	if err != nil {
+		return fmt.Errorf("user: %w", err)
+	}
+
+	u := store.User{}
+	err = d.DataTo(&u)
+	if err != nil {
+		return fmt.Errorf("user data to: %w", err)
+	}
+
+	d, err = f.c.Collection(AnswersCollection).
+		Doc(answerDocID(userID, questionID)).
+		Get(ctx)
+	if err != nil {
+		return fmt.Errorf("answer: %w", err)
+	}
+
+	a := store.Answer{}
+	err = d.DataTo(&a)
+	if err != nil {
+		return fmt.Errorf("answer data to: %w", err)
+	}
+
+	if a.IsRight {
+		_, err = f.c.Collection(UsersCollection).
+			Doc(strconv.Itoa(userID)).
+			Set(ctx,
+				map[string]any{
+					"right_answer_cnt": firestore.Increment(1),
+					"avg_speed":        (u.AvgSpeed*float64(u.RightAnswerCnt) + time.Since(q.SentAt).Seconds()) / (float64(u.RightAnswerCnt) + 1),
+				}, firestore.MergeAll)
+		if err != nil {
+			return fmt.Errorf("doc set: %w", err)
+		}
+	}
+
 	return nil
 }
 

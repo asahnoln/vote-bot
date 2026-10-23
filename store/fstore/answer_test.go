@@ -90,6 +90,13 @@ func TestSaveBet(t *testing.T) {
 		{-100, 1000, true},
 	}
 
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": 0,
+	})
+
+	c.Collection("questions").Doc("test-q-111").Set(ctx, map[string]any{})
+
+	c.Collection("users").Doc("234").Set(ctx, map[string]any{"user_id": 234})
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("bet %d", tt.bet), func(t *testing.T) {
 			c.Collection("answers").Doc("234:test-q-111").Set(ctx, map[string]any{
@@ -122,21 +129,24 @@ func TestSaveBet(t *testing.T) {
 	}
 }
 
-func TestSaveBetWithSpeedData(t *testing.T) {
+func TestSaveBetWithStatsData(t *testing.T) {
 	ctx := context.Background()
 
 	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
-	c.Collection("answers").Doc("235:test-q-111").Set(ctx, map[string]any{
+	c.Collection("questions").Doc("test-q-109").Set(ctx, map[string]any{
+		"sent_at": time.Now().Add(-3 * time.Second),
+	})
+
+	c.Collection("answers").Doc("235:test-q-109").Set(ctx, map[string]any{
 		"user_id":  235,
-		"a":        "has answer",
 		"is_right": true,
 	})
 
 	c.Collection("users").Doc("235").Set(ctx, map[string]any{
-		"avg_speed": 1.5,
-		"speed_cnt": 2,
+		"right_answer_cnt": 2,
+		"avg_speed":        1.5,
 	})
 
 	f := fstore.New(c)
@@ -148,10 +158,47 @@ func TestSaveBetWithSpeedData(t *testing.T) {
 
 	d, _ := c.Collection("users").Doc("235").Get(ctx)
 
-	if got, want := d.Data()["avg_speed"].(float64), float64(2); got != want {
+	if diff := cmp.Diff(d.Data()["avg_speed"], float64(2), cmpopts.EquateApprox(0.001, 0)); diff != "" {
+		t.Errorf("avg speed mismatch (-want +got):\n%s", diff)
+	}
+	if got, want := d.Data()["right_answer_cnt"].(int64), int64(3); got != want {
 		t.Errorf("avg speed: got %v; want %v", got, want)
 	}
-	if got, want := d.Data()["speed_cnt"].(int64), int64(3); got != want {
+}
+
+func TestSaveBetWithStatsDataWrongAnswer(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("questions").Doc("test-q-108").Set(ctx, map[string]any{
+		"sent_at": time.Now().Add(-30 * time.Second),
+	})
+
+	c.Collection("answers").Doc("236:test-q-108").Set(ctx, map[string]any{
+		"user_id":  236,
+		"is_right": false,
+	})
+
+	c.Collection("users").Doc("236").Set(ctx, map[string]any{
+		"right_answer_cnt": 5,
+		"avg_speed":        3,
+	})
+
+	f := fstore.New(c)
+
+	err := f.SaveBet(ctx, 236, "test-q-108", 11)
+	if err != nil {
+		t.Fatalf("fstore save bet: got err %q; want nil", err)
+	}
+
+	d, _ := c.Collection("users").Doc("236").Get(ctx)
+
+	if diff := cmp.Diff(d.Data()["avg_speed"], int64(3), cmpopts.EquateApprox(0.001, 0)); diff != "" {
+		t.Errorf("avg speed mismatch (-want +got):\n%s", diff)
+	}
+	if got, want := d.Data()["right_answer_cnt"].(int64), int64(5); got != want {
 		t.Errorf("avg speed: got %v; want %v", got, want)
 	}
 }

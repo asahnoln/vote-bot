@@ -1,13 +1,17 @@
 // Package store provides common structs and errors for store implementations
 package store
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 type Question struct {
-	ID    string          `firestore:"id,omitempty"`
-	Q     string          `firestore:"q,omitempty"`
-	Opts  map[string]bool `firestore:"opts,omitempty"`
-	Order int             `firestore:"order"`
+	ID     string          `firestore:"id,omitempty"`
+	Q      string          `firestore:"q,omitempty"`
+	Opts   map[string]bool `firestore:"opts,omitempty"`
+	Order  int             `firestore:"order"`
+	SentAt time.Time       `firestore:"sent_at"`
 }
 
 type Answer struct {
