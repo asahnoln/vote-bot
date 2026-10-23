@@ -95,9 +95,9 @@ func TestSaveBet(t *testing.T) {
 
 	c.Collection("questions").Doc("test-q-111").Set(ctx, map[string]any{})
 
-	c.Collection("users").Doc("234").Set(ctx, map[string]any{"user_id": 234})
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("bet %d", tt.bet), func(t *testing.T) {
+			c.Collection("users").Doc("234").Set(ctx, map[string]any{"user_id": 234, "acc": 1000})
 			c.Collection("answers").Doc("234:test-q-111").Set(ctx, map[string]any{
 				"user_id": 234,
 				"a":       "has answer",

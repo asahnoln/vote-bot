@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"strconv"
 
 	"cloud.google.com/go/firestore"
@@ -95,53 +94,4 @@ func (f *Firestore) SaveLostUser(ctx context.Context, userID int) error {
 	}
 
 	return nil
-}
-
-// TODO: This is very inefficient (3 loops!), gotta move data around...
-func (f *Firestore) RichestUsers(ctx context.Context) ([]store.User, error) {
-	users, err := f.Users(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("users: %w", err)
-	}
-
-	if len(users) == 0 {
-		return nil, nil
-	}
-
-	uIDs := make([]int, len(users))
-	for i, u := range users {
-		uIDs[i] = u.UserID
-	}
-
-	accs, err := f.Accounts(ctx, uIDs)
-	if err != nil {
-		return nil, fmt.Errorf("accounts: %w", err)
-	}
-
-	for i, u := range users {
-		users[i].Acc = accs[u.UserID]
-	}
-
-	slices.SortFunc(users, func(a, b store.User) int {
-		switch {
-		case a.Acc > b.Acc:
-			return -1
-		case a.Acc < b.Acc:
-			return 1
-		}
-
-		return 0
-	})
-
-	n := 1
-	acc := users[0].Acc
-	for _, u := range users[n:] {
-		if u.Acc < acc {
-			break
-		}
-
-		n += 1
-	}
-
-	return users[:n], nil
 }

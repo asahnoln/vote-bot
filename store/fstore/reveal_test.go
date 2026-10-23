@@ -100,33 +100,20 @@ func TestAccounts(t *testing.T) {
 	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
-	col := c.Collection("answers")
-	col.Doc("634:test-q-0").Set(ctx, map[string]any{
-		"user_id":  634,
-		"is_right": true,
-		"bet":      200,
-	})
-	col.Doc("634:test-q-1").Set(ctx, map[string]any{
-		"user_id":  634,
-		"is_right": false,
-		"bet":      100,
+	col := c.Collection("users")
+	col.Doc("634").Set(ctx, map[string]any{
+		"user_id": 634,
+		"acc":     1100,
 	})
 
-	col.Doc("707:test-q-0").Set(ctx, map[string]any{
-		"user_id":  707,
-		"is_right": true,
-		"bet":      500,
-	})
-	col.Doc("707:test-q-1").Set(ctx, map[string]any{
-		"user_id":  707,
-		"is_right": false,
-		"bet":      100,
+	col.Doc("707").Set(ctx, map[string]any{
+		"user_id": 707,
+		"acc":     1400,
 	})
 
-	col.Doc("404:skip-this-q-2").Set(ctx, map[string]any{
-		"user_id":  404,
-		"is_right": true,
-		"bet":      9999,
+	col.Doc("404").Set(ctx, map[string]any{
+		"user_id": 404,
+		"acc":     9999,
 	})
 
 	f := fstore.New(c)

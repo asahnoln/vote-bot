@@ -50,17 +50,13 @@ loop:
 const ACCOUNT_START_MONEY = 1000
 
 func (f *Firestore) Accounts(ctx context.Context, userIDs []int) (accs map[int]int, err error) {
-	iter := f.c.Collection(AnswersCollection).WhereEntity(firestore.PropertyFilter{
+	iter := f.c.Collection(UsersCollection).WhereEntity(firestore.PropertyFilter{
 		Path:     "user_id",
 		Operator: "in",
 		Value:    userIDs,
 	}).Documents(ctx)
 
 	accs = make(map[int]int)
-
-	for _, u := range userIDs {
-		accs[u] = ACCOUNT_START_MONEY
-	}
 
 loop:
 	for {
@@ -69,20 +65,16 @@ loop:
 		case err == iterator.Done:
 			break loop
 		case err != nil:
-			return nil, fmt.Errorf("answers iter: %w", err)
+			return nil, fmt.Errorf("users iter: %w", err)
 		}
 
-		a := store.Answer{}
-		err = d.DataTo(&a)
+		u := store.User{}
+		err = d.DataTo(&u)
 		if err != nil {
-			return nil, fmt.Errorf("data %#v to answer: %w", d, err)
+			return nil, fmt.Errorf("data %#v to user: %w", d, err)
 		}
 
-		if !a.IsRight {
-			a.Bet *= -1
-		}
-
-		accs[a.UserID] += int(a.Bet)
+		accs[u.UserID] += u.Acc
 	}
 
 	return accs, nil
