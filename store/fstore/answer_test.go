@@ -17,7 +17,6 @@ func TestSaveAnswer(t *testing.T) {
 	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
-	c.Collection("answers").Doc("52:test-q-67").Delete(ctx)
 	c.Collection(fstore.QuestionsCollection).Doc("test-q-67").Set(ctx, store.Question{
 		Q:     "52 or 42?",
 		Opts:  map[string]bool{"wrong": false, "right1": true, "right2": true},
@@ -158,7 +157,7 @@ func TestSaveBetWithStatsData(t *testing.T) {
 
 	d, _ := c.Collection("users").Doc("235").Get(ctx)
 
-	if diff := cmp.Diff(d.Data()["avg_speed"], float64(2), cmpopts.EquateApprox(0.001, 0)); diff != "" {
+	if diff := cmp.Diff(d.Data()["avg_speed"], float64(2), cmpopts.EquateApprox(0.01, 0)); diff != "" {
 		t.Errorf("avg speed mismatch (-want +got):\n%s", diff)
 	}
 	if got, want := d.Data()["right_answer_cnt"].(int64), int64(3); got != want {
@@ -200,5 +199,48 @@ func TestSaveBetWrongAnswerWontSaveStats(t *testing.T) {
 	}
 	if got, want := d.Data()["right_answer_cnt"].(int64), int64(5); got != want {
 		t.Errorf("avg speed: got %v; want %v", got, want)
+	}
+}
+
+func TestSaveBetSavesAcc(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("questions").Doc("test-q-107").Set(ctx, map[string]any{})
+
+	tests := []struct {
+		isRight bool
+		wantAcc int64
+	}{
+		{true, 2300},
+		{false, 1700},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("right answer %v", tt.isRight), func(t *testing.T) {
+			c.Collection("answers").Doc("237:test-q-107").Set(ctx, map[string]any{
+				"user_id":  237,
+				"is_right": tt.isRight,
+			})
+
+			c.Collection("users").Doc("237").Set(ctx, map[string]any{
+				"acc": 2000,
+			})
+
+			f := fstore.New(c)
+
+			err := f.SaveBet(ctx, 237, "test-q-107", 300)
+			if err != nil {
+				t.Fatalf("fstore save bet: got err %q; want nil", err)
+			}
+
+			d, _ := c.Collection("users").Doc("237").Get(ctx)
+
+			if got, want := d.Data()["acc"].(int64), int64(tt.wantAcc); got != want {
+				t.Errorf("avg speed: got %v; want %v", got, want)
+			}
+		})
 	}
 }

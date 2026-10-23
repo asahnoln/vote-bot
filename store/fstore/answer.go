@@ -71,7 +71,7 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("doc set: %w", err)
 	}
 
-	q, err := f.queryAndMap[store.Question](ctx, QuestionsCollection, questionID)
+	q, err := f.question(ctx, questionID)
 	if err != nil {
 		return fmt.Errorf("user query: %w", err)
 	}
@@ -86,17 +86,21 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("answer query: %w", err)
 	}
 
+	upds := []firestore.Update{}
 	if a.IsRight {
-		_, err = f.c.Collection(UsersCollection).
-			Doc(strconv.Itoa(userID)).
-			Set(ctx,
-				map[string]any{
-					"right_answer_cnt": firestore.Increment(1),
-					"avg_speed":        (u.AvgSpeed*float64(u.RightAnswerCnt) + time.Since(q.SentAt).Seconds()) / (float64(u.RightAnswerCnt) + 1),
-				}, firestore.MergeAll)
-		if err != nil {
-			return fmt.Errorf("doc set: %w", err)
-		}
+		upds = append(upds, firestore.Update{Path: "right_answer_cnt", Value: firestore.Increment(1)})
+		upds = append(upds, firestore.Update{Path: "avg_speed", Value: (u.AvgSpeed*float64(u.RightAnswerCnt) + time.Since(q.SentAt).Seconds()) / (float64(u.RightAnswerCnt) + 1)})
+	} else {
+		bet *= -1
+	}
+	upds = append(upds, firestore.Update{Path: "acc", Value: firestore.Increment(bet)})
+
+	_, err = f.c.Collection(UsersCollection).
+		Doc(strconv.Itoa(userID)).
+		Update(ctx,
+			upds)
+	if err != nil {
+		return fmt.Errorf("user update acc: %w", err)
 	}
 
 	return nil
