@@ -38,7 +38,7 @@ func (h *AnswerHandler) Name() string {
 
 const (
 	TextYourAnswer = "Ваш ответ: "
-	TextChooseBet  = "Выберите ставку:"
+	TextChooseBet  = "Ответ принят! Теперь решайте, сколько поставить на кон."
 	TextAllIn      = "ВА-БАНК!"
 )
 
@@ -113,7 +113,10 @@ func (h *BetHandler) Name() string {
 	return "bet"
 }
 
-const TextYourBet = "Ваша ставка: "
+const (
+	TextYourBet     = "Ваша ставка: "
+	TextBetAccepted = "Ставка принята!"
+)
 
 func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
 	qID, betStr, err := qIDAndData(BetCallbackDataPrefix, upd.CallbackQuery.Data)
@@ -138,6 +141,10 @@ func (h *BetHandler) Handle(ctx context.Context, upd Update) (msgs []Request, er
 				upd.CallbackQuery.Message.RichMessage.Blocks[0],
 				upd.CallbackQuery.Message.RichMessage.Blocks[1],
 				BetInputRichBlock(betStr),
+				{
+					Type: InputRichBlockParagraphType,
+					Text: TextBetAccepted,
+				},
 			},
 		},
 	}

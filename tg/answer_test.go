@@ -46,7 +46,7 @@ func TestAnswer(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Выберите ставку:",
+					Text: "Ответ принят! Теперь решайте, сколько поставить на кон.",
 				},
 				{
 					Type:  "buttons",
@@ -232,6 +232,10 @@ func TestBet(t *testing.T) {
 				{
 					Type: "paragraph",
 					Text: "Ваша ставка: 500$",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ставка принята!",
 				},
 			},
 		},

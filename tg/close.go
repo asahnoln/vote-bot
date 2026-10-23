@@ -83,10 +83,10 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []Request, 
 }
 
 const (
-	TextQuestionClosed          = "Вопрос закрыт!"
-	TextYouMissedBet            = "Вы не успели сделать ставку..."
-	TextYourAnwserIsNotAccepted = "Ваш ответ не засчитан."
-	TextYouMissedAnswer         = "Вы не успели ответить..."
+	TextQuestionClosed  = "Вопрос закрыт. Скоро узнаем, насколько вы были правы."
+	TextYouMissedBet    = "Увы, вы не успели сделать ставку. Ваша игра окончена. "
+	TextByeBye          = "Казино прощается с вами!"
+	TextYouMissedAnswer = "Вопрос закрыт! Вы не успели ответить. По правилам казино вы покидаете игру."
 )
 
 func ClosingMessage(userID int, messageID int, question string, a store.Answer) (msg EditMessageText) {
@@ -120,6 +120,10 @@ func ClosingMessage(userID int, messageID int, question string, a store.Answer) 
 			}
 
 			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, betBlock)
+			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+				Type: InputRichBlockParagraphType,
+				Text: TextQuestionClosed,
+			})
 		} else {
 			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
 				Type: InputRichBlockParagraphType,
@@ -127,7 +131,7 @@ func ClosingMessage(userID int, messageID int, question string, a store.Answer) 
 			})
 			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
 				Type: InputRichBlockParagraphType,
-				Text: TextYourAnwserIsNotAccepted,
+				Text: TextByeBye,
 			})
 		}
 	} else {
@@ -136,11 +140,6 @@ func ClosingMessage(userID int, messageID int, question string, a store.Answer) 
 			Text: TextYouMissedAnswer,
 		})
 	}
-
-	msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
-		Type: InputRichBlockParagraphType,
-		Text: TextQuestionClosed,
-	})
 
 	return
 }

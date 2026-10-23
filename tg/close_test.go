@@ -69,7 +69,7 @@ func TestCloseHandler(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Вопрос закрыт!",
+					Text: "Вопрос закрыт. Скоро узнаем, насколько вы были правы.",
 				},
 			},
 		},
@@ -104,7 +104,7 @@ func TestClosingMessage(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Вопрос закрыт!",
+					Text: "Вопрос закрыт. Скоро узнаем, насколько вы были правы.",
 				},
 			},
 		},
@@ -135,7 +135,7 @@ func TestClosingMessageAllIn(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Вопрос закрыт!",
+					Text: "Вопрос закрыт. Скоро узнаем, насколько вы были правы.",
 				},
 			},
 		},
@@ -162,15 +162,11 @@ func TestClosingMessageNoBet(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Вы не успели сделать ставку...",
+					Text: "Увы, вы не успели сделать ставку. Ваша игра окончена. ",
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваш ответ не засчитан.",
-				},
-				{
-					Type: "paragraph",
-					Text: "Вопрос закрыт!",
+					Text: "Казино прощается с вами!",
 				},
 			},
 		},
@@ -193,11 +189,7 @@ func TestClosingMessageNoAnswer(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Вы не успели ответить...",
-				},
-				{
-					Type: "paragraph",
-					Text: "Вопрос закрыт!",
+					Text: "Вопрос закрыт! Вы не успели ответить. По правилам казино вы покидаете игру.",
 				},
 			},
 		},

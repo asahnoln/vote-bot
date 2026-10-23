@@ -47,7 +47,7 @@ func (StartHandlerText) TextMissedFirstQuestion() string {
 }
 
 func (StartHandlerText) TextAlreadyJoinedTheGame() string {
-	return "Вы уже участвуете в игре!"
+	return "Вы уже в игре!\nПовторный вход не требуется."
 }
 
 func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
