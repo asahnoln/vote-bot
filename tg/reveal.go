@@ -95,7 +95,7 @@ const (
 	TextYouAreRight    = "Браво! Правильный ответ. Удача на вашей стороне."
 	TextYouAreWrongBut = "Не угадали! Вы теряете свою ставку. Посмотрим, удастся ли отыграться."
 	TextYouAreWrong    = "Неверный ответ."
-	TextYourBalance    = "Ваш счет - "
+	TextYourBalance    = "Ваш счет — "
 	TextYouLost        = "Вы банкрот. Казино прощается с вами!"
 )
 

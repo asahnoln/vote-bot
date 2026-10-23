@@ -93,7 +93,7 @@ func TestReveal(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваш счет - 500$",
+					Text: "Ваш счет — 500$",
 				},
 			},
 		},
@@ -116,7 +116,7 @@ func TestRevealMessage(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваш счет - 500$",
+					Text: "Ваш счет — 500$",
 				},
 			},
 		},
@@ -138,7 +138,7 @@ func TestRevealMessageWrong(t *testing.T) {
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваш счет - 100$",
+					Text: "Ваш счет — 100$",
 				},
 			},
 		},
@@ -166,7 +166,7 @@ func TestRevealMessageWrongAndBankrupt(t *testing.T) {
 						},
 						{
 							Type: "paragraph",
-							Text: "Ваш счет - 0$",
+							Text: "Ваш счет — 0$",
 						},
 						{
 							Type: "paragraph",
