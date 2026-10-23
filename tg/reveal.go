@@ -92,34 +92,41 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 }
 
 const (
-	TextYouAreRight        = "Вы ответили правильно!"
-	TextYouAreWrong        = "Вы ответили неправильно."
-	TextYourCurrentAccount = "Ваш текущий счет - "
-	TextYouLost            = "Вы проиграли!"
+	TextYouAreRight    = "Браво! Правильный ответ. Удача на вашей стороне."
+	TextYouAreWrongBut = "Не угадали! Вы теряете свою ставку. Посмотрим, удастся ли отыграться."
+	TextYouAreWrong    = "Неверный ответ."
+	TextYourBalance    = "Ваш счет - "
+	TextYouLost        = "Вы банкрот. Казино прощается с вами!"
 )
 
 func RevealMessage(userID int, isRight bool, acc int) (msg SendRichMessage) {
-	rightMsg := TextYouAreRight
-	if !isRight {
-		rightMsg = TextYouAreWrong
-	}
 	msg = SendRichMessage{
 		ChatID: userID,
-		RichMessage: InputRichMessage{
-			Blocks: []InputRichBlock{
-				{
-					Type: InputRichBlockParagraphType,
-					Text: rightMsg,
-				},
-				{
-					Type: InputRichBlockParagraphType,
-					Text: fmt.Sprintf("%s%d.", TextYourCurrentAccount, acc),
-				},
-			},
-		},
 	}
 
-	if acc <= 0 {
+	if acc > 0 {
+		rightMsg := TextYouAreRight
+		if !isRight {
+			rightMsg = TextYouAreWrongBut
+		}
+		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+			Type: InputRichBlockParagraphType,
+			Text: rightMsg,
+		})
+		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+			Type: InputRichBlockParagraphType,
+			Text: fmt.Sprintf("%s%d$", TextYourBalance, acc),
+		})
+
+	} else {
+		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+			Type: InputRichBlockParagraphType,
+			Text: TextYouAreWrong,
+		})
+		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+			Type: InputRichBlockParagraphType,
+			Text: fmt.Sprintf("%s%d$", TextYourBalance, 0),
+		})
 		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
 			Type: InputRichBlockParagraphType,
 			Text: TextYouLost,

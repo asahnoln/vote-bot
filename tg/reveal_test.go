@@ -89,11 +89,11 @@ func TestReveal(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Вы ответили правильно!",
+					Text: "Браво! Правильный ответ. Удача на вашей стороне.",
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваш текущий счет - 500.",
+					Text: "Ваш счет - 500$",
 				},
 			},
 		},
@@ -112,11 +112,11 @@ func TestRevealMessage(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Вы ответили правильно!",
+					Text: "Браво! Правильный ответ. Удача на вашей стороне.",
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваш текущий счет - 500.",
+					Text: "Ваш счет - 500$",
 				},
 			},
 		},
@@ -134,11 +134,11 @@ func TestRevealMessageWrong(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Вы ответили неправильно.",
+					Text: "Не угадали! Вы теряете свою ставку. Посмотрим, удастся ли отыграться.",
 				},
 				{
 					Type: "paragraph",
-					Text: "Ваш текущий счет - 100.",
+					Text: "Ваш счет - 100$",
 				},
 			},
 		},
@@ -162,15 +162,15 @@ func TestRevealMessageWrongAndBankrupt(t *testing.T) {
 					Blocks: []tg.InputRichBlock{
 						{
 							Type: "paragraph",
-							Text: "Вы ответили неправильно.",
+							Text: "Неверный ответ.",
 						},
 						{
 							Type: "paragraph",
-							Text: fmt.Sprintf("Ваш текущий счет - %d.", tt.acc),
+							Text: "Ваш счет - 0$",
 						},
 						{
 							Type: "paragraph",
-							Text: "Вы проиграли!",
+							Text: "Вы банкрот. Казино прощается с вами!",
 						},
 					},
 				},
