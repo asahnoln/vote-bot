@@ -39,3 +39,21 @@ var (
 	ErrQuestionsOffsetMustNotBeNegative = errors.New("questions offset must not be negative")
 	ErrUserAlreadySaved                 = errors.New("user already saved")
 )
+
+type Mode string
+
+const (
+	OptionalMode Mode = "optional"
+	RealMode     Mode = "real"
+)
+
+func (m Mode) String() string {
+	switch m {
+	case OptionalMode:
+		return "опциональный"
+	case RealMode:
+		return "реальный"
+	}
+
+	return string(m)
+}

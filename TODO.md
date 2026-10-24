@@ -74,22 +74,20 @@ Each user has an account. (At the start they have 1000$)
 - [x] Bot commands must be scoped to admins
 - [x] VABANK ALL IN
 - [x] Delete incoming user messages
-- [ ] Robust handling response from tg...
+- [x] Robust handling response from tg...
+- [ ] Optional questions which don't count
+- [ ] Think on misclicks on commands - suddenly close a question, or send answer again etc
+- [ ] Start bot with secret token from QR
+- [ ] Set webhook with secret token
 - [ ] Check whole code flow for a more efficient data/db handling
 - [ ] Check default behaviour of bot without handlers (no condition met)
 - [ ] Right now all-in is a little hacky in callback...
-- [ ] Stats MOLNIYA - most fastest right answers (even with 0 account)
-- [ ] Stats SHERLOCK - most right answers (even with 0 account)
 - [ ] Stats IGROK VA-BANK - most vabank uses
-- [ ] Start bot with secret token from QR
-- [ ] Think on misclicks on commands - suddenly close a question, or send answer again etc
 - [ ] Check out whole code and refactor things if necessary
 - [ ] Refactor testing destination called
 - [ ] Auto register webhook?
-- [ ] Optional questions which don't count
 - [ ] Check if question was delivered and if the command was repeated - send it if it was not delivered
 - [ ] What if EVERYONE LOST before the end of the game??
-- [ ] Set webhook with secret token
 
 ## Flow questions
 
