@@ -18,7 +18,7 @@ func (f *Firestore) SaveAnswer(ctx context.Context, userID int, questionID strin
 		return fmt.Errorf("question: %w", err)
 	}
 
-	_, err = f.c.Collection("answers").
+	_, err = f.c.Collection(AnswersCollection).
 		Doc(answerDocID(userID, questionID)).
 		Set(ctx,
 			map[string]any{

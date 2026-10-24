@@ -1,0 +1,69 @@
+package fstore_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/asahnoln/vote-bot/store"
+	"github.com/asahnoln/vote-bot/store/fstore"
+	"github.com/google/go-cmp/cmp"
+)
+
+func TestAdmins(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	col := c.Collection("admins")
+	col.Doc("101").Set(ctx, map[string]any{
+		"user_id": 101,
+	})
+	col.Doc("102").Set(ctx, map[string]any{
+		"user_id": 102,
+	})
+
+	f := fstore.New(c)
+
+	admins, err := f.Admins(ctx)
+	if err != nil {
+		t.Fatalf("fstore admins: got err %v; want nil", err)
+	}
+
+	want := []store.User{
+		{UserID: 101},
+		{UserID: 102},
+	}
+	if diff := cmp.Diff(want, admins); diff != "" {
+		t.Errorf("admins mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestSetMode(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	col := c.Collection("config")
+	col.Doc("current_question").Set(ctx, map[string]any{
+		"idx": 99,
+	})
+
+	f := fstore.New(c)
+
+	err := f.SetMode(ctx, store.OptionalMode)
+	if err != nil {
+		t.Fatalf("fstore admins: got err %v; want nil", err)
+	}
+
+	d, _ := c.Collection("config").Doc("mode").Get(ctx)
+	if got, want := d.Data()["mode"], string(store.OptionalMode); got != want {
+		t.Errorf("mode: got %v; want %v", got, want)
+	}
+
+	d, _ = c.Collection("config").Doc("current_question").Get(ctx)
+	if got, want := d.Data()["idx"], int64(0); got != want {
+		t.Errorf("current question idx: got %v; want %v", got, want)
+	}
+}
