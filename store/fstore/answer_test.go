@@ -275,18 +275,25 @@ func TestSaveBetSavesAcc(t *testing.T) {
 	resetDB(ctx, c)
 
 	c.Collection("questions").Doc("test-q-107").Set(ctx, map[string]any{})
+	c.Collection("tutorial_questions").Doc("test-q-107").Set(ctx, map[string]any{})
 
 	tests := []struct {
 		isRight bool
+		mode    store.Mode
 		wantAcc int64
 	}{
-		{true, 2300},
-		{false, 1700},
+		{true, store.RealMode, 2300},
+		{false, store.RealMode, 1700},
+		{true, store.TutorialMode, 2300},
 	}
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("right answer %v", tt.isRight), func(t *testing.T) {
-			c.Collection("answers").Doc("237:test-q-107").Set(ctx, map[string]any{
+			f := fstore.New(c)
+			f.SetMode(ctx, tt.mode)
+
+			col, _ := f.CollectionByMode(ctx, fstore.AnswersCollection)
+			c.Collection(col).Doc("237:test-q-107").Set(ctx, map[string]any{
 				"user_id":  237,
 				"is_right": tt.isRight,
 			})
@@ -294,8 +301,6 @@ func TestSaveBetSavesAcc(t *testing.T) {
 			c.Collection("users").Doc("237").Set(ctx, map[string]any{
 				"acc": 2000,
 			})
-
-			f := fstore.New(c)
 
 			err := f.SaveBet(ctx, 237, "test-q-107", 300)
 			if err != nil {

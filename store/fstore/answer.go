@@ -85,12 +85,6 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("doc set: %w", err)
 	}
 
-	// Not in tutorial mode
-	// TODO: Make more understandable
-	if answersCollection != AnswersCollection {
-		return nil
-	}
-
 	q, err := f.question(ctx, questionID)
 	if err != nil {
 		return fmt.Errorf("user query: %w", err)
@@ -106,10 +100,19 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("answer query: %w", err)
 	}
 
+	// Not in tutorial mode
+	// TODO: Make more understandable
+	mode := store.RealMode
+	if answersCollection != AnswersCollection {
+		mode = store.TutorialMode
+	}
+
 	upds := []firestore.Update{}
 	if a.IsRight {
-		upds = append(upds, firestore.Update{Path: "right_answer_cnt", Value: firestore.Increment(1)})
-		upds = append(upds, firestore.Update{Path: "avg_speed", Value: (u.AvgSpeed*float64(u.RightAnswerCnt) + time.Since(q.SentAt).Seconds()) / (float64(u.RightAnswerCnt) + 1)})
+		if mode != store.TutorialMode {
+			upds = append(upds, firestore.Update{Path: "right_answer_cnt", Value: firestore.Increment(1)})
+			upds = append(upds, firestore.Update{Path: "avg_speed", Value: (u.AvgSpeed*float64(u.RightAnswerCnt) + time.Since(q.SentAt).Seconds()) / (float64(u.RightAnswerCnt) + 1)})
+		}
 	} else {
 		bet *= -1
 	}
