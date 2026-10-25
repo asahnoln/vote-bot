@@ -87,12 +87,13 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []Request, 
 }
 
 const (
-	TextQuestionClosed       = "Вопрос закрыт. Скоро узнаем, насколько вы были правы."
-	TextYouMissedBet         = "Увы, вы не успели сделать ставку. Ваша игра окончена. "
-	TextByeBye               = "Казино прощается с вами!"
-	TextYouMissedAnswer      = "Вопрос закрыт! Вы не успели ответить. По правилам казино вы покидаете игру."
-	TextYouMissedBetTutorial = "Увы, вы не успели сделать ставку. Ваша игра была бы окончена, но это всего лишь обучение. "
-	TextByeByeTutorial       = "Казино еще не прощается с вами! Ждите следующего вопроса."
+	TextQuestionClosed          = "Вопрос закрыт. Скоро узнаем, насколько вы были правы."
+	TextYouMissedBet            = "Увы, вы не успели сделать ставку. Ваша игра окончена. "
+	TextByeBye                  = "Казино прощается с вами!"
+	TextYouMissedAnswer         = "Вопрос закрыт! Вы не успели ответить. По правилам казино вы покидаете игру."
+	TextYouMissedBetTutorial    = "Увы, вы не успели сделать ставку. Ваша игра была бы окончена, но это всего лишь обучение. "
+	TextByeByeTutorial          = "Казино еще не прощается с вами! Ждите следующего вопроса."
+	TextYouMissedAnswerTutorial = "Вопрос закрыт! Вы не успели ответить. По правилам казино вы бы покинули игру, но это всего лишь обучение."
 )
 
 func ClosingMessage(userID int, messageID int, question string, a store.Answer, mode store.Mode) (msg EditMessageText) {
@@ -131,27 +132,31 @@ func ClosingMessage(userID int, messageID int, question string, a store.Answer, 
 				Text: TextQuestionClosed,
 			})
 		} else {
-			textBet := TextYouMissedBet
-			textBye := TextByeBye
+			betBlock := InputRichBlock{
+				Type: InputRichBlockParagraphType,
+				Text: TextYouMissedBet,
+			}
+			byeBlock := InputRichBlock{
+				Type: InputRichBlockParagraphType,
+				Text: TextByeBye,
+			}
 			if mode == store.TutorialMode {
-				textBet = TextYouMissedBetTutorial
-				textBye = TextByeByeTutorial
+				betBlock.Text = TextYouMissedBetTutorial
+				byeBlock.Text = TextByeByeTutorial
 			}
 
-			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
-				Type: InputRichBlockParagraphType,
-				Text: textBet,
-			})
-			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
-				Type: InputRichBlockParagraphType,
-				Text: textBye,
-			})
+			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, betBlock)
+			msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, byeBlock)
 		}
 	} else {
-		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+		answerBlock := InputRichBlock{
 			Type: InputRichBlockParagraphType,
 			Text: TextYouMissedAnswer,
-		})
+		}
+		if mode == store.TutorialMode {
+			answerBlock.Text = TextYouMissedAnswerTutorial
+		}
+		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, answerBlock)
 	}
 
 	return

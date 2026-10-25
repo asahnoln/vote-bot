@@ -230,6 +230,29 @@ func TestClosingMessageNoAnswer(t *testing.T) {
 	}
 }
 
+func TestTutorialClosingMessageNoAnswer(t *testing.T) {
+	msg := tg.ClosingMessage(123, 110002, "Question with answer?", store.Answer{}, store.TutorialMode)
+	want := tg.EditMessageText{
+		ChatID:    123,
+		MessageID: 110002,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Question with answer?",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вопрос закрыт! Вы не успели ответить. По правилам казино вы бы покинули игру, но это всего лишь обучение.",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, msg); diff != "" {
+		t.Errorf("request mismatch (-want +got):%s", diff)
+	}
+}
+
 func TestCloseHandlerUsersStoreError(t *testing.T) {
 	wantErr := errors.New("users store error")
 	spy := &closeStoreSpy{
