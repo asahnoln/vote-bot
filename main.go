@@ -7,8 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"strconv"
-	"strings"
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
@@ -26,13 +24,14 @@ func main() {
 		log.Fatalf("init firebase client error: %v", err)
 	}
 
+	fireStore := fstore.New(fc)
 	dest := tg.NewDest(os.Getenv("BOT_URL"))
 
 	errCh := make(chan error)
 	go func() {
 		for err := range errCh {
 			slog.ErrorContext(ctx, "bot", "err", err)
-			if err := sendErrorMsgsToAdmins(ctx, dest, err); err != nil {
+			if err := sendErrorMsgsToAdmins(ctx, fireStore, dest, err); err != nil {
 				if err != nil {
 					slog.ErrorContext(ctx, "send error to telegram", "err", err)
 				}
@@ -40,9 +39,7 @@ func main() {
 		}
 	}()
 
-	fireStore := fstore.New(fc)
-
-	err = setBotCommands(ctx, dest)
+	err = setBotCommands(ctx, fireStore, dest)
 	if err != nil {
 		log.Fatalf("set bot commands: %v", err)
 	}
@@ -83,16 +80,14 @@ func initFirestoreClient(ctx context.Context) (*firestore.Client, error) {
 	return fc, err
 }
 
-func setBotCommands(ctx context.Context, dest tg.Dest) error {
-	adminIDs := os.Getenv("ADMIN_IDS")
-	ids := strings.Split(adminIDs, ",")
-	for _, id := range ids {
-		i, err := strconv.Atoi(id)
-		if err != nil {
-			return fmt.Errorf("atoi id %q: %w", id, err)
-		}
+func setBotCommands(ctx context.Context, fStore *fstore.Firestore, dest tg.Dest) error {
+	admins, err := fStore.Admins(ctx)
+	if err != nil {
+		return fmt.Errorf("fstore admins: %w", err)
+	}
 
-		m, err := dest.Send(ctx, tg.CommandsForAdmin(i))
+	for _, admin := range admins {
+		m, err := dest.Send(ctx, tg.CommandsForAdmin(admin.UserID))
 		if err != nil {
 			return fmt.Errorf("dest send (resp %#v): %w", m, err)
 		}
@@ -102,17 +97,15 @@ func setBotCommands(ctx context.Context, dest tg.Dest) error {
 	return nil
 }
 
-func sendErrorMsgsToAdmins(ctx context.Context, dest tg.Dest, errToSend error) error {
-	adminIDs := os.Getenv("ADMIN_IDS")
-	ids := strings.Split(adminIDs, ",")
-	for _, id := range ids {
-		i, err := strconv.Atoi(id)
-		if err != nil {
-			return fmt.Errorf("atoi id %q: %w", id, err)
-		}
+func sendErrorMsgsToAdmins(ctx context.Context, fStore *fstore.Firestore, dest tg.Dest, errToSend error) error {
+	admins, err := fStore.Admins(ctx)
+	if err != nil {
+		return fmt.Errorf("fstore admins: %w", err)
+	}
 
+	for _, admin := range admins {
 		m, err := dest.Send(ctx, tg.SendRichMessage{
-			ChatID: i,
+			ChatID: admin.UserID,
 			RichMessage: tg.InputRichMessage{
 				Blocks: []tg.InputRichBlock{
 					{
