@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/firestore"
 	"github.com/asahnoln/vote-bot/store"
+	"google.golang.org/api/iterator"
 )
 
 const AdminsCollection = "admins"
@@ -44,13 +46,43 @@ func (f *Firestore) SetMode(ctx context.Context, mode store.Mode) (err error) {
 		return fmt.Errorf("config current question set: %w", err)
 	}
 
+	err = f.restoreAllAccs(ctx)
+	if err != nil {
+		return err
+	}
+
 	return
+}
+
+func (f *Firestore) restoreAllAccs(ctx context.Context) (err error) {
+	iter := f.c.Collection(UsersCollection).WhereEntity(firestore.PropertyFilter{Path: "acc", Operator: "!=", Value: AccountStartMoney}).Documents(ctx)
+	if err != nil {
+		return fmt.Errorf("all users: %w", err)
+	}
+
+	for {
+		d, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("users iter: %w", err)
+		}
+
+		_, err = d.Ref.Update(ctx, []firestore.Update{
+			{Path: "acc", Value: AccountStartMoney},
+		})
+		if err != nil {
+			return fmt.Errorf("update %v: %w", d.Ref.ID, err)
+		}
+	}
+	return nil
 }
 
 func (f *Firestore) CollectionByMode(ctx context.Context, col string) (string, error) {
 	mode, err := f.Mode(ctx)
 	if err != nil {
-		return "", fmt.Errorf("mode: %w", err)
+		return col, fmt.Errorf("mode: %w", err)
 	}
 
 	if mode == store.TutorialMode {

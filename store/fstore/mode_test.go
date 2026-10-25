@@ -50,6 +50,16 @@ func TestSetMode(t *testing.T) {
 		"idx": 99,
 	})
 
+	col = c.Collection("users")
+	col.Doc("1").Set(ctx, map[string]any{
+		"user_id": 1,
+		"acc":     0,
+	})
+	col.Doc("2").Set(ctx, map[string]any{
+		"user_id": 2,
+		"acc":     10,
+	})
+
 	f := fstore.New(c)
 
 	err := f.SetMode(ctx, store.TutorialMode)
@@ -65,6 +75,16 @@ func TestSetMode(t *testing.T) {
 	d, _ = c.Collection("config").Doc("current_question").Get(ctx)
 	if got, want := d.Data()["idx"], int64(0); got != want {
 		t.Errorf("current question idx: got %v; want %v", got, want)
+	}
+
+	d, _ = c.Collection("users").Doc("1").Get(ctx)
+	if got, want := d.Data()["acc"], int64(1000); got != want {
+		t.Errorf("user 1 acc: got %v; want %v", got, want)
+	}
+
+	d, _ = c.Collection("users").Doc("2").Get(ctx)
+	if got, want := d.Data()["acc"], int64(1000); got != want {
+		t.Errorf("user 2 acc: got %v; want %v", got, want)
 	}
 }
 

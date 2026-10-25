@@ -232,3 +232,32 @@ func TestSaveLostUserError(t *testing.T) {
 		t.Fatalf("fstore save lost user: got err %v; want %v", got, want)
 	}
 }
+
+func TestRestoreAcc(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	col := c.Collection("users")
+	col.Doc("532").Set(ctx, map[string]any{
+		"user_id": 532,
+		"acc":     0,
+	})
+
+	f := fstore.New(c)
+
+	err := f.RestoreAcc(ctx, 532)
+	if err != nil {
+		t.Fatalf("fstore restore acc: got err %v; want nil", err)
+	}
+
+	d, _ := col.Doc("532").Get(ctx)
+
+	if got, want := d.Data()["acc"], int64(1000); got != want {
+		t.Errorf("acc: got %v; want %v", got, want)
+	}
+	if got, want := d.Data()["user_id"], int64(532); got != want {
+		t.Errorf("user id: got %v; want %v", got, want)
+	}
+}

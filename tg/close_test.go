@@ -90,7 +90,9 @@ func TestCloseHandlerTutorialWontSaveLosingUser(t *testing.T) {
 				{UserID: 24, LastMessageID: 10003},
 			},
 		},
-		mode: store.TutorialMode,
+		modeStoreStub: modeStoreStub{
+			mode: store.TutorialMode,
+		},
 	}
 	h := tg.CloseHandler{
 		Store: spy,
