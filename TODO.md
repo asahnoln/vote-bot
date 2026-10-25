@@ -78,6 +78,7 @@ Each user has an account. (At the start they have 1000$)
 - [x] Optional questions which don't count
 - [ ] Check flow on tutorial mode
 - [ ] Sent people message on mode change???
+- [ ] Message on last question???
 - [ ] Think on misclicks on commands - suddenly close a question, or send answer again etc
 - [ ] Start bot with secret token from QR
 - [ ] Set webhook with secret token
