@@ -19,6 +19,7 @@ type RevealStore interface {
 	Answerser
 	LostUserSaver
 	Accountser
+	Moder
 	LastClosedQuestion(context.Context) (store.Question, error)
 }
 
@@ -64,6 +65,8 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 		return nil, fmt.Errorf("account: %w", err)
 	}
 
+	mode, _ := h.Store.Mode(ctx)
+
 	for _, a := range answers {
 		acc, ok := accs[a.UserID]
 		// If bet was not set - user was filtered out above
@@ -77,10 +80,11 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 				a.UserID,
 				a.IsRight,
 				acc,
+				mode,
 			),
 		)
 
-		if acc <= 0 {
+		if mode != store.TutorialMode && acc <= 0 {
 			err := h.Store.SaveLostUser(ctx, a.UserID)
 			if err != nil {
 				return nil, fmt.Errorf("save lost user %d: %w", a.UserID, err)
@@ -92,14 +96,15 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 }
 
 const (
-	TextYouAreRight    = "Браво! Правильный ответ. Удача на вашей стороне."
-	TextYouAreWrongBut = "Не угадали! Вы теряете свою ставку. Посмотрим, удастся ли отыграться."
-	TextYouAreWrong    = "Неверный ответ."
-	TextYourBalance    = "Ваш счет — "
-	TextYouLost        = "Вы банкрот. Казино прощается с вами!"
+	TextYouAreRight     = "Браво! Правильный ответ. Удача на вашей стороне."
+	TextYouAreWrongBut  = "Не угадали! Вы теряете свою ставку. Посмотрим, удастся ли отыграться."
+	TextYouAreWrong     = "Неверный ответ."
+	TextYourBalance     = "Ваш счет — "
+	TextYouLost         = "Вы банкрот. Казино прощается с вами!"
+	TextYouLostTutorial = "Вы банкрот. Казино бы попрощалось с вами, но это всего лишь обучение. Мы снова добавляем вам 1000$ на образовательные нужды."
 )
 
-func RevealMessage(userID int, isRight bool, acc int) (msg SendRichMessage) {
+func RevealMessage(userID int, isRight bool, acc int, mode store.Mode) (msg SendRichMessage) {
 	msg = SendRichMessage{
 		ChatID: userID,
 	}
@@ -127,10 +132,14 @@ func RevealMessage(userID int, isRight bool, acc int) (msg SendRichMessage) {
 			Type: InputRichBlockParagraphType,
 			Text: fmt.Sprintf("%s%d$", TextYourBalance, 0),
 		})
-		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+		lostBlock := InputRichBlock{
 			Type: InputRichBlockParagraphType,
 			Text: TextYouLost,
-		})
+		}
+		if mode == store.TutorialMode {
+			lostBlock.Text = TextYouLostTutorial
+		}
+		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, lostBlock)
 	}
 
 	return

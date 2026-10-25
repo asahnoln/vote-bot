@@ -11,13 +11,17 @@ type LostUserSaver interface {
 	SaveLostUser(ctx context.Context, userID int) error
 }
 
+type Moder interface {
+	Mode(context.Context) (store.Mode, error)
+}
+
 type CloseStore interface {
 	Userser
 	CurrentQuestioner
 	Answerser
 	LostUserSaver
+	Moder
 	CloseCurrentQuestion(ctx context.Context) error
-	Mode(context.Context) (store.Mode, error)
 }
 
 type CloseHandler struct {

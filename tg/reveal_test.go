@@ -104,8 +104,45 @@ func TestReveal(t *testing.T) {
 	}
 }
 
+func TestRevealTutorialWontSaveLostUser(t *testing.T) {
+	storeSpy := &revealStoreSpy{
+		answersStoreStub: answersStoreStub{
+			answers: []store.Answer{
+				{
+					UserID:  15789,
+					IsRight: true,
+					Bet:     500,
+				},
+			},
+		},
+		accountStoreStub: accountStoreStub{
+			accounts: map[int]int{
+				15789: 0,
+			},
+		},
+		modeStoreStub: modeStoreStub{
+			mode: store.TutorialMode,
+		},
+	}
+	h := &tg.RevealHandler{Store: storeSpy}
+
+	upd := tg.Update{}
+	json.Unmarshal(revealCommandUpdate, &upd)
+	msgs, err := h.Handle(context.Background(), upd)
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	if got, want := len(msgs), 1; got != want {
+		t.Fatalf("request count: got %v; want %v", got, want)
+	}
+	if got, want := len(storeSpy.lostUserStoreStub.userIDs), 0; got != want {
+		t.Fatalf("lost userIDs count: got %v; want %v", got, want)
+	}
+}
+
 func TestRevealMessage(t *testing.T) {
-	msg := tg.RevealMessage(876, true, 500)
+	msg := tg.RevealMessage(876, true, 500, "")
 	want := tg.SendRichMessage{
 		ChatID: 876,
 		RichMessage: tg.InputRichMessage{
@@ -127,7 +164,7 @@ func TestRevealMessage(t *testing.T) {
 }
 
 func TestRevealMessageWrong(t *testing.T) {
-	msg := tg.RevealMessage(878, false, 100)
+	msg := tg.RevealMessage(878, false, 100, "")
 	want := tg.SendRichMessage{
 		ChatID: 878,
 		RichMessage: tg.InputRichMessage{
@@ -155,7 +192,7 @@ func TestRevealMessageWrongAndBankrupt(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("acc %d$", tt.acc), func(t *testing.T) {
-			msg := tg.RevealMessage(877, false, tt.acc)
+			msg := tg.RevealMessage(877, false, tt.acc, store.RealMode)
 			want := tg.SendRichMessage{
 				ChatID: 877,
 				RichMessage: tg.InputRichMessage{
@@ -179,6 +216,32 @@ func TestRevealMessageWrongAndBankrupt(t *testing.T) {
 				t.Errorf("msg mismatch (-want +got):%s", diff)
 			}
 		})
+	}
+}
+
+func TestRevealMessageBankruptTutorial(t *testing.T) {
+	msg := tg.RevealMessage(877, false, 0, store.TutorialMode)
+	want := tg.SendRichMessage{
+		ChatID: 877,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Неверный ответ.",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш счет — 0$",
+				},
+				{
+					Type: "paragraph",
+					Text: "Вы банкрот. Казино бы попрощалось с вами, но это всего лишь обучение. Мы снова добавляем вам 1000$ на образовательные нужды.",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, msg); diff != "" {
+		t.Errorf("msg mismatch (-want +got):%s", diff)
 	}
 }
 
@@ -271,6 +334,7 @@ type revealStoreSpy struct {
 	answersStoreStub
 	lostUserStoreStub
 	accountStoreStub
+	modeStoreStub
 	lastClosedQuestionErr error
 }
 

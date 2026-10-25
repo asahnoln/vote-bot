@@ -379,19 +379,14 @@ type closeStoreSpy struct {
 	usersStoreStub
 	answersStoreStub
 	lostUserStoreStub
-	closed  bool
-	err     error
-	mode    store.Mode
-	modeErr error
+	modeStoreStub
+	closed bool
+	err    error
 }
 
 func (s *closeStoreSpy) CloseCurrentQuestion(ctx context.Context) error {
 	s.closed = true
 	return s.err
-}
-
-func (s *closeStoreSpy) Mode(ctx context.Context) (store.Mode, error) {
-	return s.mode, s.modeErr
 }
 
 type answersStoreStub struct {
@@ -413,4 +408,13 @@ type lostUserStoreStub struct {
 func (s *lostUserStoreStub) SaveLostUser(ctx context.Context, userID int) error {
 	s.userIDs = append(s.userIDs, userID)
 	return s.err
+}
+
+type modeStoreStub struct {
+	mode store.Mode
+	err  error
+}
+
+func (s *modeStoreStub) Mode(ctx context.Context) (store.Mode, error) {
+	return s.mode, s.err
 }
