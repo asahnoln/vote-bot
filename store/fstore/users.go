@@ -98,3 +98,7 @@ func (f *Firestore) SaveLostUser(ctx context.Context, userID int) error {
 
 	return nil
 }
+
+func (f *Firestore) RestoreAcc(ctx context.Context, userID int) error {
+	return nil
+}

@@ -21,6 +21,7 @@ type RevealStore interface {
 	Accountser
 	Moder
 	LastClosedQuestion(context.Context) (store.Question, error)
+	RestoreAcc(ctx context.Context, userID int) error
 }
 
 type RevealHandler struct {
@@ -87,10 +88,18 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 			),
 		)
 
-		if mode != store.TutorialMode && acc <= 0 {
-			err := h.Store.SaveLostUser(ctx, a.UserID)
-			if err != nil {
-				return nil, fmt.Errorf("save lost user %d: %w", a.UserID, err)
+		if acc <= 0 {
+			switch mode {
+			case store.TutorialMode:
+				err := h.Store.RestoreAcc(ctx, a.UserID)
+				if err != nil {
+					return nil, fmt.Errorf("restore acc for user %d: %w", a.UserID, err)
+				}
+			default:
+				err := h.Store.SaveLostUser(ctx, a.UserID)
+				if err != nil {
+					return nil, fmt.Errorf("save lost user %d: %w", a.UserID, err)
+				}
 			}
 		}
 	}

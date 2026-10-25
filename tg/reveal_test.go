@@ -139,6 +139,9 @@ func TestRevealTutorialWontSaveLostUser(t *testing.T) {
 	if got, want := len(storeSpy.lostUserStoreStub.userIDs), 0; got != want {
 		t.Fatalf("lost userIDs count: got %v; want %v", got, want)
 	}
+	if got, want := storeSpy.restoreAcc, 15789; got != want {
+		t.Fatalf("restore acc user ID: got %v; want %v", got, want)
+	}
 }
 
 func TestRevealMessage(t *testing.T) {
@@ -328,6 +331,36 @@ func TestRevealHandlerModeStoreError(t *testing.T) {
 	}
 }
 
+func TestRevealHandlerRestoreAccError(t *testing.T) {
+	wantErr := errors.New("restore acc error")
+	spy := &revealStoreSpy{
+		answersStoreStub: answersStoreStub{
+			answers: []store.Answer{
+				{
+					UserID: 101,
+				},
+			},
+		},
+		accountStoreStub: accountStoreStub{
+			accounts: map[int]int{
+				101: 0,
+			},
+		},
+		modeStoreStub: modeStoreStub{
+			mode: store.TutorialMode,
+		},
+		restoreAccErr: wantErr,
+	}
+	h := tg.RevealHandler{
+		Store: spy,
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %v; want %v", got, want)
+	}
+}
+
 func TestRevealCondition(t *testing.T) {
 	h := tg.RevealHandler{}
 
@@ -353,6 +386,8 @@ type revealStoreSpy struct {
 	accountStoreStub
 	modeStoreStub
 	lastClosedQuestionErr error
+	restoreAcc            int
+	restoreAccErr         error
 }
 
 func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, error) {
@@ -361,6 +396,11 @@ func (s *revealStoreSpy) LastClosedQuestion(context.Context) (store.Question, er
 		Q:    "Да или Нет?",
 		Opts: map[string]bool{"Да": true, "Нет": false},
 	}, s.lastClosedQuestionErr
+}
+
+func (s *revealStoreSpy) RestoreAcc(ctx context.Context, userID int) error {
+	s.restoreAcc = userID
+	return s.restoreAccErr
 }
 
 type accountStoreStub struct {
