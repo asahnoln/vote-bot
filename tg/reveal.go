@@ -65,7 +65,10 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 		return nil, fmt.Errorf("account: %w", err)
 	}
 
-	mode, _ := h.Store.Mode(ctx)
+	mode, err := h.Store.Mode(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("mode: %w", err)
+	}
 
 	for _, a := range answers {
 		acc, ok := accs[a.UserID]

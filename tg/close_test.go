@@ -350,6 +350,23 @@ func TestCloseHandlerQuestionStoreError(t *testing.T) {
 	}
 }
 
+func TestCloseHandlerModeStoreError(t *testing.T) {
+	wantErr := errors.New("mode error")
+	spy := &closeStoreSpy{
+		modeStoreStub: modeStoreStub{
+			err: wantErr,
+		},
+	}
+	h := tg.CloseHandler{
+		Store: spy,
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %v; want %v", got, want)
+	}
+}
+
 func TestCloseCondition(t *testing.T) {
 	h := tg.CloseHandler{}
 

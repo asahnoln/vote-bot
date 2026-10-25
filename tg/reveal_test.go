@@ -311,6 +311,23 @@ func TestRevealAccountsError(t *testing.T) {
 	}
 }
 
+func TestRevealHandlerModeStoreError(t *testing.T) {
+	wantErr := errors.New("mode error")
+	spy := &revealStoreSpy{
+		modeStoreStub: modeStoreStub{
+			err: wantErr,
+		},
+	}
+	h := tg.RevealHandler{
+		Store: spy,
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %v; want %v", got, want)
+	}
+}
+
 func TestRevealCondition(t *testing.T) {
 	h := tg.RevealHandler{}
 

@@ -66,7 +66,10 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []Request, 
 		return nil, fmt.Errorf("close current question: %w", err)
 	}
 
-	mode, _ := h.Store.Mode(ctx)
+	mode, err := h.Store.Mode(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("mode: %w", err)
+	}
 
 	for _, u := range users {
 		a := answersMap[u.UserID]
