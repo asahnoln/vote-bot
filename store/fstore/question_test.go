@@ -289,6 +289,42 @@ func TestFirstQuestionMissed(t *testing.T) {
 	}
 }
 
+func TestFirstQuestionMissed_NotForTutorials(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	tests := []struct {
+		idx  int
+		want bool
+	}{
+		{10, false},
+		{5, false},
+		{0, false},
+	}
+
+	f := fstore.New(c)
+	f.SetMode(ctx, store.TutorialMode)
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("index %d", tt.idx), func(t *testing.T) {
+			c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+				"idx": tt.idx,
+			})
+
+			ok, err := f.FirstQuestionMissed(ctx)
+			if err != nil {
+				t.Fatalf("fstore question: got err %v; want nil", err)
+			}
+
+			if got, want := ok, tt.want; got != want {
+				t.Errorf("fstore question missed: got err %v; want %v", got, want)
+			}
+		})
+	}
+}
+
 func TestFirstQuestionMissedError(t *testing.T) {
 	ctx := context.Background()
 

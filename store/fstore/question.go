@@ -42,13 +42,6 @@ func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err 
 	return q, nil
 }
 
-const (
-	ConfigCollection     = "config"
-	CurrentQuestionDocID = "current_question"
-)
-
-const IdxPath = "idx"
-
 func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
 	col, err := f.CollectionByMode(ctx, QuestionsCollection)
 	if err != nil {
@@ -81,6 +74,15 @@ func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
 }
 
 func (f *Firestore) FirstQuestionMissed(ctx context.Context) (ok bool, err error) {
+	mode, err := f.mode(ctx)
+	if err != nil {
+		return false, fmt.Errorf("mode: %w", err)
+	}
+
+	if mode == store.TutorialMode {
+		return false, nil
+	}
+
 	idx, err := f.getCurrentQuestionIdx(ctx)
 	if err != nil {
 		return false, fmt.Errorf("current question idx: %w", err)
