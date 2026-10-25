@@ -83,6 +83,32 @@ func TestCloseHandler(t *testing.T) {
 	}
 }
 
+func TestCloseHandlerTutorialWontSaveLosingUser(t *testing.T) {
+	spy := &closeStoreSpy{
+		usersStoreStub: usersStoreStub{
+			users: []store.User{
+				{UserID: 24, LastMessageID: 10003},
+			},
+		},
+		mode: store.TutorialMode,
+	}
+	h := tg.CloseHandler{
+		Store: spy,
+	}
+
+	msgs, err := h.Handle(context.Background(), tg.Update{})
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	if got, want := len(msgs), 1; got != want {
+		t.Errorf("msgs count: got %v; want %v", got, want)
+	}
+	if got, want := len(spy.lostUserStoreStub.userIDs), 0; got != want {
+		t.Errorf("lost userIDs count: got %v; want %v", got, want)
+	}
+}
+
 func TestClosingMessage(t *testing.T) {
 	msg := tg.ClosingMessage(191, 167521, "Q or W?", store.Answer{A: "WWW!!!", Bet: 1900}, "")
 	want := tg.EditMessageText{

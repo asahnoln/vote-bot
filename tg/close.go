@@ -76,7 +76,7 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []Request, 
 			),
 		)
 
-		if a.Bet == 0 { // Works for both missing answer and bet
+		if mode != store.TutorialMode && a.Bet == 0 { // Works for both missing answer and bet
 			err := h.Store.SaveLostUser(ctx, u.UserID)
 			if err != nil {
 				return nil, fmt.Errorf("save lost user %d: %w", u.UserID, err)
