@@ -74,7 +74,7 @@ func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
 }
 
 func (f *Firestore) FirstQuestionMissed(ctx context.Context) (ok bool, err error) {
-	mode, err := f.mode(ctx)
+	mode, err := f.Mode(ctx)
 	if err != nil {
 		return false, fmt.Errorf("mode: %w", err)
 	}

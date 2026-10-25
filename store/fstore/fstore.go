@@ -31,7 +31,7 @@ func New(c *firestore.Client) *Firestore {
 	return &Firestore{c}
 }
 
-func (f *Firestore) mode(ctx context.Context) (store.Mode, error) {
+func (f *Firestore) Mode(ctx context.Context) (store.Mode, error) {
 	d, err := f.c.Collection(ConfigCollection).Doc(ModeDocID).Get(ctx)
 	if err != nil {
 		if status.Code(err) != codes.NotFound {

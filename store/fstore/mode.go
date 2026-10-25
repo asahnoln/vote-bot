@@ -48,7 +48,7 @@ func (f *Firestore) SetMode(ctx context.Context, mode store.Mode) (err error) {
 }
 
 func (f *Firestore) CollectionByMode(ctx context.Context, col string) (string, error) {
-	mode, err := f.mode(ctx)
+	mode, err := f.Mode(ctx)
 	if err != nil {
 		return "", fmt.Errorf("mode: %w", err)
 	}

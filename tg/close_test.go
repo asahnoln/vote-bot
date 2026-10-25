@@ -84,7 +84,7 @@ func TestCloseHandler(t *testing.T) {
 }
 
 func TestClosingMessage(t *testing.T) {
-	msg := tg.ClosingMessage(191, 167521, "Q or W?", store.Answer{A: "WWW!!!", Bet: 1900})
+	msg := tg.ClosingMessage(191, 167521, "Q or W?", store.Answer{A: "WWW!!!", Bet: 1900}, "")
 	want := tg.EditMessageText{
 		ChatID:    191,
 		MessageID: 167521,
@@ -115,7 +115,7 @@ func TestClosingMessage(t *testing.T) {
 }
 
 func TestClosingMessageAllIn(t *testing.T) {
-	msg := tg.ClosingMessage(191, 167521, "Q or W?", store.Answer{A: "WWW!!!", Bet: 999, AllIn: true})
+	msg := tg.ClosingMessage(191, 167521, "Q or W?", store.Answer{A: "WWW!!!", Bet: 999, AllIn: true}, "")
 	want := tg.EditMessageText{
 		ChatID:    191,
 		MessageID: 167521,
@@ -146,7 +146,7 @@ func TestClosingMessageAllIn(t *testing.T) {
 }
 
 func TestClosingMessageNoBet(t *testing.T) {
-	msg := tg.ClosingMessage(124, 110003, "Cool question", store.Answer{A: "Cool answer"})
+	msg := tg.ClosingMessage(124, 110003, "Cool question", store.Answer{A: "Cool answer"}, store.RealMode)
 	want := tg.EditMessageText{
 		ChatID:    124,
 		MessageID: 110003,
@@ -176,8 +176,39 @@ func TestClosingMessageNoBet(t *testing.T) {
 	}
 }
 
+func TestTutorialClosingMessageNoBet(t *testing.T) {
+	msg := tg.ClosingMessage(124, 110003, "Tutorial question", store.Answer{A: "Tutorial answer"}, store.TutorialMode)
+	want := tg.EditMessageText{
+		ChatID:    124,
+		MessageID: 110003,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Tutorial question",
+				},
+				{
+					Type: "paragraph",
+					Text: "Ваш ответ: Tutorial answer",
+				},
+				{
+					Type: "paragraph",
+					Text: "Увы, вы не успели сделать ставку. Ваша игра была бы окончена, но это всего лишь обучение. ",
+				},
+				{
+					Type: "paragraph",
+					Text: "Казино еще не прощается с вами! Ждите следующего вопроса.",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, msg); diff != "" {
+		t.Errorf("request mismatch (-want +got):%s", diff)
+	}
+}
+
 func TestClosingMessageNoAnswer(t *testing.T) {
-	msg := tg.ClosingMessage(123, 110002, "Question with answer?", store.Answer{})
+	msg := tg.ClosingMessage(123, 110002, "Question with answer?", store.Answer{}, "")
 	want := tg.EditMessageText{
 		ChatID:    123,
 		MessageID: 110002,
@@ -299,13 +330,19 @@ type closeStoreSpy struct {
 	usersStoreStub
 	answersStoreStub
 	lostUserStoreStub
-	closed bool
-	err    error
+	closed  bool
+	err     error
+	mode    store.Mode
+	modeErr error
 }
 
 func (s *closeStoreSpy) CloseCurrentQuestion(ctx context.Context) error {
 	s.closed = true
 	return s.err
+}
+
+func (s *closeStoreSpy) Mode(ctx context.Context) (store.Mode, error) {
+	return s.mode, s.modeErr
 }
 
 type answersStoreStub struct {
