@@ -85,6 +85,12 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("doc set: %w", err)
 	}
 
+	// Not in tutorial mode
+	// TODO: Make more understandable
+	if answersCollection != AnswersCollection {
+		return nil
+	}
+
 	q, err := f.question(ctx, questionID)
 	if err != nil {
 		return fmt.Errorf("user query: %w", err)

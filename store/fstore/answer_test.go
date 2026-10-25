@@ -310,3 +310,41 @@ func TestSaveBetSavesAcc(t *testing.T) {
 		})
 	}
 }
+
+func TestTutorialSaveBetWontSaveStats(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("tutorial_questions").Doc("tut-q-107").Set(ctx, map[string]any{
+		"sent_at": time.Now().Add(-30 * time.Second),
+	})
+
+	c.Collection("tutorial_answers").Doc("235:tut-q-107").Set(ctx, map[string]any{
+		"user_id":  235,
+		"is_right": true,
+	})
+
+	c.Collection("users").Doc("235").Set(ctx, map[string]any{
+		"right_answer_cnt": 4,
+		"avg_speed":        2,
+	})
+
+	f := fstore.New(c)
+
+	f.SetMode(ctx, store.TutorialMode)
+	err := f.SaveBet(ctx, 235, "tut-q-107", 20)
+	if err != nil {
+		t.Fatalf("fstore save bet: got err %q; want nil", err)
+	}
+
+	d, _ := c.Collection("users").Doc("235").Get(ctx)
+
+	if diff := cmp.Diff(d.Data()["avg_speed"], int64(2), cmpopts.EquateApprox(0.001, 0)); diff != "" {
+		t.Errorf("avg speed mismatch (-want +got):\n%s", diff)
+	}
+	if got, want := d.Data()["right_answer_cnt"], int64(4); got != want {
+		t.Errorf("avg speed: got %v; want %v", got, want)
+	}
+}
