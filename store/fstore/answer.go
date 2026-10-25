@@ -108,13 +108,11 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 	}
 
 	upds := []firestore.Update{}
-	if a.IsRight {
-		if mode != store.TutorialMode {
-			upds = append(upds, firestore.Update{Path: "right_answer_cnt", Value: firestore.Increment(1)})
-			upds = append(upds, firestore.Update{Path: "avg_speed", Value: (u.AvgSpeed*float64(u.RightAnswerCnt) + time.Since(q.SentAt).Seconds()) / (float64(u.RightAnswerCnt) + 1)})
-		}
-	} else {
+	if !a.IsRight {
 		bet *= -1
+	} else if mode != store.TutorialMode {
+		upds = append(upds, firestore.Update{Path: "right_answer_cnt", Value: firestore.Increment(1)})
+		upds = append(upds, firestore.Update{Path: "avg_speed", Value: (u.AvgSpeed*float64(u.RightAnswerCnt) + time.Since(q.SentAt).Seconds()) / (float64(u.RightAnswerCnt) + 1)})
 	}
 	upds = append(upds, firestore.Update{Path: "acc", Value: firestore.Increment(bet)})
 
