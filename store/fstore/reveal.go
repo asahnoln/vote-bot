@@ -19,7 +19,12 @@ func (f *Firestore) LastClosedQuestion(ctx context.Context) (q store.Question, e
 }
 
 func (f *Firestore) Answers(ctx context.Context, questionID string) (answers []store.Answer, err error) {
-	iter := f.c.Collection(AnswersCollection).WhereEntity(firestore.PropertyFilter{
+	answersCollection, err := f.CollectionByMode(ctx, AnswersCollection)
+	if err != nil {
+		return answers, fmt.Errorf("collection by mode: %w", err)
+	}
+
+	iter := f.c.Collection(answersCollection).WhereEntity(firestore.PropertyFilter{
 		Path:     "question_id",
 		Operator: EqualOp,
 		Value:    questionID,

@@ -18,7 +18,11 @@ func (f *Firestore) SaveAnswer(ctx context.Context, userID int, questionID strin
 		return fmt.Errorf("question: %w", err)
 	}
 
-	_, err = f.c.Collection(AnswersCollection).
+	answersCollection, err := f.CollectionByMode(ctx, AnswersCollection)
+	if err != nil {
+		return fmt.Errorf("collection by mode: %w", err)
+	}
+	_, err = f.c.Collection(answersCollection).
 		Doc(answerDocID(userID, questionID)).
 		Set(ctx,
 			map[string]any{
@@ -35,7 +39,12 @@ func (f *Firestore) SaveAnswer(ctx context.Context, userID int, questionID strin
 }
 
 func (f *Firestore) question(ctx context.Context, questionID string) (q store.Question, err error) {
-	doc, err := f.c.Collection(QuestionsCollection).Doc(questionID).Get(ctx)
+	col, err := f.CollectionByMode(ctx, QuestionsCollection)
+	if err != nil {
+		return q, fmt.Errorf("collection by mode: %w", err)
+	}
+
+	doc, err := f.c.Collection(col).Doc(questionID).Get(ctx)
 	if err != nil {
 		return q, fmt.Errorf("get: %w", err)
 	}
@@ -60,7 +69,12 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		bet = accs[userID]
 		allIn = true
 	}
-	_, err := f.c.Collection(AnswersCollection).
+
+	answersCollection, err := f.CollectionByMode(ctx, AnswersCollection)
+	if err != nil {
+		return fmt.Errorf("collection by mode: %w", err)
+	}
+	_, err = f.c.Collection(answersCollection).
 		Doc(answerDocID(userID, questionID)).
 		Set(ctx,
 			map[string]any{
@@ -81,7 +95,7 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("user query: %w", err)
 	}
 
-	a, err := f.queryAndMap[store.Answer](ctx, AnswersCollection, answerDocID(userID, questionID))
+	a, err := f.queryAndMap[store.Answer](ctx, answersCollection, answerDocID(userID, questionID))
 	if err != nil {
 		return fmt.Errorf("answer query: %w", err)
 	}

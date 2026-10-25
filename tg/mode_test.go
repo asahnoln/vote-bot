@@ -12,7 +12,7 @@ import (
 
 func TestModeOptionalHandler(t *testing.T) {
 	spy := &modeStoreSpy{}
-	h := tg.ModeHandler{Store: spy, Mode: store.OptionalMode}
+	h := tg.ModeHandler{Store: spy, Mode: store.TutorialMode}
 
 	msgs, err := h.Handle(context.Background(), tg.Update{})
 	if err != nil {
@@ -27,7 +27,7 @@ func TestModeOptionalHandler(t *testing.T) {
 		ChatID: 10001,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
-				{Text: "Установлен режим вопросов: опциональный"},
+				{Text: "Установлен режим вопросов: учебный"},
 			},
 		},
 	}
@@ -39,7 +39,7 @@ func TestModeOptionalHandler(t *testing.T) {
 		t.Errorf("2nd chat ID: got %v; want %v", got, want)
 	}
 
-	if got, want := spy.mode, store.OptionalMode; got != want {
+	if got, want := spy.mode, store.TutorialMode; got != want {
 		t.Errorf("mode set: got %v; want %v", got, want)
 	}
 }
@@ -49,7 +49,7 @@ func TestModeHadnlerAdminsError(t *testing.T) {
 	spy := &modeStoreSpy{
 		adminsErr: wantErr,
 	}
-	h := tg.ModeHandler{Store: spy, Mode: store.OptionalMode}
+	h := tg.ModeHandler{Store: spy, Mode: store.TutorialMode}
 
 	_, err := h.Handle(context.Background(), tg.Update{})
 	if got, want := err, wantErr; !errors.Is(got, want) {
@@ -62,7 +62,7 @@ func TestModeHadnlerModeError(t *testing.T) {
 	spy := &modeStoreSpy{
 		modeErr: wantErr,
 	}
-	h := tg.ModeHandler{Store: spy, Mode: store.OptionalMode}
+	h := tg.ModeHandler{Store: spy, Mode: store.TutorialMode}
 
 	_, err := h.Handle(context.Background(), tg.Update{})
 	if got, want := err, wantErr; !errors.Is(got, want) {

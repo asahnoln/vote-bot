@@ -43,9 +43,11 @@ func firestoreMemoryEmulatorClient(t *testing.T, ctx context.Context) *firestore
 func resetDB(ctx context.Context, c *firestore.Client) {
 	deleteCollection(ctx, c, "config")
 	deleteCollection(ctx, c, "questions")
+	deleteCollection(ctx, c, "tutorial_questions")
 	deleteCollection(ctx, c, "users")
 	deleteCollection(ctx, c, "admins")
 	deleteCollection(ctx, c, "answers")
+	deleteCollection(ctx, c, "tutorial_answers")
 }
 
 func deleteCollection(ctx context.Context, c *firestore.Client, name string) {

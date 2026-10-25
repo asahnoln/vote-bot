@@ -50,7 +50,12 @@ const (
 const IdxPath = "idx"
 
 func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
-	results, err := f.c.Collection(QuestionsCollection).NewAggregationQuery().WithCount("all").Get(ctx)
+	col, err := f.CollectionByMode(ctx, QuestionsCollection)
+	if err != nil {
+		return fmt.Errorf("collection by mode: %w", err)
+	}
+
+	results, err := f.c.Collection(col).NewAggregationQuery().WithCount("all").Get(ctx)
 	if err != nil {
 		return fmt.Errorf("count all questions: %w", err)
 	}
@@ -90,7 +95,12 @@ func (f *Firestore) SaveCurrentQuestionSentAt(ctx context.Context) error {
 		return fmt.Errorf("current question by idx: %w", err)
 	}
 
-	_, err = f.c.Collection(QuestionsCollection).Doc(q.ID).Update(ctx,
+	col, err := f.CollectionByMode(ctx, QuestionsCollection)
+	if err != nil {
+		return fmt.Errorf("collection by mode: %w", err)
+	}
+
+	_, err = f.c.Collection(col).Doc(q.ID).Update(ctx,
 		[]firestore.Update{
 			{Path: "sent_at", Value: time.Now()},
 		})
@@ -111,7 +121,12 @@ func (f *Firestore) getQuestionByCurrentIdx(ctx context.Context, n int) (q store
 		return q, fmt.Errorf("%w: idx %d, n %d", store.ErrQuestionsOffsetMustNotBeNegative, idx, n)
 	}
 
-	docs, err := f.c.Collection(QuestionsCollection).
+	col, err := f.CollectionByMode(ctx, QuestionsCollection)
+	if err != nil {
+		return q, fmt.Errorf("collection by mode: %w", err)
+	}
+
+	docs, err := f.c.Collection(col).
 		Offset(offset).
 		Limit(1).
 		Documents(ctx).

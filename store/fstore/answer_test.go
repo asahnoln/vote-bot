@@ -61,6 +61,35 @@ func TestSaveAnswer(t *testing.T) {
 	}
 }
 
+func TestTutorialSaveAnswer(t *testing.T) {
+	ctx := context.Background()
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("config").Doc("mode").Set(ctx, map[string]any{"mode": store.TutorialMode})
+	c.Collection("tutorial_questions").Doc("tut-q-67").Set(ctx, store.Question{
+		Q:     "52 or 42?",
+		Opts:  map[string]bool{"wrong": false, "right": true},
+		Order: 0,
+	})
+
+	f := fstore.New(c)
+
+	err := f.SaveAnswer(ctx, 51, "tut-q-67", "right")
+	if err != nil {
+		t.Fatalf("fstore save tutorial answer: got err %q; want nil", err)
+	}
+
+	d, err := c.Collection("tutorial_answers").Doc("51:tut-q-67").Get(ctx)
+	if err != nil {
+		t.Fatalf("get doc err: %v", err)
+	}
+
+	if got, want := d.Data()["user_id"], int64(51); got != want {
+		t.Errorf("user id: got %v; want %v", got, want)
+	}
+}
+
 func TestSaveAnswerNoQuestion(t *testing.T) {
 	ctx := context.Background()
 	c := firestoreMemoryEmulatorClient(t, ctx)
@@ -125,6 +154,43 @@ func TestSaveBet(t *testing.T) {
 				t.Errorf("bet mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestTutorialSaveBet(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": 0,
+	})
+	c.Collection("config").Doc("mode").Set(ctx, map[string]any{
+		"mode": store.TutorialMode,
+	})
+
+	c.Collection("tutorial_questions").Doc("tut-q-111").Set(ctx, map[string]any{})
+	c.Collection("users").Doc("233").Set(ctx, map[string]any{"user_id": 233, "acc": 1000})
+	c.Collection("tutorial_answers").Doc("233:tut-q-111").Set(ctx, map[string]any{
+		"user_id": 233,
+		"a":       "has tutorial answer",
+	})
+
+	f := fstore.New(c)
+
+	err := f.SaveBet(ctx, 233, "tut-q-111", 10)
+	if err != nil {
+		t.Fatalf("fstore save bet: got err %q; want nil", err)
+	}
+
+	d, err := c.Collection("tutorial_answers").Doc("233:tut-q-111").Get(ctx)
+	if err != nil {
+		t.Fatalf("get doc err: %v", err)
+	}
+
+	if got, want := d.Data()["bet"], int64(10); got != want {
+		t.Errorf("user id: got %v; want %v", got, want)
 	}
 }
 

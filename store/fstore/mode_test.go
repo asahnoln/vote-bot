@@ -52,18 +52,36 @@ func TestSetMode(t *testing.T) {
 
 	f := fstore.New(c)
 
-	err := f.SetMode(ctx, store.OptionalMode)
+	err := f.SetMode(ctx, store.TutorialMode)
 	if err != nil {
 		t.Fatalf("fstore admins: got err %v; want nil", err)
 	}
 
 	d, _ := c.Collection("config").Doc("mode").Get(ctx)
-	if got, want := d.Data()["mode"], string(store.OptionalMode); got != want {
+	if got, want := d.Data()["mode"], string(store.TutorialMode); got != want {
 		t.Errorf("mode: got %v; want %v", got, want)
 	}
 
 	d, _ = c.Collection("config").Doc("current_question").Get(ctx)
 	if got, want := d.Data()["idx"], int64(0); got != want {
 		t.Errorf("current question idx: got %v; want %v", got, want)
+	}
+}
+
+func TestCollectionByModeNoErrorWhenNotFound(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	f := fstore.New(c)
+
+	col, err := f.CollectionByMode(ctx, "someCollection")
+	if err != nil {
+		t.Fatalf("fstore CollectionByMode: got err %v; want nil", err)
+	}
+
+	if got, want := col, "someCollection"; got != want {
+		t.Errorf("got %v; want %v", got, want)
 	}
 }

@@ -43,14 +43,14 @@ var (
 type Mode string
 
 const (
-	OptionalMode Mode = "optional"
+	TutorialMode Mode = "tutorial"
 	RealMode     Mode = "real"
 )
 
 func (m Mode) String() string {
 	switch m {
-	case OptionalMode:
-		return "опциональный"
+	case TutorialMode:
+		return "учебный"
 	case RealMode:
 		return "реальный"
 	}

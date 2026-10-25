@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/asahnoln/vote-bot/store"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const AdminsCollection = "admins"
@@ -45,4 +47,20 @@ func (f *Firestore) SetMode(ctx context.Context, mode store.Mode) (err error) {
 	}
 
 	return
+}
+
+func (f *Firestore) CollectionByMode(ctx context.Context, col string) (string, error) {
+	d, err := f.c.Collection(ConfigCollection).Doc("mode").Get(ctx)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return col, nil
+		}
+
+		return "", fmt.Errorf("config mode: %w", err)
+	}
+
+	if o, ok := d.Data()["mode"].(string); ok && o == string(store.TutorialMode) {
+		col = o + "_" + col
+	}
+	return col, nil
 }

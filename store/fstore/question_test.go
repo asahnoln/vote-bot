@@ -25,6 +25,9 @@ func TestQuestion(t *testing.T) {
 	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
 		"idx": 1,
 	})
+	c.Collection("config").Doc("mode").Set(ctx, map[string]any{
+		"mode": store.RealMode,
+	})
 	col := c.Collection("questions")
 	col.Doc("test-q-0").Set(ctx, store.Question{
 		Q:     "Should not be used?",
@@ -341,5 +344,52 @@ func TestSaveQuestionSentAt(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, got, cmpopts.EquateApproxTime(time.Second)); diff != "" {
 		t.Errorf("question mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestOptionalCurrentQuestion(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": 2,
+	})
+	c.Collection("config").Doc("mode").Set(ctx, map[string]any{
+		"mode": store.TutorialMode,
+	})
+	col := c.Collection("tutorial_questions")
+	col.Doc("opt-q-0").Set(ctx, store.Question{
+		Q:     "Should not be used?",
+		Opts:  map[string]bool{"skip": false, "avoid": true},
+		Order: 0,
+	})
+	col.Doc("opt-q-1").Set(ctx, store.Question{
+		Q:     "Should skip in future?",
+		Opts:  map[string]bool{"SKIP": false, "FUTURE": true},
+		Order: 1,
+	})
+	col.Doc("opt-q-2").Set(ctx, store.Question{
+		Q:     "SaaaS or SoooS?",
+		Opts:  map[string]bool{"jej": false, "joj": false, "sas": true, "sos": true},
+		Order: 2,
+	})
+
+	f := fstore.New(c)
+
+	q, err := f.CurrentQuestion(ctx)
+	if err != nil {
+		t.Fatalf("fstore question: got err %v; want nil", err)
+	}
+
+	want := store.Question{
+		ID:    "opt-q-2",
+		Q:     "SaaaS or SoooS?",
+		Opts:  map[string]bool{"jej": false, "joj": false, "sas": true, "sos": true},
+		Order: 2,
+	}
+	if diff := cmp.Diff(want, q); diff != "" {
+		t.Errorf("optional question mismatch (-want +got):\n%s", diff)
 	}
 }

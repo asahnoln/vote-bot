@@ -11,7 +11,7 @@ func TestModeString(t *testing.T) {
 		mode store.Mode
 		want string
 	}{
-		{store.OptionalMode, "опциональный"},
+		{store.TutorialMode, "учебный"},
 		{store.RealMode, "реальный"},
 	}
 
