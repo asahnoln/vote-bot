@@ -37,6 +37,8 @@ const (
 	CloseCurrentQuestionCommand = "/closecurrentquestion"
 	SendAnswerCommand           = "/sendanswer"
 	StatsRichestUsersCommand    = "/statsrichestusers"
+	SetTutorialModeCommand      = "/settutorialmode"
+	SetRealModeCommand          = "/setrealmode"
 )
 
 func CommandsForAdmin(id int) SetMyCommands {
@@ -57,6 +59,14 @@ func CommandsForAdmin(id int) SetMyCommands {
 			{
 				Command:     StatsRichestUsersCommand,
 				Description: "Статистика: богачи",
+			},
+			{
+				Command:     SetTutorialModeCommand,
+				Description: "Режим: обучение",
+			},
+			{
+				Command:     SetRealModeCommand,
+				Description: "Режим: реальный",
 			},
 		},
 		Scope: BotCommandScope{

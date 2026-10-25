@@ -17,6 +17,18 @@ type ModeHandler struct {
 	Mode  store.Mode
 }
 
+func (h *ModeHandler) HandleResponse(context.Context, any) error {
+	return nil
+}
+
+func (h *ModeHandler) Name() string {
+	return "mode"
+}
+
+func (h *ModeHandler) Condition(upd Update) bool {
+	return upd.Message.Text == "/set"+string(h.Mode)+"mode"
+}
+
 func (h *ModeHandler) Handle(ctx context.Context, update Update) (msgs []Request, err error) {
 	admins, err := h.Store.Admins(ctx)
 	if err != nil {

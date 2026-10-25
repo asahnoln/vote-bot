@@ -44,7 +44,7 @@ func TestModeOptionalHandler(t *testing.T) {
 	}
 }
 
-func TestModeHadnlerAdminsError(t *testing.T) {
+func TestModeHandlerAdminsError(t *testing.T) {
 	wantErr := errors.New("admins error")
 	spy := &modeStoreSpy{
 		adminsErr: wantErr,
@@ -57,7 +57,7 @@ func TestModeHadnlerAdminsError(t *testing.T) {
 	}
 }
 
-func TestModeHadnlerModeError(t *testing.T) {
+func TestModeHandlerModeError(t *testing.T) {
 	wantErr := errors.New("mode error")
 	spy := &modeStoreSpy{
 		modeErr: wantErr,
@@ -67,6 +67,32 @@ func TestModeHadnlerModeError(t *testing.T) {
 	_, err := h.Handle(context.Background(), tg.Update{})
 	if got, want := err, wantErr; !errors.Is(got, want) {
 		t.Errorf("got err %q; want %q", got, want)
+	}
+}
+
+func TestModeHandlerCondition(t *testing.T) {
+	h := tg.ModeHandler{Mode: store.TutorialMode}
+	ok := h.Condition(tg.Update{
+		Message: tg.Message{
+			Text: "/settutorialmode",
+		},
+	})
+
+	if got, want := ok, true; got != want {
+		t.Errorf("got %v; want %v", got, want)
+	}
+
+	ok = h.Condition(tg.Update{})
+	if got, want := ok, false; got != want {
+		t.Errorf("got %v; want %v", got, want)
+	}
+}
+
+func TestModeHandlerName(t *testing.T) {
+	h := tg.ModeHandler{}
+	n := h.Name()
+	if got, want := n, "mode"; got != want {
+		t.Errorf("got %v; want %v", got, want)
 	}
 }
 

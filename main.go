@@ -12,6 +12,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
+	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/store/fstore"
 	"github.com/asahnoln/vote-bot/tg"
 	"google.golang.org/api/option"
@@ -39,7 +40,7 @@ func main() {
 		}
 	}()
 
-	store := fstore.New(fc)
+	fireStore := fstore.New(fc)
 
 	err = setBotCommands(ctx, dest)
 	if err != nil {
@@ -50,13 +51,15 @@ func main() {
 		Dest:      dest,
 		ErrorChan: errCh,
 	}
-	b.Handle(&tg.StartHandler{Store: store, Text: tg.StartHandlerText{}})
-	b.Handle(&tg.QuestionHandler{Store: store})
-	b.Handle(&tg.AnswerHandler{Store: store})
-	b.Handle(&tg.BetHandler{Store: store})
-	b.Handle(&tg.CloseHandler{Store: store})
-	b.Handle(&tg.RevealHandler{Store: store})
-	b.Handle(&tg.StatsHandler{Store: store})
+	b.Handle(&tg.StartHandler{Store: fireStore, Text: tg.StartHandlerText{}})
+	b.Handle(&tg.QuestionHandler{Store: fireStore})
+	b.Handle(&tg.AnswerHandler{Store: fireStore})
+	b.Handle(&tg.BetHandler{Store: fireStore})
+	b.Handle(&tg.CloseHandler{Store: fireStore})
+	b.Handle(&tg.RevealHandler{Store: fireStore})
+	b.Handle(&tg.StatsHandler{Store: fireStore})
+	b.Handle(&tg.ModeHandler{Store: fireStore, Mode: store.TutorialMode})
+	b.Handle(&tg.ModeHandler{Store: fireStore, Mode: store.RealMode})
 	b.Handle(&tg.DefaultHandler{})
 
 	// TODO: Create http server for context

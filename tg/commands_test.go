@@ -55,6 +55,14 @@ func TestCommandsForAdmins(t *testing.T) {
 				Command:     "/statsrichestusers",
 				Description: "Статистика: богачи",
 			},
+			{
+				Command:     "/settutorialmode",
+				Description: "Режим: обучение",
+			},
+			{
+				Command:     "/setrealmode",
+				Description: "Режим: реальный",
+			},
 		},
 		Scope: tg.BotCommandScope{
 			Type:   "chat",
