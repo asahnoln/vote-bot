@@ -43,7 +43,10 @@ func (h *ModeHandler) Handle(ctx context.Context, update Update) (msgs []Request
 	msg := SendRichMessage{
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{
-				{Text: "Установлен режим вопросов: " + h.Mode.String()},
+				{
+					Type: InputRichBlockParagraphType,
+					Text: "Установлен режим вопросов: " + h.Mode.String(),
+				},
 			},
 		},
 	}

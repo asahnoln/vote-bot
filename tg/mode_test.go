@@ -27,7 +27,10 @@ func TestModeOptionalHandler(t *testing.T) {
 		ChatID: 10001,
 		RichMessage: tg.InputRichMessage{
 			Blocks: []tg.InputRichBlock{
-				{Text: "Установлен режим вопросов: учебный"},
+				{
+					Type: "paragraph",
+					Text: "Установлен режим вопросов: учебный",
+				},
 			},
 		},
 	}
