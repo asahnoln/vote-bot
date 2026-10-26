@@ -55,7 +55,7 @@ func (f *Firestore) SetMode(ctx context.Context, mode store.Mode) (err error) {
 }
 
 func (f *Firestore) restoreAllAccs(ctx context.Context) (err error) {
-	iter := f.c.Collection(UsersCollection).WhereEntity(firestore.PropertyFilter{Path: "acc", Operator: "!=", Value: AccountStartMoney}).Documents(ctx)
+	iter := f.c.Collection(UsersCollection).WhereEntity(firestore.PropertyFilter{Path: "acc", Operator: "!=", Value: store.AccountStartMoney}).Documents(ctx)
 	if err != nil {
 		return fmt.Errorf("all users: %w", err)
 	}
@@ -70,7 +70,7 @@ func (f *Firestore) restoreAllAccs(ctx context.Context) (err error) {
 		}
 
 		_, err = d.Ref.Update(ctx, []firestore.Update{
-			{Path: "acc", Value: AccountStartMoney},
+			{Path: "acc", Value: store.AccountStartMoney},
 		})
 		if err != nil {
 			return fmt.Errorf("update %v: %w", d.Ref.ID, err)

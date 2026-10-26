@@ -113,7 +113,7 @@ const (
 	TextYouAreWrong     = "Неверный ответ."
 	TextYourBalance     = "Ваш счет — "
 	TextYouLost         = "Вы банкрот. Казино прощается с вами!"
-	TextYouLostTutorial = "Вы банкрот. Казино бы попрощалось с вами, но это всего лишь обучение. Мы снова добавляем вам 1000$ на образовательные нужды."
+	TextYouLostTutorial = "Вы банкрот. Казино бы попрощалось с вами, но это всего лишь обучение. Мы снова добавляем вам %d$ на образовательные нужды."
 )
 
 func RevealMessage(userID int, isRight bool, acc int, mode store.Mode) (msg SendRichMessage) {
@@ -149,7 +149,7 @@ func RevealMessage(userID int, isRight bool, acc int, mode store.Mode) (msg Send
 			Text: TextYouLost,
 		}
 		if mode == store.TutorialMode {
-			lostBlock.Text = TextYouLostTutorial
+			lostBlock.Text = fmt.Sprintf(TextYouLostTutorial, store.AccountStartMoney)
 		}
 		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, lostBlock)
 	}

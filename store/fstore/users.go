@@ -52,15 +52,13 @@ func (f *Firestore) users(ctx context.Context, efs ...firestore.EntityFilter) (u
 	return users, nil
 }
 
-const AccountStartMoney = 1000
-
 func (f *Firestore) SaveUser(ctx context.Context, userID int, name string) error {
 	_, err := f.c.Collection(UsersCollection).
 		Doc(strconv.Itoa(userID)).
 		Create(ctx, store.User{
 			UserID: userID,
 			Name:   name,
-			Acc:    AccountStartMoney,
+			Acc:    store.AccountStartMoney,
 		})
 	if err != nil {
 		if status.Code(err) == codes.AlreadyExists {
@@ -101,7 +99,7 @@ func (f *Firestore) SaveLostUser(ctx context.Context, userID int) error {
 
 func (f *Firestore) RestoreAcc(ctx context.Context, userID int) error {
 	_, err := f.c.Collection(UsersCollection).Doc(strconv.Itoa(userID)).Set(ctx, map[string]any{
-		"acc": AccountStartMoney,
+		"acc": store.AccountStartMoney,
 	}, firestore.MergeAll)
 	if err != nil {
 		return fmt.Errorf("user set acc: %w", err)

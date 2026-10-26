@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/asahnoln/vote-bot/store"
 )
@@ -39,7 +40,7 @@ func (h *StartHandler) Condition(upd Update) bool {
 type StartHandlerText struct{}
 
 func (StartHandlerText) TextWelcomeToTheGame() string {
-	return "💸 Ваш стартовый капитал 1000$\nСтавьте с умом, играйте смело — и пусть удача будет на вашей стороне!"
+	return "💸 Ваш стартовый капитал " + strconv.Itoa(store.AccountStartMoney) + "$\nСтавьте с умом, играйте смело — и пусть удача будет на вашей стороне!"
 }
 
 func (StartHandlerText) TextMissedFirstQuestion() string {

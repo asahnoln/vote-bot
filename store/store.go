@@ -40,6 +40,8 @@ var (
 	ErrUserAlreadySaved                 = errors.New("user already saved")
 )
 
+const AccountStartMoney = 1000
+
 type Mode string
 
 const (
