@@ -95,10 +95,6 @@ func (h *CloseHandler) Handle(ctx context.Context, upd Update) (msgs []Request, 
 	adminsMsgs, err := adminMessages(ctx, h.Store, []InputRichBlock{
 		{
 			Type: InputRichBlockParagraphType,
-			Text: "Сообщение только для админов",
-		},
-		{
-			Type: InputRichBlockParagraphType,
 			Text: q.Q,
 		},
 		{
