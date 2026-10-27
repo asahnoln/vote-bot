@@ -20,6 +20,7 @@ type RevealStore interface {
 	LostUserSaver
 	Accountser
 	Moder
+	Adminser
 	LastClosedQuestion(context.Context) (store.Question, error)
 	RestoreAcc(ctx context.Context, userID int) error
 }
@@ -102,6 +103,30 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 				}
 			}
 		}
+	}
+
+	msg := SendRichMessage{
+		RichMessage: InputRichMessage{
+			Blocks: []InputRichBlock{
+				{
+					Type: InputRichBlockParagraphType,
+					Text: "Сообщение только для админов",
+				},
+				{
+					Type: InputRichBlockParagraphType,
+					Text: "Высланы результаты ставок",
+				},
+			},
+		},
+	}
+	admins, err := h.Store.Admins(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("admins: %w", err)
+	}
+
+	for _, a := range admins {
+		msg.ChatID = a.UserID
+		msgs = append(msgs, msg)
 	}
 
 	return msgs, nil

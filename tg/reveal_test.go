@@ -79,8 +79,12 @@ func TestReveal(t *testing.T) {
 		t.Errorf("lost user IDs mismatch (-want +got):%s", diff)
 	}
 
-	if got, want := len(msgs), 4; got != want {
+	if got, want := len(msgs), 6; got != want {
 		t.Fatalf("request count: got %v; want %v", got, want)
+	}
+
+	if got, want := msgs[4].(tg.SendRichMessage).ChatID, 10001; got != want {
+		t.Errorf("request final admin user id: got %v; want %v", got, want)
 	}
 
 	want := tg.SendRichMessage{
@@ -133,7 +137,7 @@ func TestRevealTutorialWontSaveLostUser(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := len(msgs), 1; got != want {
+	if got, want := len(msgs), 3; got != want {
 		t.Fatalf("request count: got %v; want %v", got, want)
 	}
 	if got, want := len(storeSpy.lostUserStoreStub.userIDs), 0; got != want {
@@ -361,6 +365,30 @@ func TestRevealHandlerRestoreAccError(t *testing.T) {
 	}
 }
 
+func TestRevealHandlerAdminsError(t *testing.T) {
+	wantErr := errors.New("admins error")
+	spy := &revealStoreSpy{
+		answersStoreStub: answersStoreStub{
+			answers: []store.Answer{
+				{
+					UserID: 101,
+				},
+			},
+		},
+		adminsStoreStub: adminsStoreStub{
+			err: wantErr,
+		},
+	}
+	h := tg.RevealHandler{
+		Store: spy,
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %v; want %v", got, want)
+	}
+}
+
 func TestRevealCondition(t *testing.T) {
 	h := tg.RevealHandler{}
 
@@ -385,6 +413,7 @@ type revealStoreSpy struct {
 	lostUserStoreStub
 	accountStoreStub
 	modeStoreStub
+	adminsStoreStub
 	lastClosedQuestionErr error
 	restoreAcc            int
 	restoreAccErr         error
