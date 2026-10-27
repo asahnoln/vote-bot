@@ -20,40 +20,40 @@ func TestStatsFastest(t *testing.T) {
 		"user_id":          10,
 		"lost":             false,
 		"name":             "1st",
-		"right_answer_cnt": 9,
 		"acc":              1000,
+		"right_answer_cnt": 9,
 		"avg_speed":        1,
 	})
 	col.Doc("11").Set(ctx, map[string]any{
 		"user_id":          11,
 		"lost":             false,
 		"name":             "2nd",
-		"right_answer_cnt": 9,
 		"acc":              1000,
+		"right_answer_cnt": 9,
 		"avg_speed":        2,
 	})
 	col.Doc("12").Set(ctx, map[string]any{
 		"user_id":          12,
 		"lost":             false,
 		"name":             "3rd",
-		"right_answer_cnt": 9,
-		"acc":              999,
+		"acc":              1000,
+		"right_answer_cnt": 8,
 		"avg_speed":        0.5,
 	})
 	col.Doc("13").Set(ctx, map[string]any{
 		"user_id":          13,
 		"lost":             false,
 		"name":             "4th",
-		"right_answer_cnt": 9,
 		"acc":              999,
+		"right_answer_cnt": 9,
 		"avg_speed":        1,
 	})
 	col.Doc("14").Set(ctx, map[string]any{
 		"user_id":          14,
 		"lost":             false,
 		"name":             "5th",
+		"acc":              999,
 		"right_answer_cnt": 8,
-		"acc":              1000,
 		"avg_speed":        0.25,
 	})
 	col.Doc("15").Set(ctx, map[string]any{
@@ -73,11 +73,11 @@ func TestStatsFastest(t *testing.T) {
 	}
 
 	want := []store.User{
-		{UserID: 10, Name: "1st", RightAnswerCnt: 9, Acc: 1000, AvgSpeed: 1},
-		{UserID: 11, Name: "2nd", RightAnswerCnt: 9, Acc: 1000, AvgSpeed: 2},
-		{UserID: 12, Name: "3rd", RightAnswerCnt: 9, Acc: 999, AvgSpeed: 0.5},
-		{UserID: 13, Name: "4th", RightAnswerCnt: 9, Acc: 999, AvgSpeed: 1},
-		{UserID: 14, Name: "5th", RightAnswerCnt: 8, Acc: 1000, AvgSpeed: 0.25},
+		{UserID: 10, Name: "1st", Acc: 1000, RightAnswerCnt: 9, AvgSpeed: 1},
+		{UserID: 11, Name: "2nd", Acc: 1000, RightAnswerCnt: 9, AvgSpeed: 2},
+		{UserID: 12, Name: "3rd", Acc: 1000, RightAnswerCnt: 8, AvgSpeed: 0.5},
+		{UserID: 13, Name: "4th", Acc: 999, RightAnswerCnt: 9, AvgSpeed: 1},
+		{UserID: 14, Name: "5th", Acc: 999, RightAnswerCnt: 8, AvgSpeed: 0.25},
 	}
 	if diff := cmp.Diff(want, users); diff != "" {
 		t.Errorf("stats fastest users mismatch (-want +got):\n%s", diff)

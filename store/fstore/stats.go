@@ -16,8 +16,8 @@ func (f *Firestore) Stats(ctx context.Context) (users []store.User, err error) {
 			Operator: EqualOp,
 			Value:    false,
 		}).
-		OrderBy("right_answer_cnt", firestore.Desc).
 		OrderBy("acc", firestore.Desc).
+		OrderBy("right_answer_cnt", firestore.Desc).
 		OrderBy("avg_speed", firestore.Asc).
 		Documents(ctx).GetAll()
 	if err != nil {
