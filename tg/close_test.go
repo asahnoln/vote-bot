@@ -46,8 +46,8 @@ func TestCloseHandler(t *testing.T) {
 		t.Errorf("answers question: got %v; want %v", got, want)
 	}
 
-	if got, want := len(msgs), 4; got != want {
-		t.Errorf("msgs count: got %v; want %v", got, want)
+	if got, want := len(msgs), 6; got != want {
+		t.Fatalf("msgs count: got %v; want %v", got, want)
 	}
 
 	want := tg.EditMessageText{
@@ -81,6 +81,10 @@ func TestCloseHandler(t *testing.T) {
 	if diff := cmp.Diff([]int{23, 24}, spy.lostUserStoreStub.userIDs); diff != "" {
 		t.Errorf("lost user IDs mismatch (-want +got):%s", diff)
 	}
+
+	if got, want := msgs[4].(tg.SendRichMessage).ChatID, 10001; got != want {
+		t.Errorf("request final admin user id: got %v; want %v", got, want)
+	}
 }
 
 func TestCloseHandlerTutorialWontSaveLosingUser(t *testing.T) {
@@ -103,7 +107,7 @@ func TestCloseHandlerTutorialWontSaveLosingUser(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := len(msgs), 1; got != want {
+	if got, want := len(msgs), 3; got != want {
 		t.Errorf("msgs count: got %v; want %v", got, want)
 	}
 	if got, want := len(spy.lostUserStoreStub.userIDs), 0; got != want {
@@ -369,6 +373,23 @@ func TestCloseHandlerModeStoreError(t *testing.T) {
 	}
 }
 
+func TestCloseHandlerAdminsError(t *testing.T) {
+	wantErr := errors.New("admins error")
+	spy := &closeStoreSpy{
+		adminsStoreStub: adminsStoreStub{
+			err: wantErr,
+		},
+	}
+	h := tg.CloseHandler{
+		Store: spy,
+	}
+	_, err := h.Handle(context.Background(), tg.Update{})
+
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
+}
+
 func TestCloseCondition(t *testing.T) {
 	h := tg.CloseHandler{}
 
@@ -399,6 +420,7 @@ type closeStoreSpy struct {
 	answersStoreStub
 	lostUserStoreStub
 	modeStoreStub
+	adminsStoreStub
 	closed bool
 	err    error
 }
