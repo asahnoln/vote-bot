@@ -50,7 +50,9 @@ func TestModeOptionalHandler(t *testing.T) {
 func TestModeHandlerAdminsError(t *testing.T) {
 	wantErr := errors.New("admins error")
 	spy := &modeStoreSpy{
-		adminsErr: wantErr,
+		adminsStoreStub: adminsStoreStub{
+			err: wantErr,
+		},
 	}
 	h := tg.ModeHandler{Store: spy, Mode: store.TutorialMode}
 
@@ -63,7 +65,7 @@ func TestModeHandlerAdminsError(t *testing.T) {
 func TestModeHandlerModeError(t *testing.T) {
 	wantErr := errors.New("mode error")
 	spy := &modeStoreSpy{
-		modeErr: wantErr,
+		err: wantErr,
 	}
 	h := tg.ModeHandler{Store: spy, Mode: store.TutorialMode}
 
@@ -100,19 +102,23 @@ func TestModeHandlerName(t *testing.T) {
 }
 
 type modeStoreSpy struct {
-	mode      store.Mode
-	adminsErr error
-	modeErr   error
-}
-
-func (s *modeStoreSpy) Admins(ctx context.Context) ([]store.User, error) {
-	return []store.User{
-		{UserID: 10001},
-		{UserID: 10002},
-	}, s.adminsErr
+	adminsStoreStub
+	mode store.Mode
+	err  error
 }
 
 func (s *modeStoreSpy) SetMode(ctx context.Context, mode store.Mode) error {
 	s.mode = mode
-	return s.modeErr
+	return s.err
+}
+
+type adminsStoreStub struct {
+	err error
+}
+
+func (s *adminsStoreStub) Admins(ctx context.Context) ([]store.User, error) {
+	return []store.User{
+		{UserID: 10001},
+		{UserID: 10002},
+	}, s.err
 }

@@ -3,6 +3,9 @@ package tg
 import (
 	"context"
 	"fmt"
+	"maps"
+	"slices"
+	"strings"
 
 	"github.com/asahnoln/vote-bot/store"
 )
@@ -17,6 +20,7 @@ type CurrentQuestioner interface {
 }
 
 type QuestionStore interface {
+	Adminser
 	Userser
 	CurrentQuestioner
 	SaveLastMessageID(ctx context.Context, userID int, msgID int) error
@@ -75,6 +79,43 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []Reques
 		msg.ChatID = u.UserID
 		msgs = append(msgs, msg)
 	}
+
+	msg = SendRichMessage{
+		RichMessage: InputRichMessage{
+			Blocks: []InputRichBlock{
+				{
+					Type: InputRichBlockParagraphType,
+					Text: "Сообщение только для админов",
+				},
+				{
+					Type: InputRichBlockParagraphType,
+					Text: "Выслан вопрос:",
+				},
+				{
+					Type: InputRichBlockParagraphType,
+					Text: q.Q,
+				},
+				{
+					Type: InputRichBlockParagraphType,
+					Text: "Варианты ответов:",
+				},
+				{
+					Type: InputRichBlockParagraphType,
+					Text: strings.Join(slices.Collect(maps.Keys(q.Opts)), ", "),
+				},
+			},
+		},
+	}
+	admins, err := h.Store.Admins(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("admins: %w", err)
+	}
+
+	for _, a := range admins {
+		msg.ChatID = a.UserID
+		msgs = append(msgs, msg)
+	}
+
 	return msgs, nil
 }
 

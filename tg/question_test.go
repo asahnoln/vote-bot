@@ -19,6 +19,7 @@ func TestQuestion(t *testing.T) {
 		questionStoreStub
 		lastMessageStoreSpy
 		questionSentAtStoreSpy
+		adminsStoreStub
 	}{
 		usersStoreStub: usersStoreStub{
 			users: []store.User{
@@ -41,7 +42,7 @@ func TestQuestion(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := len(msgs), 3; got != want {
+	if got, want := len(msgs), 5; got != want {
 		t.Fatalf("msgs count: got %d; want %d", got, want)
 	}
 	want := tg.SendRichMessage{
@@ -80,6 +81,10 @@ func TestQuestion(t *testing.T) {
 	if got, want := storeSpy.questionSentAtStoreSpy.called, true; got != want {
 		t.Errorf("question save sent at called: got %v; want %v", got, want)
 	}
+
+	if got, want := msgs[3].(tg.SendRichMessage).ChatID, 10001; got != want {
+		t.Errorf("request final admin user id: got %v; want %v", got, want)
+	}
 }
 
 func TestQuestionHandleResponse(t *testing.T) {
@@ -88,6 +93,7 @@ func TestQuestionHandleResponse(t *testing.T) {
 		questionStoreStub
 		lastMessageStoreSpy
 		questionSentAtStoreSpy
+		adminsStoreStub
 	}{}
 	h := tg.QuestionHandler{Store: spy}
 
@@ -134,6 +140,7 @@ func TestQuestionStoreError(t *testing.T) {
 		questionStoreStub
 		lastMessageStoreSpy
 		questionSentAtStoreSpy
+		adminsStoreStub
 	}{
 		questionStoreStub: questionStoreStub{
 			err: wantErr,
@@ -156,6 +163,7 @@ func TestQuestionUsersError(t *testing.T) {
 		questionStoreStub
 		lastMessageStoreSpy
 		questionSentAtStoreSpy
+		adminsStoreStub
 	}{
 		usersStoreStub: usersStoreStub{
 			err: wantErr,
@@ -178,8 +186,32 @@ func TestQuestionSaveSentAtError(t *testing.T) {
 		questionStoreStub
 		lastMessageStoreSpy
 		questionSentAtStoreSpy
+		adminsStoreStub
 	}{
 		questionSentAtStoreSpy: questionSentAtStoreSpy{
+			err: wantErr,
+		},
+	}
+	h := tg.QuestionHandler{
+		Store: stub,
+	}
+	_, err := h.Handle(context.Background(), tg.Update{})
+
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
+}
+
+func TestQuestionAdminsError(t *testing.T) {
+	wantErr := errors.New("admins error")
+	stub := &struct {
+		usersStoreStub
+		questionStoreStub
+		lastMessageStoreSpy
+		questionSentAtStoreSpy
+		adminsStoreStub
+	}{
+		adminsStoreStub: adminsStoreStub{
 			err: wantErr,
 		},
 	}

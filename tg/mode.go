@@ -7,8 +7,12 @@ import (
 	"github.com/asahnoln/vote-bot/store"
 )
 
-type ModeOptionalStore interface {
+type Adminser interface {
 	Admins(ctx context.Context) ([]store.User, error)
+}
+
+type ModeOptionalStore interface {
+	Adminser
 	SetMode(ctx context.Context, mode store.Mode) error
 }
 
