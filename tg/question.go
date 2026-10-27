@@ -108,6 +108,11 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []Reques
 }
 
 func (h *QuestionHandler) HandleResponse(ctx context.Context, resp any) error {
+	blocks := resp.(Message).RichMessage.Blocks
+	if len(blocks) > 0 && blocks[0].Text == AdminsOnlyWarning {
+		return nil
+	}
+
 	// TODO: Check for error
 	h.Store.SaveLastMessageID(ctx, resp.(Message).Chat.ID, resp.(Message).MessageID)
 	return nil

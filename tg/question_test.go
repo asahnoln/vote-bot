@@ -115,6 +115,41 @@ func TestQuestionHandleResponse(t *testing.T) {
 	}
 }
 
+func TestQuestionHandleResponseDontSaveAdminMessage(t *testing.T) {
+	spy := &struct {
+		usersStoreStub
+		questionStoreStub
+		lastMessageStoreSpy
+		questionSentAtStoreSpy
+		adminsStoreStub
+	}{}
+	h := tg.QuestionHandler{Store: spy}
+
+	err := h.HandleResponse(context.Background(), tg.Message{
+		Chat: tg.Chat{
+			ID: 22,
+		},
+		MessageID: 1853,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Text: "Сообщение только для админов",
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	if got, want := spy.userID, 0; got != want {
+		t.Errorf("last user ID saved: got %v; want %v", got, want)
+	}
+	if got, want := spy.msgID, 0; got != want {
+		t.Errorf("last msg ID saved: got %v; want %v", got, want)
+	}
+}
+
 func TestQuestionCondition(t *testing.T) {
 	h := tg.QuestionHandler{}
 

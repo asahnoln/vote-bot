@@ -179,13 +179,15 @@ func (b *Bot) error(err error, w http.ResponseWriter, s int) {
 	b.ErrorChan <- err
 }
 
+const AdminsOnlyWarning = "Сообщение только для админов"
+
 func adminMessages(ctx context.Context, store Adminser, blocks []InputRichBlock) (msgs []Request, err error) {
 	msg := SendRichMessage{
 		RichMessage: InputRichMessage{
 			Blocks: []InputRichBlock{
 				{
 					Type: InputRichBlockParagraphType,
-					Text: "Сообщение только для админов",
+					Text: AdminsOnlyWarning,
 				},
 			},
 		},
