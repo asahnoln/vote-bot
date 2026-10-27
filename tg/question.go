@@ -80,41 +80,29 @@ func (h *QuestionHandler) Handle(ctx context.Context, upd Update) (msgs []Reques
 		msgs = append(msgs, msg)
 	}
 
-	msg = SendRichMessage{
-		RichMessage: InputRichMessage{
-			Blocks: []InputRichBlock{
-				{
-					Type: InputRichBlockParagraphType,
-					Text: "Сообщение только для админов",
-				},
-				{
-					Type: InputRichBlockParagraphType,
-					Text: "Выслан вопрос:",
-				},
-				{
-					Type: InputRichBlockParagraphType,
-					Text: q.Q,
-				},
-				{
-					Type: InputRichBlockParagraphType,
-					Text: "Варианты ответов:",
-				},
-				{
-					Type: InputRichBlockParagraphType,
-					Text: strings.Join(slices.Collect(maps.Keys(q.Opts)), ", "),
-				},
-			},
+	adminsMsgs, err := adminMessages(ctx, h.Store, []InputRichBlock{
+		{
+			Type: InputRichBlockParagraphType,
+			Text: "Выслан вопрос:",
 		},
-	}
-	admins, err := h.Store.Admins(ctx)
+		{
+			Type: InputRichBlockParagraphType,
+			Text: q.Q,
+		},
+		{
+			Type: InputRichBlockParagraphType,
+			Text: "Варианты ответов:",
+		},
+		{
+			Type: InputRichBlockParagraphType,
+			Text: strings.Join(slices.Collect(maps.Keys(q.Opts)), ", "),
+		},
+	})
 	if err != nil {
-		return nil, fmt.Errorf("admins: %w", err)
+		return nil, fmt.Errorf("admin messages: %w", err)
 	}
 
-	for _, a := range admins {
-		msg.ChatID = a.UserID
-		msgs = append(msgs, msg)
-	}
+	msgs = append(msgs, adminsMsgs...)
 
 	return msgs, nil
 }

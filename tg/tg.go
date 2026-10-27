@@ -178,3 +178,28 @@ func (b *Bot) error(err error, w http.ResponseWriter, s int) {
 
 	b.ErrorChan <- err
 }
+
+func adminMessages(ctx context.Context, store Adminser, blocks []InputRichBlock) (msgs []Request, err error) {
+	msg := SendRichMessage{
+		RichMessage: InputRichMessage{
+			Blocks: []InputRichBlock{
+				{
+					Type: InputRichBlockParagraphType,
+					Text: "Сообщение только для админов",
+				},
+			},
+		},
+	}
+	msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, blocks...)
+	admins, err := store.Admins(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("admins store: %w", err)
+	}
+
+	for _, a := range admins {
+		msg.ChatID = a.UserID
+		msgs = append(msgs, msg)
+	}
+
+	return
+}

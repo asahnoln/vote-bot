@@ -105,29 +105,17 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 		}
 	}
 
-	msg := SendRichMessage{
-		RichMessage: InputRichMessage{
-			Blocks: []InputRichBlock{
-				{
-					Type: InputRichBlockParagraphType,
-					Text: "Сообщение только для админов",
-				},
-				{
-					Type: InputRichBlockParagraphType,
-					Text: "Высланы результаты ставок",
-				},
-			},
+	adminsMsgs, err := adminMessages(ctx, h.Store, []InputRichBlock{
+		{
+			Type: InputRichBlockParagraphType,
+			Text: "Высланы результаты ставок",
 		},
-	}
-	admins, err := h.Store.Admins(ctx)
+	})
 	if err != nil {
-		return nil, fmt.Errorf("admins: %w", err)
+		return nil, fmt.Errorf("admin messages: %w", err)
 	}
 
-	for _, a := range admins {
-		msg.ChatID = a.UserID
-		msgs = append(msgs, msg)
-	}
+	msgs = append(msgs, adminsMsgs...)
 
 	return msgs, nil
 }
