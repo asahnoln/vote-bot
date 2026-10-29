@@ -14,13 +14,7 @@ import (
 
 // TODO: Check command scope
 func TestQuestion(t *testing.T) {
-	storeSpy := &struct {
-		usersStoreStub
-		questionStoreStub
-		lastMessageStoreSpy
-		questionSentAtStoreSpy
-		adminsStoreStub
-	}{
+	storeSpy := &questionHandlerStoreStub{
 		usersStoreStub: usersStoreStub{
 			users: []store.User{
 				{UserID: 501},
@@ -88,13 +82,7 @@ func TestQuestion(t *testing.T) {
 }
 
 func TestQuestionHandleResponse(t *testing.T) {
-	spy := &struct {
-		usersStoreStub
-		questionStoreStub
-		lastMessageStoreSpy
-		questionSentAtStoreSpy
-		adminsStoreStub
-	}{}
+	spy := &questionHandlerStoreStub{}
 	h := tg.QuestionHandler{Store: spy}
 
 	err := h.HandleResponse(context.Background(), tg.Message{
@@ -116,13 +104,7 @@ func TestQuestionHandleResponse(t *testing.T) {
 }
 
 func TestQuestionHandleResponseDontSaveAdminMessage(t *testing.T) {
-	spy := &struct {
-		usersStoreStub
-		questionStoreStub
-		lastMessageStoreSpy
-		questionSentAtStoreSpy
-		adminsStoreStub
-	}{}
+	spy := &questionHandlerStoreStub{}
 	h := tg.QuestionHandler{Store: spy}
 
 	err := h.HandleResponse(context.Background(), tg.Message{
@@ -170,13 +152,7 @@ func TestQuestionCondition(t *testing.T) {
 
 func TestQuestionStoreError(t *testing.T) {
 	wantErr := errors.New("question error")
-	stub := &struct {
-		usersStoreStub
-		questionStoreStub
-		lastMessageStoreSpy
-		questionSentAtStoreSpy
-		adminsStoreStub
-	}{
+	stub := &questionHandlerStoreStub{
 		questionStoreStub: questionStoreStub{
 			err: wantErr,
 		},
@@ -193,13 +169,7 @@ func TestQuestionStoreError(t *testing.T) {
 
 func TestQuestionUsersError(t *testing.T) {
 	wantErr := errors.New("users error")
-	stub := &struct {
-		usersStoreStub
-		questionStoreStub
-		lastMessageStoreSpy
-		questionSentAtStoreSpy
-		adminsStoreStub
-	}{
+	stub := &questionHandlerStoreStub{
 		usersStoreStub: usersStoreStub{
 			err: wantErr,
 		},
@@ -216,13 +186,7 @@ func TestQuestionUsersError(t *testing.T) {
 
 func TestQuestionSaveSentAtError(t *testing.T) {
 	wantErr := errors.New("question sent at error")
-	stub := &struct {
-		usersStoreStub
-		questionStoreStub
-		lastMessageStoreSpy
-		questionSentAtStoreSpy
-		adminsStoreStub
-	}{
+	stub := &questionHandlerStoreStub{
 		questionSentAtStoreSpy: questionSentAtStoreSpy{
 			err: wantErr,
 		},
@@ -239,13 +203,7 @@ func TestQuestionSaveSentAtError(t *testing.T) {
 
 func TestQuestionAdminsError(t *testing.T) {
 	wantErr := errors.New("admins error")
-	stub := &struct {
-		usersStoreStub
-		questionStoreStub
-		lastMessageStoreSpy
-		questionSentAtStoreSpy
-		adminsStoreStub
-	}{
+	stub := &questionHandlerStoreStub{
 		adminsStoreStub: adminsStoreStub{
 			err: wantErr,
 		},
@@ -258,6 +216,14 @@ func TestQuestionAdminsError(t *testing.T) {
 	if got, want := err, wantErr; !errors.Is(got, want) {
 		t.Fatalf("got err %v; want %v", got, want)
 	}
+}
+
+type questionHandlerStoreStub struct {
+	usersStoreStub
+	questionStoreStub
+	lastMessageStoreSpy
+	questionSentAtStoreSpy
+	adminsStoreStub
 }
 
 type questionSentAtStoreSpy struct {

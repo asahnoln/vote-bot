@@ -59,3 +59,10 @@ func (m Mode) String() string {
 
 	return string(m)
 }
+
+type State string
+
+const (
+	StateQuestion State = "question"
+	StateAnswer   State = "answer"
+)

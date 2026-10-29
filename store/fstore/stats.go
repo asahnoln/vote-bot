@@ -8,7 +8,6 @@ import (
 	"github.com/asahnoln/vote-bot/store"
 )
 
-// TODO: Use this for stats handler
 func (f *Firestore) Stats(ctx context.Context) (users []store.User, err error) {
 	docs, err := f.c.Collection(UsersCollection).
 		WhereEntity(firestore.PropertyFilter{

@@ -57,6 +57,9 @@ func TestReveal(t *testing.T) {
 				15790: -200,
 			},
 		},
+		stateStoreStub: stateStoreStub{
+			state: store.StateAnswer,
+		},
 	}
 	h := &tg.RevealHandler{Store: storeSpy}
 
@@ -414,6 +417,7 @@ type revealStoreSpy struct {
 	accountStoreStub
 	modeStoreStub
 	adminsStoreStub
+	stateStoreStub
 	lastClosedQuestionErr error
 	restoreAcc            int
 	restoreAccErr         error
