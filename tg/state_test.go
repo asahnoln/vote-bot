@@ -10,8 +10,8 @@ import (
 )
 
 func TestStateWrapperChecksState(t *testing.T) {
-	stub := &stateStoreStub{
-		state: store.StateAnswer,
+	stub := &stateStoreSpy{
+		state: store.StateRevealed,
 	}
 
 	h := &tg.StateWrapper{
@@ -27,7 +27,7 @@ func TestStateWrapperChecksState(t *testing.T) {
 
 func TestStateWrapperError(t *testing.T) {
 	wantErr := errors.New("state error")
-	stub := &stateStoreStub{
+	stub := &stateStoreSpy{
 		err: wantErr,
 	}
 	h := tg.StateWrapper{
@@ -40,8 +40,29 @@ func TestStateWrapperError(t *testing.T) {
 	}
 }
 
+func TestStateWrapperSavesNextState(t *testing.T) {
+	spy := &stateStoreSpy{
+		state: store.StateQuestion,
+	}
+
+	h := &tg.StateWrapper{
+		Store:     spy,
+		State:     store.StateQuestion,
+		NextState: store.StateClosed,
+		Handler:   &handlerStub{},
+	}
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if err != nil {
+		t.Fatalf("got err %q; want nil", err)
+	}
+
+	if got, want := spy.state, store.StateClosed; got != want {
+		t.Errorf("got state %v; want %v", got, want)
+	}
+}
+
 func TestStateWrapperUsesHandlersMethods(t *testing.T) {
-	stub := &stateStoreStub{
+	stub := &stateStoreSpy{
 		state: store.StateQuestion,
 	}
 
@@ -91,14 +112,32 @@ func TestStateWrapperUsesHandlersMethods(t *testing.T) {
 	}
 }
 
-type stateStoreStub struct {
-	state store.State
-	err   error
+func TestStateWrapperSaveError(t *testing.T) {
+	wantErr := errors.New("save state error")
+	stub := &stateStoreSpy{
+		saveErr: wantErr,
+	}
+	h := tg.StateWrapper{
+		Store: stub,
+	}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
 }
 
-func (s *stateStoreStub) State(context.Context) (store.State, error) {
-	if s.state == "" {
-		s.state = store.StateQuestion
-	}
+type stateStoreSpy struct {
+	state   store.State
+	err     error
+	saveErr error
+}
+
+func (s *stateStoreSpy) State(context.Context) (store.State, error) {
 	return s.state, s.err
+}
+
+func (s *stateStoreSpy) SaveState(ctx context.Context, state store.State) error {
+	s.state = state
+	return s.saveErr
 }

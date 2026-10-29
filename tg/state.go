@@ -3,29 +3,38 @@ package tg
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/asahnoln/vote-bot/store"
 )
 
 var ErrWrongState = errors.New("state must be question")
 
-type Stater interface {
+type StateStore interface {
 	State(context.Context) (store.State, error)
+	SaveState(context.Context, store.State) error
 }
 
 type StateWrapper struct {
-	Store   Stater
-	State   store.State
-	Handler Handler
+	Store     StateStore
+	State     store.State
+	NextState store.State
+	Handler   Handler
 }
 
 func (w *StateWrapper) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
 	state, err := w.Store.State(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("state: %w", err)
 	}
+
 	if state != w.State {
-		return nil, ErrWrongState
+		return nil, fmt.Errorf("%w: current state %q; will run at state %q", ErrWrongState, state, w.State)
+	}
+
+	err = w.Store.SaveState(ctx, w.NextState)
+	if err != nil {
+		return nil, fmt.Errorf("save state: %w", err)
 	}
 
 	return w.Handler.Handle(ctx, upd)

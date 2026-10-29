@@ -64,5 +64,6 @@ type State string
 
 const (
 	StateQuestion State = "question"
-	StateAnswer   State = "answer"
+	StateClosed   State = "closed"
+	StateRevealed State = "revealed"
 )
