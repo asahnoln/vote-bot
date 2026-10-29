@@ -52,7 +52,7 @@ func (f *Firestore) SetMode(ctx context.Context, mode store.Mode) (err error) {
 		return err
 	}
 
-	err = f.SaveState(ctx, store.StateQuestion)
+	err = f.SaveState(ctx, store.StateSendQuestion)
 	if err != nil {
 		return fmt.Errorf("save state: %w", err)
 	}

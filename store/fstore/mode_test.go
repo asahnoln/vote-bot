@@ -84,7 +84,7 @@ func TestSetMode(t *testing.T) {
 	}
 
 	d, _ = c.Collection("config").Doc("state").Get(ctx)
-	if got, want := d.Data()["state"], string(store.StateQuestion); got != want {
+	if got, want := d.Data()["state"], string(store.StateSendQuestion); got != want {
 		t.Errorf("current state: got %v; want %v", got, want)
 	}
 

@@ -63,7 +63,7 @@ func (m Mode) String() string {
 type State string
 
 const (
-	StateQuestion State = "question"
-	StateClosed   State = "closed"
-	StateRevealed State = "revealed"
+	StateSendQuestion  State = "send_question"
+	StateCloseQuestion State = "close_question"
+	StateRevealAnswer  State = "reveal_answer"
 )

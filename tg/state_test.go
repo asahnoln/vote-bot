@@ -11,12 +11,12 @@ import (
 
 func TestStateWrapperChecksState(t *testing.T) {
 	stub := &stateStoreSpy{
-		state: store.StateRevealed,
+		state: store.StateRevealAnswer,
 	}
 
 	h := &tg.StateWrapper{
 		Store:   stub,
-		State:   store.StateQuestion,
+		State:   store.StateSendQuestion,
 		Handler: &handlerStub{},
 	}
 	_, err := h.Handle(context.Background(), tg.Update{})
@@ -42,13 +42,13 @@ func TestStateWrapperError(t *testing.T) {
 
 func TestStateWrapperSavesNextState(t *testing.T) {
 	spy := &stateStoreSpy{
-		state: store.StateQuestion,
+		state: store.StateSendQuestion,
 	}
 
 	h := &tg.StateWrapper{
 		Store:     spy,
-		State:     store.StateQuestion,
-		NextState: store.StateClosed,
+		State:     store.StateSendQuestion,
+		NextState: store.StateCloseQuestion,
 		Handler:   &handlerStub{},
 	}
 	_, err := h.Handle(context.Background(), tg.Update{})
@@ -56,17 +56,17 @@ func TestStateWrapperSavesNextState(t *testing.T) {
 		t.Fatalf("got err %q; want nil", err)
 	}
 
-	if got, want := spy.state, store.StateClosed; got != want {
+	if got, want := spy.state, store.StateCloseQuestion; got != want {
 		t.Errorf("got state %v; want %v", got, want)
 	}
 }
 
 func TestStateWrapperUsesHandlersMethods(t *testing.T) {
 	stub := &stateStoreSpy{
-		state: store.StateQuestion,
+		state: store.StateSendQuestion,
 	}
 
-	h := &tg.StateWrapper{Store: stub, State: store.StateQuestion, Handler: &handlerCustomStub{
+	h := &tg.StateWrapper{Store: stub, State: store.StateSendQuestion, Handler: &handlerCustomStub{
 		conditionFunc: func(u tg.Update) bool {
 			return u.Message.Chat.ID == 141
 		},

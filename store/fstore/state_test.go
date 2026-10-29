@@ -18,7 +18,7 @@ func TestState(t *testing.T) {
 
 	col := c.Collection("config")
 	col.Doc("state").Set(ctx, map[string]any{
-		"state": store.StateClosed,
+		"state": store.StateCloseQuestion,
 	})
 
 	f := fstore.New(c)
@@ -28,7 +28,7 @@ func TestState(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := state, store.StateClosed; got != want {
+	if got, want := state, store.StateCloseQuestion; got != want {
 		t.Errorf("got state %v; want %v", got, want)
 	}
 }
@@ -74,18 +74,18 @@ func TestSaveState(t *testing.T) {
 
 	col := c.Collection("config")
 	col.Doc("state").Set(ctx, map[string]any{
-		"state": store.StateClosed,
+		"state": store.StateCloseQuestion,
 	})
 
 	f := fstore.New(c)
 
-	err := f.SaveState(ctx, store.StateRevealed)
+	err := f.SaveState(ctx, store.StateRevealAnswer)
 	if err != nil {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
 	d, _ := c.Collection("config").Doc("state").Get(ctx)
-	if got, want := d.Data()["state"], string(store.StateRevealed); got != want {
+	if got, want := d.Data()["state"], string(store.StateRevealAnswer); got != want {
 		t.Errorf("state: got %v; want %v", got, want)
 	}
 }
