@@ -8,7 +8,7 @@ import (
 	"github.com/asahnoln/vote-bot/store"
 )
 
-var ErrWrongState = errors.New("state must be question")
+var ErrWrongState = errors.New("wrong state")
 
 type StateStore interface {
 	State(context.Context) (store.State, error)
