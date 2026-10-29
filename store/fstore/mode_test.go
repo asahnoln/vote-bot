@@ -83,6 +83,11 @@ func TestSetMode(t *testing.T) {
 		t.Errorf("current question idx: got %v; want %v", got, want)
 	}
 
+	d, _ = c.Collection("config").Doc("state").Get(ctx)
+	if got, want := d.Data()["state"], string(store.StateQuestion); got != want {
+		t.Errorf("current state: got %v; want %v", got, want)
+	}
+
 	d, _ = c.Collection("users").Doc("1").Get(ctx)
 	if got, want := d.Data()["acc"], int64(1000); got != want {
 		t.Errorf("user 1 acc: got %v; want %v", got, want)

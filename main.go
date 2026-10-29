@@ -50,7 +50,12 @@ func main() {
 		ErrorChan: errCh,
 	}
 	b.Handle(&tg.StartHandler{Store: fireStore, Text: tg.StartHandlerText{}})
-	b.Handle(&tg.QuestionHandler{Store: fireStore})
+	b.Handle(
+		&tg.StateWrapper{
+			Store:   fireStore,
+			State:   store.StateQuestion,
+			Handler: &tg.QuestionHandler{Store: fireStore},
+		})
 	b.Handle(&tg.AnswerHandler{Store: fireStore})
 	b.Handle(&tg.BetHandler{Store: fireStore})
 	b.Handle(&tg.CloseHandler{Store: fireStore})
