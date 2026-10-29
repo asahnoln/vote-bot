@@ -18,9 +18,15 @@ func TestAdmins(t *testing.T) {
 	col := c.Collection("admins")
 	col.Doc("101").Set(ctx, map[string]any{
 		"user_id": 101,
+		"active":  true,
 	})
 	col.Doc("102").Set(ctx, map[string]any{
 		"user_id": 102,
+		"active":  true,
+	})
+	col.Doc("103").Set(ctx, map[string]any{
+		"user_id": 103,
+		"active":  false,
 	})
 
 	f := fstore.New(c)

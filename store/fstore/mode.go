@@ -13,6 +13,7 @@ const AdminsCollection = "admins"
 
 func (f *Firestore) Admins(ctx context.Context) (admins []store.User, err error) {
 	docs, err := f.c.Collection(AdminsCollection).
+		WhereEntity(firestore.PropertyFilter{Path: "active", Operator: EqualOp, Value: true}).
 		Documents(ctx).GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("admins get all: %w", err)
