@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 
@@ -59,8 +60,12 @@ func main() {
 	b.Handle(&tg.ModeHandler{Store: fireStore, Mode: store.RealMode})
 	b.Handle(&tg.DefaultHandler{})
 
-	// TODO: Create http server for context
-	err = http.ListenAndServe(":8080", b)
+	srv := http.Server{
+		Addr:        ":8080",
+		Handler:     b,
+		BaseContext: func(l net.Listener) context.Context { return ctx },
+	}
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Fatalf("http listen and server error: %v", err)
 	}
