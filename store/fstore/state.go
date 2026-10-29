@@ -27,5 +27,12 @@ func (f *Firestore) State(ctx context.Context) (store.State, error) {
 }
 
 func (f *Firestore) SaveState(ctx context.Context, state store.State) error {
+	_, err := f.c.Collection(ConfigCollection).Doc(StateDocID).Set(ctx, map[string]any{
+		"state": state,
+	})
+	if err != nil {
+		return fmt.Errorf("set: %w", err)
+	}
+
 	return nil
 }

@@ -65,3 +65,27 @@ func TestStateWrongFormat(t *testing.T) {
 		t.Fatalf("fstore state: got err %v; want %v", got, want)
 	}
 }
+
+func TestSaveState(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	col := c.Collection("config")
+	col.Doc("state").Set(ctx, map[string]any{
+		"state": store.StateClosed,
+	})
+
+	f := fstore.New(c)
+
+	err := f.SaveState(ctx, store.StateRevealed)
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	d, _ := c.Collection("config").Doc("state").Get(ctx)
+	if got, want := d.Data()["state"], string(store.StateRevealed); got != want {
+		t.Errorf("state: got %v; want %v", got, want)
+	}
+}
