@@ -26,35 +26,32 @@ func TestReveal(t *testing.T) {
 					UserID:  876,
 					IsRight: true,
 					Bet:     100,
+					Acc:     500,
 				},
 				{
 					UserID:  2345,
 					IsRight: false,
 					Bet:     200,
+					Acc:     300,
 				},
 				{
 					UserID:  15789,
 					IsRight: true,
 					Bet:     500,
+					Acc:     0,
 				},
 				{
 					UserID:  15790,
 					IsRight: false,
 					Bet:     700,
+					Acc:     -200,
 				},
 				// Must be filtered out
 				{
 					UserID:  15791,
 					IsRight: false,
+					Acc:     9999,
 				},
-			},
-		},
-		accountStoreStub: accountStoreStub{
-			accounts: map[int]int{
-				876:   500,
-				2345:  300,
-				15789: 0,
-				15790: -200,
 			},
 		},
 	}
@@ -69,10 +66,6 @@ func TestReveal(t *testing.T) {
 
 	if got, want := storeSpy.answersStoreStub.questionID, "last-closed-q-99"; got != want {
 		t.Errorf("question id for answer: got %q; want %q", got, want)
-	}
-
-	if diff := cmp.Diff([]int{876, 2345, 15789, 15790}, storeSpy.accountStoreStub.userIDs); diff != "" {
-		t.Errorf("accounts user IDs mismatch (-want +got):%s", diff)
 	}
 
 	if diff := cmp.Diff([]int{15789, 15790}, storeSpy.lostUserStoreStub.userIDs); diff != "" {
@@ -116,12 +109,8 @@ func TestRevealTutorialWontSaveLostUser(t *testing.T) {
 					UserID:  15789,
 					IsRight: true,
 					Bet:     500,
+					Acc:     0,
 				},
-			},
-		},
-		accountStoreStub: accountStoreStub{
-			accounts: map[int]int{
-				15789: 0,
 			},
 		},
 		modeStoreStub: modeStoreStub{
@@ -271,16 +260,13 @@ func TestRevealLostUserError(t *testing.T) {
 			answers: []store.Answer{
 				{
 					UserID: 100,
+					Bet:    100,
+					Acc:    0,
 				},
 			},
 		},
 		lostUserStoreStub: lostUserStoreStub{
 			err: wantErr,
-		},
-		accountStoreStub: accountStoreStub{
-			accounts: map[int]int{
-				100: 0,
-			},
 		},
 	}}
 
@@ -294,20 +280,6 @@ func TestRevealAnswersError(t *testing.T) {
 	wantErr := errors.New("answers error")
 	h := tg.RevealHandler{Store: &revealStoreSpy{
 		answersStoreStub: answersStoreStub{
-			err: wantErr,
-		},
-	}}
-
-	_, err := h.Handle(context.Background(), tg.Update{})
-	if got, want := err, wantErr; !errors.Is(got, want) {
-		t.Errorf("got err %q; want %q", got, want)
-	}
-}
-
-func TestRevealAccountsError(t *testing.T) {
-	wantErr := errors.New("accounts error")
-	h := tg.RevealHandler{Store: &revealStoreSpy{
-		accountStoreStub: accountStoreStub{
 			err: wantErr,
 		},
 	}}
@@ -342,12 +314,9 @@ func TestRevealHandlerRestoreAccError(t *testing.T) {
 			answers: []store.Answer{
 				{
 					UserID: 101,
+					Bet:    200,
+					Acc:    0,
 				},
-			},
-		},
-		accountStoreStub: accountStoreStub{
-			accounts: map[int]int{
-				101: 0,
 			},
 		},
 		modeStoreStub: modeStoreStub{
@@ -411,7 +380,6 @@ func TestRevealCondition(t *testing.T) {
 type revealStoreSpy struct {
 	answersStoreStub
 	lostUserStoreStub
-	accountStoreStub
 	modeStoreStub
 	adminsStoreStub
 	stateStoreSpy

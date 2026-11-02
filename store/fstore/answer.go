@@ -60,13 +60,15 @@ func (f *Firestore) question(ctx context.Context, questionID string) (q store.Qu
 }
 
 func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, bet int) error {
+	uID := strconv.Itoa(userID)
+	u, err := f.queryAndMap[store.User](ctx, UsersCollection, uID)
+	if err != nil {
+		return fmt.Errorf("user query: %w", err)
+	}
+
 	allIn := false
 	if bet == -100 {
-		accs, err := f.Accounts(ctx, []int{userID})
-		if err != nil {
-			return fmt.Errorf("accounts: %w", err)
-		}
-		bet = accs[userID]
+		bet = u.Acc
 		allIn = true
 	}
 
@@ -74,12 +76,23 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 	if err != nil {
 		return fmt.Errorf("collection by mode: %w", err)
 	}
+
+	a, err := f.queryAndMap[store.Answer](ctx, answersCollection, answerDocID(userID, questionID))
+	if err != nil {
+		return fmt.Errorf("answer query: %w", err)
+	}
+
+	betMlp := bet
+	if !a.IsRight {
+		betMlp *= -1
+	}
 	_, err = f.c.Collection(answersCollection).
 		Doc(answerDocID(userID, questionID)).
 		Set(ctx,
 			map[string]any{
 				"bet":    bet,
 				"all_in": allIn,
+				"acc":    u.Acc + betMlp,
 			}, firestore.MergeAll)
 	if err != nil {
 		return fmt.Errorf("doc set: %w", err)
@@ -90,16 +103,6 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("user query: %w", err)
 	}
 
-	u, err := f.queryAndMap[store.User](ctx, UsersCollection, strconv.Itoa(userID))
-	if err != nil {
-		return fmt.Errorf("user query: %w", err)
-	}
-
-	a, err := f.queryAndMap[store.Answer](ctx, answersCollection, answerDocID(userID, questionID))
-	if err != nil {
-		return fmt.Errorf("answer query: %w", err)
-	}
-
 	// Not in tutorial mode
 	// TODO: Make more understandable
 	mode := store.RealMode
@@ -108,16 +111,14 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 	}
 
 	upds := []firestore.Update{}
-	if !a.IsRight {
-		bet *= -1
-	} else if mode != store.TutorialMode {
+	if a.IsRight && mode != store.TutorialMode {
 		upds = append(upds, firestore.Update{Path: "right_answer_cnt", Value: firestore.Increment(1)})
 		upds = append(upds, firestore.Update{Path: "avg_speed", Value: (u.AvgSpeed*float64(u.RightAnswerCnt) + time.Since(q.SentAt).Seconds()) / (float64(u.RightAnswerCnt) + 1)})
 	}
-	upds = append(upds, firestore.Update{Path: "acc", Value: firestore.Increment(bet)})
+	upds = append(upds, firestore.Update{Path: "acc", Value: firestore.Increment(betMlp)})
 
 	_, err = f.c.Collection(UsersCollection).
-		Doc(strconv.Itoa(userID)).
+		Doc(uID).
 		Update(ctx,
 			upds)
 	if err != nil {

@@ -20,6 +20,7 @@ type Answer struct {
 	Bet     int    `firestore:"bet"`
 	A       string `firestore:"a"`
 	AllIn   bool   `firestore:"all_in"`
+	Acc     int    `firestore:"acc"`
 }
 
 type User struct {

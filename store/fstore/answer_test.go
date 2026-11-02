@@ -112,10 +112,11 @@ func TestSaveBet(t *testing.T) {
 	tests := []struct {
 		bet       int
 		wantBet   int64
+		wantAcc   int64
 		wantAllIn bool
 	}{
-		{500, 500, false},
-		{-100, 1000, true},
+		{500, 500, 500, false},
+		{-100, 1000, 0, true},
 	}
 
 	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
@@ -129,7 +130,7 @@ func TestSaveBet(t *testing.T) {
 			c.Collection("users").Doc("234").Set(ctx, map[string]any{"user_id": 234, "acc": 1000})
 			c.Collection("answers").Doc("234:test-q-111").Set(ctx, map[string]any{
 				"user_id": 234,
-				"a":       "has answer",
+				"a":       "wrong answer",
 			})
 
 			f := fstore.New(c)
@@ -146,9 +147,10 @@ func TestSaveBet(t *testing.T) {
 
 			want := map[string]any{
 				"user_id": int64(234),
-				"a":       "has answer",
+				"a":       "wrong answer",
 				"bet":     tt.wantBet,
 				"all_in":  tt.wantAllIn,
+				"acc":     tt.wantAcc,
 			}
 			if diff := cmp.Diff(want, d.Data(), cmpopts.EquateApproxTime(time.Second)); diff != "" {
 				t.Errorf("bet mismatch (-want +got):\n%s", diff)
@@ -308,9 +310,13 @@ func TestSaveBetSavesAcc(t *testing.T) {
 			}
 
 			d, _ := c.Collection("users").Doc("237").Get(ctx)
-
 			if got, want := d.Data()["acc"].(int64), int64(tt.wantAcc); got != want {
-				t.Errorf("avg speed: got %v; want %v", got, want)
+				t.Errorf("acc in users: got %v; want %v", got, want)
+			}
+
+			d, _ = c.Collection(col).Doc("237:test-q-107").Get(ctx)
+			if got, want := d.Data()["acc"], int64(tt.wantAcc); got != want {
+				t.Errorf("acc in answers: got %v; want %v", got, want)
 			}
 		})
 	}

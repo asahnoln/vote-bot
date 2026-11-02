@@ -18,7 +18,6 @@ type Accountser interface {
 type RevealStore interface {
 	Answerser
 	LostUserSaver
-	Accountser
 	Moder
 	Adminser
 	LastClosedQuestion(context.Context) (store.Question, error)
@@ -52,30 +51,13 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 		return nil, fmt.Errorf("answers: %w", err)
 	}
 
-	userIDs := make([]int, 0)
-	for _, a := range answers {
-		// Filter out from response messages
-		if a.Bet == 0 {
-			continue
-		}
-
-		userIDs = append(userIDs, a.UserID)
-	}
-
-	accs, err := h.Store.Accounts(ctx, userIDs)
-	if err != nil {
-		return nil, fmt.Errorf("account: %w", err)
-	}
-
 	mode, err := h.Store.Mode(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("mode: %w", err)
 	}
 
 	for _, a := range answers {
-		acc, ok := accs[a.UserID]
-		// If bet was not set - user was filtered out above
-		if !ok {
+		if a.Bet == 0 {
 			continue
 		}
 
@@ -84,12 +66,12 @@ func (h *RevealHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 			RevealMessage(
 				a.UserID,
 				a.IsRight,
-				acc,
+				a.Acc,
 				mode,
 			),
 		)
 
-		if acc <= 0 {
+		if a.Acc <= 0 {
 			switch mode {
 			case store.TutorialMode:
 				err := h.Store.RestoreAcc(ctx, a.UserID)
