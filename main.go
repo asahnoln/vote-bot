@@ -49,7 +49,11 @@ func main() {
 		Dest:      dest,
 		ErrorChan: errCh,
 	}
-	b.Handle(&tg.StartHandler{Store: fireStore, Text: tg.StartHandlerText{}})
+	b.Handle(&tg.StartHandler{
+		Store: fireStore,
+		Text:  tg.StartHandlerText{},
+		Token: os.Getenv("START_TOKEN"),
+	})
 	b.Handle(&tg.StateWrapper{
 		Store:     fireStore,
 		State:     store.StateSendQuestion,

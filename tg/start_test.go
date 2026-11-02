@@ -134,7 +134,6 @@ func TestStartDontSaveIfUserAlreadyJoined(t *testing.T) {
 			Chat: tg.Chat{
 				ID: 202,
 			},
-			Text: "/start",
 		},
 	})
 	if err != nil {
@@ -148,16 +147,28 @@ func TestStartDontSaveIfUserAlreadyJoined(t *testing.T) {
 }
 
 func TestStartCondition(t *testing.T) {
-	h := tg.StartHandler{}
+	h := tg.StartHandler{
+		Token: "someToken",
+	}
 
 	ok := h.Condition(tg.Update{
+		Message: tg.Message{
+			Text: "/start someToken",
+		},
+	})
+
+	if got, want := ok, true; got != want {
+		t.Errorf("start true condition: got %v; want %v", got, want)
+	}
+
+	ok = h.Condition(tg.Update{
 		Message: tg.Message{
 			Text: "/start",
 		},
 	})
 
-	if got, want := ok, true; got != want {
-		t.Errorf("start condition: got %v; want %v", got, want)
+	if got, want := ok, false; got != want {
+		t.Errorf("start false condition: got %v; want %v", got, want)
 	}
 }
 

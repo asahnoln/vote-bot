@@ -23,6 +23,7 @@ type StartTextStore interface {
 type StartHandler struct {
 	Store StartStore
 	Text  StartTextStore
+	Token string
 }
 
 func (h *StartHandler) HandleResponse(context.Context, any) error {
@@ -34,7 +35,7 @@ func (h *StartHandler) Name() string {
 }
 
 func (h *StartHandler) Condition(upd Update) bool {
-	return upd.Message.Text == "/start"
+	return upd.Message.Text == "/start "+h.Token
 }
 
 type StartHandlerText struct{}
