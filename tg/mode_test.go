@@ -10,7 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestModeOptionalHandler(t *testing.T) {
+func TestModeHandler(t *testing.T) {
 	spy := &modeStoreSpy{}
 	h := tg.ModeHandler{Store: spy, Mode: store.TutorialMode}
 
@@ -47,6 +47,41 @@ func TestModeOptionalHandler(t *testing.T) {
 	}
 }
 
+func TestModeRealHandlerSendUsersIntroMessage(t *testing.T) {
+	spy := &modeStoreSpy{
+		usersStoreStub: usersStoreStub{
+			users: []store.User{
+				{UserID: 932},
+			},
+		},
+	}
+	h := tg.ModeHandler{Store: spy, Mode: store.RealMode}
+
+	msgs, err := h.Handle(context.Background(), tg.Update{})
+	if err != nil {
+		t.Fatalf("got err %v; want nil", err)
+	}
+
+	if got, want := len(msgs), 3; got != want {
+		t.Fatalf("msgs count: got %v; want %v", got, want)
+	}
+
+	want := tg.SendRichMessage{
+		ChatID: 932,
+		RichMessage: tg.InputRichMessage{
+			Blocks: []tg.InputRichBlock{
+				{
+					Type: "paragraph",
+					Text: "Ваш баланс сброшен до стартовых 1000$. Началась реальная игра!",
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(want, msgs[2]); diff != "" {
+		t.Errorf("send rich message mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestModeHandlerAdminsError(t *testing.T) {
 	wantErr := errors.New("admins error")
 	spy := &modeStoreSpy{
@@ -68,6 +103,21 @@ func TestModeHandlerModeError(t *testing.T) {
 		err: wantErr,
 	}
 	h := tg.ModeHandler{Store: spy, Mode: store.TutorialMode}
+
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Errorf("got err %q; want %q", got, want)
+	}
+}
+
+func TestModeHandlerUsersError(t *testing.T) {
+	wantErr := errors.New("users error")
+	spy := &modeStoreSpy{
+		usersStoreStub: usersStoreStub{
+			err: wantErr,
+		},
+	}
+	h := tg.ModeHandler{Store: spy, Mode: store.RealMode}
 
 	_, err := h.Handle(context.Background(), tg.Update{})
 	if got, want := err, wantErr; !errors.Is(got, want) {
@@ -103,6 +153,7 @@ func TestModeHandlerName(t *testing.T) {
 
 type modeStoreSpy struct {
 	adminsStoreStub
+	usersStoreStub
 	mode store.Mode
 	err  error
 }
