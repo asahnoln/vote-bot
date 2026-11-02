@@ -51,38 +51,3 @@ loop:
 
 	return answers, nil
 }
-
-func (f *Firestore) Accounts(ctx context.Context, userIDs []int) (accs map[int]int, err error) {
-	if len(userIDs) == 0 {
-		return
-	}
-
-	iter := f.c.Collection(UsersCollection).WhereEntity(firestore.PropertyFilter{
-		Path:     "user_id",
-		Operator: "in",
-		Value:    userIDs,
-	}).Documents(ctx)
-
-	accs = make(map[int]int)
-
-loop:
-	for {
-		d, err := iter.Next()
-		switch {
-		case err == iterator.Done:
-			break loop
-		case err != nil:
-			return nil, fmt.Errorf("users iter: %w", err)
-		}
-
-		u := store.User{}
-		err = d.DataTo(&u)
-		if err != nil {
-			return nil, fmt.Errorf("data %#v to user: %w", d, err)
-		}
-
-		accs[u.UserID] += u.Acc
-	}
-
-	return accs, nil
-}

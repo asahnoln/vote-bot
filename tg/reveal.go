@@ -11,10 +11,6 @@ type Answerser interface {
 	Answers(ctx context.Context, questionID string) ([]store.Answer, error)
 }
 
-type Accountser interface {
-	Accounts(ctx context.Context, userIDs []int) (map[int]int, error)
-}
-
 type RevealStore interface {
 	Answerser
 	LostUserSaver

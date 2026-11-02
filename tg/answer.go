@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/asahnoln/vote-bot/store"
 )
 
 const (
@@ -20,7 +22,7 @@ var (
 )
 
 type AnswerStore interface {
-	Accountser
+	User(ctx context.Context, userID int) (store.User, error)
 	SaveAnswer(ctx context.Context, userID int, questionID string, answer string) error
 }
 
@@ -48,9 +50,9 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 		return nil, errors.Join(ErrWrongCallbackData, err)
 	}
 
-	accs, err := h.Store.Accounts(ctx, []int{upd.CallbackQuery.Message.Chat.ID})
+	user, err := h.Store.User(ctx, upd.CallbackQuery.Message.Chat.ID)
 	if err != nil {
-		return nil, fmt.Errorf("accounts: %w", err)
+		return nil, fmt.Errorf("user: %w", err)
 	}
 
 	err = h.Store.SaveAnswer(ctx,
@@ -83,7 +85,7 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 				{
 					Type:    InputRichBlockButtonsType,
 					Align:   AlignLeft,
-					Buttons: BetButtons(accs[upd.CallbackQuery.Message.Chat.ID], []int{100, 200, 500}, qID),
+					Buttons: BetButtons(user.Acc, []int{100, 200, 500}, qID),
 				},
 			},
 		},

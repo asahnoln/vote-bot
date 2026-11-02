@@ -7,6 +7,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
 	"github.com/google/go-cmp/cmp"
 )
@@ -18,9 +19,10 @@ func TestAnswer(t *testing.T) {
 	upd := tg.Update{}
 	json.Unmarshal(answerCallbackUpdate, &upd)
 	storeSpy := &answerStoreSpy{
-		accountStoreStub: accountStoreStub{
-			accounts: map[int]int{
-				45030020: 1000,
+		users: map[int]store.User{
+			45030020: {
+				UserID: 45030020,
+				Acc:    1000,
 			},
 		},
 	}
@@ -87,9 +89,6 @@ func TestAnswer(t *testing.T) {
 	if got, want := storeSpy.questionID, "opt-q-67"; got != want {
 		t.Errorf("save question: got %v; want %v", got, want)
 	}
-	if diff := cmp.Diff([]int{45030020}, storeSpy.accountStoreStub.userIDs); diff != "" {
-		t.Errorf("edit message text mismatch (-want +got):%s", diff)
-	}
 }
 
 func TestBetButtons(t *testing.T) {
@@ -140,9 +139,7 @@ func TestAnswerAccountsError(t *testing.T) {
 	wantErr := errors.New("accounts error")
 
 	storeSpy := &answerStoreSpy{
-		accountStoreStub: accountStoreStub{
-			err: wantErr,
-		},
+		userErr: wantErr,
 	}
 	h := &tg.AnswerHandler{Store: storeSpy}
 	_, err := h.Handle(context.Background(), tg.Update{
@@ -332,11 +329,16 @@ func TestBetNotEnoughMessageFromBefore(t *testing.T) {
 }
 
 type answerStoreSpy struct {
-	accountStoreStub
+	users      map[int]store.User
 	userID     int
 	questionID string
 	answer     string
 	err        error
+	userErr    error
+}
+
+func (s *answerStoreSpy) User(ctx context.Context, userID int) (store.User, error) {
+	return s.users[userID], s.userErr
 }
 
 func (s *answerStoreSpy) SaveAnswer(ctx context.Context, userID int, questiongID string, answer string) error {

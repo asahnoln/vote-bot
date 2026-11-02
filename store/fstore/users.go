@@ -14,6 +14,10 @@ import (
 
 const UsersCollection = "users"
 
+func (f *Firestore) User(ctx context.Context, userID int) (store.User, error) {
+	return store.User{}, nil
+}
+
 func (f *Firestore) AllUsers(ctx context.Context) (users []store.User, err error) {
 	return f.users(ctx)
 }
