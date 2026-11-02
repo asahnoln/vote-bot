@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
-	"cloud.google.com/go/firestore/apiv1/firestorepb"
 	"github.com/asahnoln/vote-bot/store"
 )
 
@@ -43,24 +42,9 @@ func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err 
 }
 
 func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
-	col, err := f.CollectionByMode(ctx, QuestionsCollection)
+	_, err := f.getQuestionByCurrentIdx(ctx, 1)
 	if err != nil {
-		return fmt.Errorf("collection by mode: %w", err)
-	}
-
-	results, err := f.c.Collection(col).NewAggregationQuery().WithCount("all").Get(ctx)
-	if err != nil {
-		return fmt.Errorf("count all questions: %w", err)
-	}
-
-	count := results["all"].(*firestorepb.Value).GetIntegerValue()
-	idx, err := f.getCurrentQuestionIdx(ctx)
-	if err != nil {
-		return fmt.Errorf("current idx: %w", err)
-	}
-
-	if idx >= int(count) {
-		return store.ErrNoOpenQuestionsLeft
+		return fmt.Errorf("get question by current idx: %w", err)
 	}
 
 	_, err = f.c.Collection(ConfigCollection).Doc(CurrentQuestionDocID).Update(ctx, []firestore.Update{

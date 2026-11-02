@@ -77,10 +77,10 @@ Each user has an account. (At the start they have 1000$)
 - [x] Robust handling response from tg...
 - [x] Optional questions which don't count
 - [x] Think on misclicks on commands - suddenly close a question, or send answer again etc
+- [x] Start bot with secret token from QR
 - [ ] Check flow on tutorial mode
 - [ ] Sent people message on mode change???
 - [ ] Message on last question???
-- [ ] Start bot with secret token from QR
 - [ ] Set webhook with secret token
 - [ ] Check whole code flow for a more efficient data/db handling
 - [ ] Check default behaviour of bot without handlers (no condition met)
