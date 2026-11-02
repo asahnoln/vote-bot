@@ -14,8 +14,13 @@ import (
 
 const UsersCollection = "users"
 
-func (f *Firestore) User(ctx context.Context, userID int) (store.User, error) {
-	return store.User{}, nil
+func (f *Firestore) User(ctx context.Context, userID int) (u store.User, err error) {
+	u, err = f.queryAndMap[store.User](ctx, UsersCollection, strconv.Itoa(userID))
+	if err != nil {
+		return u, fmt.Errorf("query and map: %w", err)
+	}
+
+	return u, nil
 }
 
 func (f *Firestore) AllUsers(ctx context.Context) (users []store.User, err error) {

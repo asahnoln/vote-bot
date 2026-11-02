@@ -60,8 +60,7 @@ func (f *Firestore) question(ctx context.Context, questionID string) (q store.Qu
 }
 
 func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, bet int) error {
-	uID := strconv.Itoa(userID)
-	u, err := f.queryAndMap[store.User](ctx, UsersCollection, uID)
+	u, err := f.User(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("user query: %w", err)
 	}
@@ -118,7 +117,7 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 	upds = append(upds, firestore.Update{Path: "acc", Value: firestore.Increment(betMlp)})
 
 	_, err = f.c.Collection(UsersCollection).
-		Doc(uID).
+		Doc(strconv.Itoa(userID)).
 		Update(ctx,
 			upds)
 	if err != nil {
