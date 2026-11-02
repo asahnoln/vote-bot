@@ -32,10 +32,15 @@ func (w *StateWrapper) Handle(ctx context.Context, upd Update) (msgs []Request, 
 		return nil, fmt.Errorf("%w: current state %q; will run at state %q", ErrWrongState, state, w.State)
 	}
 
+	msgs, err = w.Handler.Handle(ctx, upd)
+	if err != nil {
+		return nil, fmt.Errorf("handle: %w", err)
+	}
+
 	err = w.Store.SaveState(ctx, w.NextState)
 	if err != nil {
 		return nil, fmt.Errorf("save state: %w", err)
 	}
 
-	return w.Handler.Handle(ctx, upd)
+	return msgs, nil
 }

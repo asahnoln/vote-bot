@@ -65,13 +65,40 @@ func TestStateWrapperSavesNextState(t *testing.T) {
 	}
 }
 
+func TestStateWrapperDoesNotChangeStateIfHandlerErrors(t *testing.T) {
+	spy := &stateStoreSpy{
+		state: store.StateSendQuestion,
+	}
+
+	wantErr := errors.New("handler error")
+	h := &tg.StateWrapper{
+		Store:     spy,
+		State:     store.StateSendQuestion,
+		NextState: store.StateCloseQuestion,
+		Handler: &handlerCustomStub{
+			handleFunc: func(ctx context.Context, u tg.Update) ([]tg.Request, error) {
+				return nil, wantErr
+			},
+		},
+	}
+	_, err := h.Handle(context.Background(), tg.Update{})
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
+
+	if got, want := spy.state, store.StateSendQuestion; got != want {
+		t.Errorf("got state %v; want %v", got, want)
+	}
+}
+
 func TestStateWrapperSaveError(t *testing.T) {
 	wantErr := errors.New("save state error")
 	stub := &stateStoreSpy{
 		saveErr: wantErr,
 	}
 	h := tg.StateWrapper{
-		Store: stub,
+		Store:   stub,
+		Handler: &handlerStub{},
 	}
 
 	_, err := h.Handle(context.Background(), tg.Update{})
