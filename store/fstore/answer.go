@@ -65,12 +65,6 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("user query: %w", err)
 	}
 
-	allIn := false
-	if bet == -100 {
-		bet = u.Acc
-		allIn = true
-	}
-
 	answersCollection, err := f.CollectionByMode(ctx, AnswersCollection)
 	if err != nil {
 		return fmt.Errorf("collection by mode: %w", err)
@@ -90,7 +84,7 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		Set(ctx,
 			map[string]any{
 				"bet":    bet,
-				"all_in": allIn,
+				"all_in": bet == u.Acc,
 				"acc":    u.Acc + betMlp,
 			}, firestore.MergeAll)
 	if err != nil {

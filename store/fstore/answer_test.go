@@ -111,12 +111,11 @@ func TestSaveBet(t *testing.T) {
 
 	tests := []struct {
 		bet       int
-		wantBet   int64
 		wantAcc   int64
 		wantAllIn bool
 	}{
-		{500, 500, 500, false},
-		{-100, 1000, 0, true},
+		{500, 500, false},
+		{1000, 0, true},
 	}
 
 	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
@@ -148,7 +147,7 @@ func TestSaveBet(t *testing.T) {
 			want := map[string]any{
 				"user_id": int64(234),
 				"a":       "wrong answer",
-				"bet":     tt.wantBet,
+				"bet":     int64(tt.bet),
 				"all_in":  tt.wantAllIn,
 				"acc":     tt.wantAcc,
 			}
