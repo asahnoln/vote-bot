@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 	"testing/synctest"
+	"time"
 
 	"github.com/asahnoln/vote-bot/store"
 	"github.com/asahnoln/vote-bot/tg"
@@ -144,15 +145,18 @@ func TestBotHandlers(t *testing.T) {
 
 			dest := &destSpy{}
 			b.Dest = dest
-			b.ServeHTTP(w, r)
 
-			if got, want := w.Code, http.StatusOK; got != want {
-				t.Errorf("bot response code: got %v; want %v", got, want)
-			}
+			synctest.Test(t, func(t *testing.T) {
+				b.ServeHTTP(w, r)
 
-			if got, want := dest.got[0].(tg.SendRichMessage).ChatID, tt.wantChatID; got != want {
-				t.Errorf("sent msg with chat ID: got %v; want %v", got, want)
-			}
+				if got, want := w.Code, http.StatusOK; got != want {
+					t.Errorf("bot response code: got %v; want %v", got, want)
+				}
+
+				if got, want := dest.gotMap[tt.wantChatID].(tg.SendRichMessage).ChatID, tt.wantChatID; got != want {
+					t.Errorf("sent msg with chat ID: got %v; want %v", got, want)
+				}
+			})
 		})
 	}
 }
@@ -195,7 +199,9 @@ func TestBotHandler(t *testing.T) {
 			msgs = append(msgs, tg.EditMessageText{
 				ChatID: 602,
 			})
-			msgs = append(msgs, tg.SendRichMessage{})
+			msgs = append(msgs, tg.SendRichMessage{
+				ChatID: 123,
+			})
 			return
 		},
 		handleRespFunc: func(ctx context.Context, m any) error {
@@ -206,23 +212,26 @@ func TestBotHandler(t *testing.T) {
 			return "customStub"
 		},
 	})
-	b.ServeHTTP(w, r)
 
-	if got, want := len(destSpy.got), 3; got != want {
-		t.Fatalf("dest requests count got %d; want %d", got, want)
-	}
+	synctest.Test(t, func(t *testing.T) {
+		b.ServeHTTP(w, r)
 
-	if got, want := destSpy.got[0].(tg.SendRichMessage).ChatID, 96712; got != want {
-		t.Errorf("dest request msg chatID: got %d; want %d", got, want)
-	}
+		if got, want := len(destSpy.gotMap), 3; got != want {
+			t.Fatalf("dest requests count got %d; want %d", got, want)
+		}
 
-	if got, want := destSpy.got[1].(tg.EditMessageText).ChatID, 602; got != want {
-		t.Errorf("request 2nd user id: got %v; want %v", got, want)
-	}
+		if got, want := destSpy.gotMap[96712].(tg.SendRichMessage).ChatID, 96712; got != want {
+			t.Errorf("dest request msg chatID: got %d; want %d", got, want)
+		}
 
-	if got, want := gotM.MessageID, 1853; got != want {
-		t.Errorf("last message handled: got %v; want %v", got, want)
-	}
+		if got, want := destSpy.gotMap[602].(tg.EditMessageText).ChatID, 602; got != want {
+			t.Errorf("request 2nd user id: got %v; want %v", got, want)
+		}
+
+		if got, want := gotM.MessageID, 1853; got != want {
+			t.Errorf("last message handled: got %v; want %v", got, want)
+		}
+	})
 }
 
 func TestBotMessagesSentWhenDestErrorsAnytime(t *testing.T) {
@@ -267,10 +276,26 @@ func TestBotMessagesSentWhenDestErrorsAnytime(t *testing.T) {
 			return "customStub"
 		},
 	})
-	b.ServeHTTP(w, r)
 
-	if got, want := len(destSpy.got), 3; got != want {
-		t.Fatalf("dest requests count got %d; want %d", got, want)
+	synctest.Test(t, func(t *testing.T) {
+		b.ServeHTTP(w, r)
+
+		if got, want := len(destSpy.gotMap), 3; got != want {
+			t.Fatalf("dest requests count got %d; want %d", got, want)
+		}
+	})
+}
+
+func BenchmarkSendHandlers(b *testing.B) {
+	ctx := context.Background()
+	h := &tg.StartHandler{}
+	msgs := make([]tg.Request, 100)
+
+	bot := &tg.Bot{
+		Dest: &destNoop{},
+	}
+	for b.Loop() {
+		bot.SendRequests(ctx, h, msgs)
 	}
 }
 
@@ -350,14 +375,31 @@ func (s *handlerCustomStub) Name() string {
 	return s.nameFunc()
 }
 
+type destNoop struct{}
+
+func (d *destNoop) Send(ctx context.Context, data tg.Request) (m any, err error) {
+	time.Sleep(time.Millisecond)
+	return nil, nil
+}
+
 type destSpy struct {
-	got       []any
+	gotMap    map[int]any
 	err       error
 	returnMsg tg.Message
 }
 
 func (d *destSpy) Send(ctx context.Context, data tg.Request) (m any, err error) {
-	d.got = append(d.got, data)
+	if d.gotMap == nil {
+		d.gotMap = make(map[int]any)
+	}
+	chatID := 0
+	switch d := data.(type) {
+	case tg.SendRichMessage:
+		chatID = d.ChatID
+	case tg.EditMessageText:
+		chatID = d.ChatID
+	}
+	d.gotMap[chatID] = data
 	return d.returnMsg, d.err
 }
 

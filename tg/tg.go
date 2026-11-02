@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"sync"
 )
 
 const ApplicationJSONContentType = "application/json"
@@ -118,7 +119,7 @@ func (b *Bot) Handle(h Handler) {
 func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 	upd, err := parseUpdate(w, r)
 	if err != nil {
-		b.error(err, w, http.StatusInternalServerError)
+		b.asyncError(err)
 		return
 	}
 
@@ -132,25 +133,33 @@ func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 
-	msgs, err := handler.Handle(r.Context(), upd)
+	ctx := r.Context()
+	msgs, err := handler.Handle(ctx, upd)
 	if err != nil {
-		b.error(fmt.Errorf("proc %q: %w", handler.Name(), err), w, http.StatusInternalServerError)
+		b.asyncError(fmt.Errorf("proc %q: %w", handler.Name(), err))
 		return
 	}
 
-	for _, m := range msgs {
-		ctx := r.Context()
-		resp, err := b.Dest.Send(ctx, m)
-		if err != nil {
-			b.error(fmt.Errorf("dest send: %w", err), w, http.StatusInternalServerError)
-			continue
-		}
+	b.SendRequests(ctx, handler, msgs)
+}
 
-		err = handler.HandleResponse(ctx, resp)
-		if err != nil {
-			b.error(fmt.Errorf("dest resp save: %w", err), w, http.StatusInternalServerError)
-		}
+func (b *Bot) SendRequests(ctx context.Context, handler Handler, msgs []Request) {
+	wg := sync.WaitGroup{}
+	for _, m := range msgs {
+		wg.Go(func() {
+			resp, err := b.Dest.Send(ctx, m)
+			if err != nil {
+				b.asyncError(fmt.Errorf("dest send: %w", err))
+				return
+			}
+
+			err = handler.HandleResponse(ctx, resp)
+			if err != nil {
+				b.asyncError(fmt.Errorf("dest resp save: %w", err))
+			}
+		})
 	}
+	wg.Wait()
 }
 
 func parseUpdate(w http.ResponseWriter, r *http.Request) (upd Update, err error) {
@@ -171,7 +180,7 @@ func parseUpdate(w http.ResponseWriter, r *http.Request) (upd Update, err error)
 	return upd, nil
 }
 
-func (b *Bot) error(err error, w http.ResponseWriter, s int) {
+func (b *Bot) asyncError(err error) {
 	if b.ErrorChan == nil {
 		return
 	}
