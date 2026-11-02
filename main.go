@@ -68,25 +68,34 @@ func registerHandles(b *tg.Bot, fireStore *fstore.Firestore) {
 		Text:  tg.StartHandlerText{},
 		Token: os.Getenv("START_TOKEN"),
 	})
-	b.Handle(&tg.StateWrapper{
-		Store:     fireStore,
-		State:     store.StateSendQuestion,
-		NextState: store.StateCloseQuestion,
-		Handler:   &tg.QuestionHandler{Store: fireStore},
+	b.Handle(&tg.AdminWrapper{
+		Store: fireStore,
+		Handler: &tg.StateWrapper{
+			Store:     fireStore,
+			State:     store.StateSendQuestion,
+			NextState: store.StateCloseQuestion,
+			Handler:   &tg.QuestionHandler{Store: fireStore},
+		},
 	})
 	b.Handle(&tg.AnswerHandler{Store: fireStore})
 	b.Handle(&tg.BetHandler{Store: fireStore})
-	b.Handle(&tg.StateWrapper{
-		Store:     fireStore,
-		State:     store.StateCloseQuestion,
-		NextState: store.StateRevealAnswer,
-		Handler:   &tg.CloseHandler{Store: fireStore},
+	b.Handle(&tg.AdminWrapper{
+		Store: fireStore,
+		Handler: &tg.StateWrapper{
+			Store:     fireStore,
+			State:     store.StateCloseQuestion,
+			NextState: store.StateRevealAnswer,
+			Handler:   &tg.CloseHandler{Store: fireStore},
+		},
 	})
-	b.Handle(&tg.StateWrapper{
-		Store:     fireStore,
-		State:     store.StateRevealAnswer,
-		NextState: store.StateSendQuestion,
-		Handler:   &tg.RevealHandler{Store: fireStore},
+	b.Handle(&tg.AdminWrapper{
+		Store: fireStore,
+		Handler: &tg.StateWrapper{
+			Store:     fireStore,
+			State:     store.StateRevealAnswer,
+			NextState: store.StateSendQuestion,
+			Handler:   &tg.RevealHandler{Store: fireStore},
+		},
 	})
 	b.Handle(&tg.StatsHandler{Store: fireStore})
 	b.Handle(&tg.ModeHandler{Store: fireStore, Mode: store.TutorialMode})

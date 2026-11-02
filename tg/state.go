@@ -16,10 +16,10 @@ type StateStore interface {
 }
 
 type StateWrapper struct {
+	Wrapper
 	Store     StateStore
 	State     store.State
 	NextState store.State
-	Handler   Handler
 }
 
 func (w *StateWrapper) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
@@ -38,16 +38,4 @@ func (w *StateWrapper) Handle(ctx context.Context, upd Update) (msgs []Request, 
 	}
 
 	return w.Handler.Handle(ctx, upd)
-}
-
-func (w *StateWrapper) Condition(upd Update) bool {
-	return w.Handler.Condition(upd)
-}
-
-func (w *StateWrapper) HandleResponse(ctx context.Context, msg any) error {
-	return w.Handler.HandleResponse(ctx, msg)
-}
-
-func (w *StateWrapper) Name() string {
-	return w.Handler.Name()
 }
