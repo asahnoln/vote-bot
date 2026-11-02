@@ -233,6 +233,40 @@ func TestCloseCurrentQuestion(t *testing.T) {
 	}
 }
 
+func TestCloseCurrentQuestionLastOneShouldMove(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("config").Doc("current_question").Set(ctx, map[string]any{
+		"idx": 1,
+	})
+	col := c.Collection("questions")
+	col.Doc("test-q-0").Set(ctx, store.Question{
+		Q:     "Should not be used?",
+		Opts:  map[string]bool{"skip": false, "avoid": true},
+		Order: 0,
+	})
+	col.Doc("test-q-1").Set(ctx, store.Question{
+		Q:     "SaaaS or SoooS?",
+		Opts:  map[string]bool{"jej": false, "joj": false, "sas": true, "sos": true},
+		Order: 1,
+	})
+
+	f := fstore.New(c)
+
+	err := f.CloseCurrentQuestion(ctx)
+	if err != nil {
+		t.Fatalf("fstore close question: got err %v; want nil", err)
+	}
+
+	d, _ := c.Collection("config").Doc("current_question").Get(ctx)
+	if got, want := d.Data()["idx"].(int64), int64(2); got != want {
+		t.Errorf("current question idx: got %v; want %v", got, want)
+	}
+}
+
 func TestCloseCurrentQuestionIdxBiggerThanQuestionCount(t *testing.T) {
 	ctx := context.Background()
 

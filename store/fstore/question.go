@@ -42,7 +42,7 @@ func (f *Firestore) CurrentQuestion(ctx context.Context) (q store.Question, err 
 }
 
 func (f *Firestore) CloseCurrentQuestion(ctx context.Context) error {
-	_, err := f.getQuestionByCurrentIdx(ctx, 1)
+	_, err := f.getQuestionByCurrentIdx(ctx, 0)
 	if err != nil {
 		return fmt.Errorf("get question by current idx: %w", err)
 	}
