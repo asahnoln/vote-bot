@@ -169,20 +169,15 @@ func (h *BetHandler) HandleResponse(ctx context.Context, resp any) error {
 }
 
 func BetInputRichBlock(bet string) InputRichBlock {
-	if bet == "-100" {
-		bet = TextAllIn
-	} else {
-		bet += "$"
-	}
 	return InputRichBlock{
 		Type: "paragraph",
-		Text: TextYourBet + bet,
+		Text: TextYourBet + bet + "$",
 	}
 }
 
 func BetButtons(acc int, bets []int, questionID string) (btns []RichMessageButton) {
 	for _, b := range bets {
-		if b > acc {
+		if b >= acc {
 			continue
 		}
 
@@ -193,9 +188,8 @@ func BetButtons(acc int, bets []int, questionID string) (btns []RichMessageButto
 	}
 
 	btns = append(btns, RichMessageButton{
-		Text: TextAllIn,
-		// NOTE: -100 is a special for all-in
-		CallbackData: fmt.Sprintf("%s%s:%d", BetCallbackDataPrefix, questionID, -100),
+		Text:         fmt.Sprintf("%s (%d$)", TextAllIn, acc),
+		CallbackData: fmt.Sprintf("%s%s:%d", BetCallbackDataPrefix, questionID, acc),
 	})
 
 	return btns

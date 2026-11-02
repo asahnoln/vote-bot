@@ -184,7 +184,7 @@ func TestRevealMessageWrong(t *testing.T) {
 func TestRevealMessageWrongAndBankrupt(t *testing.T) {
 	tests := []struct {
 		acc int
-	}{{0}, {-100}}
+	}{{0}, {-200}}
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("acc %d$", tt.acc), func(t *testing.T) {
