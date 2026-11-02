@@ -79,6 +79,7 @@ Each user has an account. (At the start they have 1000$)
 - [x] Think on misclicks on commands - suddenly close a question, or send answer again etc
 - [x] Start bot with secret token from QR
 - [x] Sent people message on mode change???
+- [x] Right now all-in is a little hacky in callback...
 - [ ] Message on last question???
 - [ ] Send admin next question after closing current
 - [ ] Check if someone looses on last tutrial question to fix the message
@@ -86,7 +87,6 @@ Each user has an account. (At the start they have 1000$)
 - [ ] Set webhook with secret token
 - [ ] Check whole code flow for a more efficient data/db handling
 - [ ] Check default behaviour of bot without handlers (no condition met)
-- [ ] Right now all-in is a little hacky in callback...
 - [ ] Stats IGROK VA-BANK - most vabank uses
 - [ ] Check out whole code and refactor things if necessary
 - [ ] Refactor testing destination called
