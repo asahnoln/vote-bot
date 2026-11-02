@@ -131,3 +131,21 @@ func TestAccounts(t *testing.T) {
 		t.Errorf("accounts mismatch (-want +got):\n%s", diff)
 	}
 }
+
+func TestAccountsEmptyUsers(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	f := fstore.New(c)
+
+	accs, err := f.Accounts(ctx, []int{})
+	if err != nil {
+		t.Fatalf("fstore account: got err %v; want nil", err)
+	}
+
+	if got, want := len(accs), 0; got != want {
+		t.Errorf("accs len: got %v; want %v", got, want)
+	}
+}

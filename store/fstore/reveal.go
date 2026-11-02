@@ -53,6 +53,10 @@ loop:
 }
 
 func (f *Firestore) Accounts(ctx context.Context, userIDs []int) (accs map[int]int, err error) {
+	if len(userIDs) == 0 {
+		return
+	}
+
 	iter := f.c.Collection(UsersCollection).WhereEntity(firestore.PropertyFilter{
 		Path:     "user_id",
 		Operator: "in",
