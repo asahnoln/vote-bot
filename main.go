@@ -49,6 +49,20 @@ func main() {
 		Dest:      dest,
 		ErrorChan: errCh,
 	}
+	registerHandles(b, fireStore)
+
+	srv := http.Server{
+		Addr:        ":8080",
+		Handler:     b,
+		BaseContext: func(l net.Listener) context.Context { return ctx },
+	}
+	err = srv.ListenAndServe()
+	if err != nil {
+		log.Fatalf("http listen and server error: %v", err)
+	}
+}
+
+func registerHandles(b *tg.Bot, fireStore *fstore.Firestore) {
 	b.Handle(&tg.StartHandler{
 		Store: fireStore,
 		Text:  tg.StartHandlerText{},
@@ -78,16 +92,6 @@ func main() {
 	b.Handle(&tg.ModeHandler{Store: fireStore, Mode: store.TutorialMode})
 	b.Handle(&tg.ModeHandler{Store: fireStore, Mode: store.RealMode})
 	b.Handle(&tg.DefaultHandler{})
-
-	srv := http.Server{
-		Addr:        ":8080",
-		Handler:     b,
-		BaseContext: func(l net.Listener) context.Context { return ctx },
-	}
-	err = srv.ListenAndServe()
-	if err != nil {
-		log.Fatalf("http listen and server error: %v", err)
-	}
 }
 
 func initFirestoreClient(ctx context.Context) (*firestore.Client, error) {
