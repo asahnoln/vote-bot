@@ -17,9 +17,14 @@ type ModeOptionalStore interface {
 	SetMode(ctx context.Context, mode store.Mode) error
 }
 
+type TextByKeyer interface {
+	TextByKey(key string) string
+}
+
 type ModeHandler struct {
-	Store ModeOptionalStore
-	Mode  store.Mode
+	Store     ModeOptionalStore
+	TextStore TextByKeyer
+	Mode      store.Mode
 }
 
 func (h *ModeHandler) HandleResponse(context.Context, any) error {
@@ -59,7 +64,7 @@ func (h *ModeHandler) Handle(ctx context.Context, update Update) (msgs []Request
 		msgs = append(msgs, msgsWithTextForUsers(
 			users,
 			// TODO: Check text
-			fmt.Sprintf("Ваш баланс снова %d$. Началась реальная игра!", store.AccountStartMoney),
+			fmt.Sprintf(h.TextStore.TextByKey("startBalanceAgain %d"), store.AccountStartMoney),
 		)...)
 	}
 

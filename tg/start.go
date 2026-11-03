@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/asahnoln/vote-bot/store"
 )
@@ -14,16 +13,10 @@ type StartStore interface {
 	SaveUser(ctx context.Context, userID int, name string) error
 }
 
-type StartTextStore interface {
-	TextWelcomeToTheGame() string
-	TextMissedFirstQuestion() string
-	TextAlreadyJoinedTheGame() string
-}
-
 type StartHandler struct {
-	Store StartStore
-	Text  StartTextStore
-	Token string
+	Store     StartStore
+	TextStore TextByKeyer
+	Token     string
 }
 
 func (h *StartHandler) HandleResponse(context.Context, any) error {
@@ -38,29 +31,15 @@ func (h *StartHandler) Condition(upd Update) bool {
 	return upd.Message.Text == "/start "+h.Token
 }
 
-type StartHandlerText struct{}
-
-func (StartHandlerText) TextWelcomeToTheGame() string {
-	return "💸 Ваш стартовый капитал " + strconv.Itoa(store.AccountStartMoney) + "$\nСтавьте с умом, играйте смело — и пусть удача будет на вашей стороне!"
-}
-
-func (StartHandlerText) TextMissedFirstQuestion() string {
-	return "Вы пропустили первый вопрос. Правила есть правила: в этот раз вы не участвуете."
-}
-
-func (StartHandlerText) TextAlreadyJoinedTheGame() string {
-	return "Вы уже в игре!\nПовторный вход не требуется."
-}
-
 func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []Request, err error) {
 	ok, err := h.Store.FirstQuestionMissed(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("first question missed: %w", err)
 	}
 
-	text := h.Text.TextWelcomeToTheGame()
+	text := h.TextStore.TextByKey("welcomeToTheGame")
 	if ok {
-		text = h.Text.TextMissedFirstQuestion()
+		text = h.TextStore.TextByKey("missedFirstQuestion")
 	} else {
 		err = h.Store.SaveUser(
 			ctx,
@@ -70,7 +49,7 @@ func (h *StartHandler) Handle(ctx context.Context, upd Update) (msgs []Request, 
 
 		switch {
 		case errors.Is(err, store.ErrUserAlreadySaved):
-			text = h.Text.TextAlreadyJoinedTheGame()
+			text = h.TextStore.TextByKey("alreadyJoinedTheGame")
 		case err != nil:
 			return nil, fmt.Errorf("save user: %w", err)
 		}

@@ -14,8 +14,8 @@ import (
 func TestStartHandler(t *testing.T) {
 	spy := &usersStoreSpy{}
 	h := tg.StartHandler{
-		Store: spy,
-		Text:  &textStub{},
+		Store:     spy,
+		TextStore: &stubTextStore{},
 	}
 
 	upd := tg.Update{}
@@ -38,7 +38,7 @@ func TestStartHandler(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "TextWelcomeToTheGame",
+					Text: "welcomeToTheGame",
 				},
 			},
 		},
@@ -54,8 +54,8 @@ func TestStartHandlerStoreError(t *testing.T) {
 		err: wantErr,
 	}
 	h := tg.StartHandler{
-		Store: spy,
-		Text:  &textStub{},
+		Store:     spy,
+		TextStore: &stubTextStore{},
 	}
 
 	_, err := h.Handle(context.Background(), tg.Update{})
@@ -69,8 +69,8 @@ func TestStartDontSaveIfQuestionMissed(t *testing.T) {
 		firstQuestionMissed: true,
 	}
 	h := tg.StartHandler{
-		Store: spy,
-		Text:  &textStub{},
+		Store:     spy,
+		TextStore: &stubTextStore{},
 	}
 
 	msgs, err := h.Handle(context.Background(), tg.Update{
@@ -95,7 +95,7 @@ func TestStartDontSaveIfQuestionMissed(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "TextMissedFirstQuestion",
+					Text: "missedFirstQuestion",
 				},
 			},
 		},
@@ -125,8 +125,8 @@ func TestStartDontSaveIfUserAlreadyJoined(t *testing.T) {
 		err: store.ErrUserAlreadySaved,
 	}
 	h := tg.StartHandler{
-		Store: spy,
-		Text:  &textStub{},
+		Store:     spy,
+		TextStore: &stubTextStore{},
 	}
 
 	msgs, err := h.Handle(context.Background(), tg.Update{
@@ -141,7 +141,7 @@ func TestStartDontSaveIfUserAlreadyJoined(t *testing.T) {
 	}
 
 	// TODO: What text should be used?
-	if got, want := msgs[0].(tg.SendRichMessage).RichMessage.Blocks[0].Text, "TextAlreadyJoinedTheGame"; got != want {
+	if got, want := msgs[0].(tg.SendRichMessage).RichMessage.Blocks[0].Text, "alreadyJoinedTheGame"; got != want {
 		t.Errorf("text: got %v; want %v", got, want)
 	}
 }

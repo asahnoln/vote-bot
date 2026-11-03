@@ -55,7 +55,11 @@ func TestModeRealHandlerSendUsersIntroMessage(t *testing.T) {
 			},
 		},
 	}
-	h := tg.ModeHandler{Store: spy, Mode: store.RealMode}
+	h := tg.ModeHandler{
+		Store:     spy,
+		Mode:      store.RealMode,
+		TextStore: &stubTextStore{},
+	}
 
 	msgs, err := h.Handle(context.Background(), tg.Update{})
 	if err != nil {
@@ -72,7 +76,7 @@ func TestModeRealHandlerSendUsersIntroMessage(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Ваш баланс снова 1000$. Началась реальная игра!",
+					Text: "startBalanceAgain 1000",
 				},
 			},
 		},
@@ -172,4 +176,10 @@ func (s *adminsStoreStub) Admins(ctx context.Context) ([]store.User, error) {
 		{UserID: 10001},
 		{UserID: 10002},
 	}, s.err
+}
+
+type stubTextStore struct{}
+
+func (s *stubTextStore) TextByKey(key string) string {
+	return key
 }

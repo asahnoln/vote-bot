@@ -64,9 +64,9 @@ func main() {
 
 func registerHandles(b *tg.Bot, fireStore *fstore.Firestore) {
 	b.Handle(&tg.StartHandler{
-		Store: fireStore,
-		Text:  tg.StartHandlerText{},
-		Token: os.Getenv("START_TOKEN"),
+		Store:     fireStore,
+		TextStore: ruText,
+		Token:     os.Getenv("START_TOKEN"),
 	})
 
 	b.Handle(&tg.AdminWrapper{
@@ -74,8 +74,12 @@ func registerHandles(b *tg.Bot, fireStore *fstore.Firestore) {
 		Handler: &tg.ModeHandler{Store: fireStore, Mode: store.TutorialMode},
 	})
 	b.Handle(&tg.AdminWrapper{
-		Store:   fireStore,
-		Handler: &tg.ModeHandler{Store: fireStore, Mode: store.RealMode},
+		Store: fireStore,
+		Handler: &tg.ModeHandler{
+			Store:     fireStore,
+			TextStore: ruText,
+			Mode:      store.RealMode,
+		},
 	})
 
 	b.Handle(&tg.AdminWrapper{
