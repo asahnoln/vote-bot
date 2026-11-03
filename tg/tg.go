@@ -41,8 +41,18 @@ type InputRichBlock struct {
 	IsStriped bool                   `json:"is_striped"`
 }
 
+type Style string
+
+const (
+	PrimaryStyle = "primary"
+	SuccessStyle = "success"
+	DangerStyle  = "danger"
+	LinkStyle    = "link"
+)
+
 type RichMessageButton struct {
 	Text         string `json:"text"`
+	Style        Style  `json:"style"`
 	CallbackData string `json:"callback_data"`
 }
 

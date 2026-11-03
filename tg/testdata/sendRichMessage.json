@@ -9,6 +9,7 @@
         "buttons": [
           {
             "text": "button 1",
+            "style": "style",
             "callback_data": "button data"
           }
         ],

@@ -56,14 +56,17 @@ func TestAnswer(t *testing.T) {
 					Buttons: []tg.RichMessageButton{
 						{
 							Text:         "100$",
+							Style:        "success",
 							CallbackData: "bet:opt-q-67:100",
 						},
 						{
 							Text:         "200$",
+							Style:        "success",
 							CallbackData: "bet:opt-q-67:200",
 						},
 						{
 							Text:         "500$",
+							Style:        "success",
 							CallbackData: "bet:opt-q-67:500",
 						},
 					},
@@ -73,8 +76,9 @@ func TestAnswer(t *testing.T) {
 					Align: "left",
 					Buttons: []tg.RichMessageButton{
 						{
-							Text: "ВА-БАНК! (1000$)",
 							// NOTE: Uses current account
+							Text:         "ВА-БАНК! (1000$)",
+							Style:        "danger",
 							CallbackData: "bet:opt-q-67:1000",
 						},
 					},
@@ -103,20 +107,24 @@ func TestBetButtons(t *testing.T) {
 		{
 			{
 				Text:         "100$",
+				Style:        tg.SuccessStyle,
 				CallbackData: "bet:opt-q-67:100",
 			},
 			{
 				Text:         "200$",
+				Style:        tg.SuccessStyle,
 				CallbackData: "bet:opt-q-67:200",
 			},
 			{
 				Text:         "500$",
+				Style:        tg.SuccessStyle,
 				CallbackData: "bet:opt-q-67:500",
 			},
 		},
 		{
 			{
 				Text:         "ВА-БАНК! (501$)",
+				Style:        tg.DangerStyle,
 				CallbackData: "bet:opt-q-67:501",
 			},
 		},
@@ -133,12 +141,14 @@ func TestBetButtonsLessThanAcc(t *testing.T) {
 		{
 			{
 				Text:         "100$",
+				Style:        tg.SuccessStyle,
 				CallbackData: "bet:opt-q-67:100",
 			},
 		},
 		{
 			{
 				Text:         "ВА-БАНК! (150$)",
+				Style:        tg.DangerStyle,
 				CallbackData: "bet:opt-q-67:150",
 			},
 		},
@@ -155,12 +165,14 @@ func TestBetButtonsLessThanAccLikeABet(t *testing.T) {
 		{
 			{
 				Text:         "100$",
+				Style:        tg.SuccessStyle,
 				CallbackData: "bet:opt-q-67:100",
 			},
 		},
 		{
 			{
 				Text:         "ВА-БАНК! (200$)",
+				Style:        tg.DangerStyle,
 				CallbackData: "bet:opt-q-67:200",
 			},
 		},
@@ -177,6 +189,7 @@ func TestBetButtonsNoBetsLeft(t *testing.T) {
 		{
 			{
 				Text:         "ВА-БАНК! (50$)",
+				Style:        tg.DangerStyle,
 				CallbackData: "bet:opt-q-67:50",
 			},
 		},

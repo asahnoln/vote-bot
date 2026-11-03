@@ -25,6 +25,7 @@ func TestSendRichMessageStr(t *testing.T) {
 					Buttons: []tg.RichMessageButton{
 						{
 							Text:         "button 1",
+							Style:        "style",
 							CallbackData: "button data",
 						},
 					},
@@ -70,6 +71,7 @@ func TestEditMessageTextJSON(t *testing.T) {
 					Buttons: []tg.RichMessageButton{
 						{
 							Text:         "edit button 1",
+							Style:        "coolStyle",
 							CallbackData: "edit button data",
 						},
 					},

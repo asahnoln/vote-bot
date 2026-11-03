@@ -188,6 +188,7 @@ func BetButtonsRows(acc int, bets []int, questionID string) (btnsRows [][]RichMe
 
 		btnsRows[0] = append(btnsRows[0], RichMessageButton{
 			Text:         fmt.Sprintf("%d$", b),
+			Style:        SuccessStyle,
 			CallbackData: fmt.Sprintf("%s%s:%d", BetCallbackDataPrefix, questionID, b),
 		})
 	}
@@ -199,6 +200,7 @@ func BetButtonsRows(acc int, bets []int, questionID string) (btnsRows [][]RichMe
 	btnsRows = append(btnsRows, []RichMessageButton{
 		{
 			Text:         fmt.Sprintf("%s (%d$)", TextAllIn, acc),
+			Style:        DangerStyle,
 			CallbackData: fmt.Sprintf("%s%s:%d", BetCallbackDataPrefix, questionID, acc),
 		},
 	})

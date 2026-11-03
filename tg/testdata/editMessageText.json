@@ -10,6 +10,7 @@
         "buttons": [
           {
             "text": "edit button 1",
+            "style": "coolStyle",
             "callback_data": "edit button data"
           }
         ],
