@@ -66,6 +66,12 @@ func TestAnswer(t *testing.T) {
 							Text:         "500$",
 							CallbackData: "bet:opt-q-67:500",
 						},
+					},
+				},
+				{
+					Type:  "buttons",
+					Align: "left",
+					Buttons: []tg.RichMessageButton{
 						{
 							Text: "ВА-БАНК! (1000$)",
 							// NOTE: Uses current account
@@ -92,23 +98,27 @@ func TestAnswer(t *testing.T) {
 }
 
 func TestBetButtons(t *testing.T) {
-	btns := tg.BetButtons(501, []int{100, 200, 500}, "opt-q-67")
-	want := []tg.RichMessageButton{
+	btns := tg.BetButtonsRows(501, []int{100, 200, 500}, "opt-q-67")
+	want := [][]tg.RichMessageButton{
 		{
-			Text:         "100$",
-			CallbackData: "bet:opt-q-67:100",
+			{
+				Text:         "100$",
+				CallbackData: "bet:opt-q-67:100",
+			},
+			{
+				Text:         "200$",
+				CallbackData: "bet:opt-q-67:200",
+			},
+			{
+				Text:         "500$",
+				CallbackData: "bet:opt-q-67:500",
+			},
 		},
 		{
-			Text:         "200$",
-			CallbackData: "bet:opt-q-67:200",
-		},
-		{
-			Text:         "500$",
-			CallbackData: "bet:opt-q-67:500",
-		},
-		{
-			Text:         "ВА-БАНК! (501$)",
-			CallbackData: "bet:opt-q-67:501",
+			{
+				Text:         "ВА-БАНК! (501$)",
+				CallbackData: "bet:opt-q-67:501",
+			},
 		},
 	}
 
@@ -118,15 +128,19 @@ func TestBetButtons(t *testing.T) {
 }
 
 func TestBetButtonsLessThanAcc(t *testing.T) {
-	btns := tg.BetButtons(150, []int{100, 200, 500}, "opt-q-67")
-	want := []tg.RichMessageButton{
+	btns := tg.BetButtonsRows(150, []int{100, 200, 500}, "opt-q-67")
+	want := [][]tg.RichMessageButton{
 		{
-			Text:         "100$",
-			CallbackData: "bet:opt-q-67:100",
+			{
+				Text:         "100$",
+				CallbackData: "bet:opt-q-67:100",
+			},
 		},
 		{
-			Text:         "ВА-БАНК! (150$)",
-			CallbackData: "bet:opt-q-67:150",
+			{
+				Text:         "ВА-БАНК! (150$)",
+				CallbackData: "bet:opt-q-67:150",
+			},
 		},
 	}
 
@@ -136,15 +150,35 @@ func TestBetButtonsLessThanAcc(t *testing.T) {
 }
 
 func TestBetButtonsLessThanAccLikeABet(t *testing.T) {
-	btns := tg.BetButtons(200, []int{100, 200, 500}, "opt-q-67")
-	want := []tg.RichMessageButton{
+	btns := tg.BetButtonsRows(200, []int{100, 200, 500}, "opt-q-67")
+	want := [][]tg.RichMessageButton{
 		{
-			Text:         "100$",
-			CallbackData: "bet:opt-q-67:100",
+			{
+				Text:         "100$",
+				CallbackData: "bet:opt-q-67:100",
+			},
 		},
 		{
-			Text:         "ВА-БАНК! (200$)",
-			CallbackData: "bet:opt-q-67:200",
+			{
+				Text:         "ВА-БАНК! (200$)",
+				CallbackData: "bet:opt-q-67:200",
+			},
+		},
+	}
+
+	if diff := cmp.Diff(want, btns); diff != "" {
+		t.Errorf("bet buttons mismatch (-want +got):%s", diff)
+	}
+}
+
+func TestBetButtonsNoBetsLeft(t *testing.T) {
+	btns := tg.BetButtonsRows(50, []int{100, 200, 500}, "opt-q-67")
+	want := [][]tg.RichMessageButton{
+		{
+			{
+				Text:         "ВА-БАНК! (50$)",
+				CallbackData: "bet:opt-q-67:50",
+			},
 		},
 	}
 

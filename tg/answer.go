@@ -82,13 +82,17 @@ func (h *AnswerHandler) Handle(ctx context.Context, upd Update) (msgs []Request,
 					Type: InputRichBlockParagraphType,
 					Text: TextChooseBet,
 				},
-				{
-					Type:    InputRichBlockButtonsType,
-					Align:   AlignLeft,
-					Buttons: BetButtons(user.Acc, []int{100, 200, 500}, qID),
-				},
 			},
 		},
+	}
+
+	btnsRows := BetButtonsRows(user.Acc, []int{100, 200, 500}, qID)
+	for _, r := range btnsRows {
+		msg.RichMessage.Blocks = append(msg.RichMessage.Blocks, InputRichBlock{
+			Type:    InputRichBlockButtonsType,
+			Align:   AlignLeft,
+			Buttons: r,
+		})
 	}
 
 	msgs = append(msgs, msg)
@@ -175,24 +179,31 @@ func BetInputRichBlock(bet string) InputRichBlock {
 	}
 }
 
-func BetButtons(acc int, bets []int, questionID string) (btns []RichMessageButton) {
+func BetButtonsRows(acc int, bets []int, questionID string) (btnsRows [][]RichMessageButton) {
+	btnsRows = make([][]RichMessageButton, 1)
 	for _, b := range bets {
 		if b >= acc {
 			continue
 		}
 
-		btns = append(btns, RichMessageButton{
+		btnsRows[0] = append(btnsRows[0], RichMessageButton{
 			Text:         fmt.Sprintf("%d$", b),
 			CallbackData: fmt.Sprintf("%s%s:%d", BetCallbackDataPrefix, questionID, b),
 		})
 	}
 
-	btns = append(btns, RichMessageButton{
-		Text:         fmt.Sprintf("%s (%d$)", TextAllIn, acc),
-		CallbackData: fmt.Sprintf("%s%s:%d", BetCallbackDataPrefix, questionID, acc),
+	if len(btnsRows[0]) == 0 {
+		btnsRows = make([][]RichMessageButton, 0)
+	}
+
+	btnsRows = append(btnsRows, []RichMessageButton{
+		{
+			Text:         fmt.Sprintf("%s (%d$)", TextAllIn, acc),
+			CallbackData: fmt.Sprintf("%s%s:%d", BetCallbackDataPrefix, questionID, acc),
+		},
 	})
 
-	return btns
+	return btnsRows
 }
 
 func qIDAndData(prefix Prefix, s string) (qID string, data string, err error) {
