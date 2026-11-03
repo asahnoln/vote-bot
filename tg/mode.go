@@ -59,7 +59,7 @@ func (h *ModeHandler) Handle(ctx context.Context, update Update) (msgs []Request
 		msgs = append(msgs, msgsWithTextForUsers(
 			users,
 			// TODO: Check text
-			fmt.Sprintf("Ваш баланс сброшен до стартовых %d$. Началась реальная игра!", store.AccountStartMoney),
+			fmt.Sprintf("Ваш баланс снова %d$. Началась реальная игра!", store.AccountStartMoney),
 		)...)
 	}
 

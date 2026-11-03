@@ -72,7 +72,7 @@ func TestModeRealHandlerSendUsersIntroMessage(t *testing.T) {
 			Blocks: []tg.InputRichBlock{
 				{
 					Type: "paragraph",
-					Text: "Ваш баланс сброшен до стартовых 1000$. Началась реальная игра!",
+					Text: "Ваш баланс снова 1000$. Началась реальная игра!",
 				},
 			},
 		},
