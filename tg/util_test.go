@@ -54,8 +54,8 @@ func TestSpreadButtonsValues(t *testing.T) {
 
 	want := [][]tg.RichMessageButton{
 		{
-			{Text: "opt1", CallbackData: "opt:q-123:opt1"},
-			{Text: "opt2", CallbackData: "opt:q-123:opt2"},
+			{Text: "opt1", Style: tg.PrimaryStyle, CallbackData: "opt:q-123:opt1"},
+			{Text: "opt2", Style: tg.PrimaryStyle, CallbackData: "opt:q-123:opt2"},
 		},
 	}
 

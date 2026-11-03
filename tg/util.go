@@ -32,6 +32,7 @@ func SpreadButtons(opts map[string]bool, questionID string, maxPerRow int) (btns
 
 		row = append(row, RichMessageButton{
 			Text:         o,
+			Style:        PrimaryStyle,
 			CallbackData: fmt.Sprintf("%s%s:%s", OptCallbackDataPrefix, questionID, o),
 		})
 
