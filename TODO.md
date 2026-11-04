@@ -80,11 +80,13 @@ Each user has an account. (At the start they have 1000$)
 - [x] Start bot with secret token from QR
 - [x] Sent people message on mode change???
 - [x] Right now all-in is a little hacky in callback...
+- [ ] Race condition on answers and bets
+- [ ] Make sure question close edits are in priority over other edits
+- [ ] Set webhook with secret token
 - [ ] Message on last question???
 - [ ] Send admin next question after closing current
 - [ ] Check if someone looses on last tutrial question to fix the message
 - [ ] Check flow on tutorial mode
-- [ ] Set webhook with secret token
 - [ ] Check whole code flow for a more efficient data/db handling
 - [ ] Check default behaviour of bot without handlers (no condition met)
 - [ ] Stats IGROK VA-BANK - most vabank uses
@@ -107,3 +109,12 @@ MOLNIYA - most fastest right answers (even with 0 account)
 SHERLOCK - most right answers (even with 0 account)
 IGROK VA-BANK - most vabank uses
 HINTMAN - who use the most hints (even with 0 account)
+
+## PROBLEM
+
+| /close | save bet |
+| -------------- | --------------- |
+| answers received | |
+| | save bet |
+| send closing info | |
+| | send bet info |

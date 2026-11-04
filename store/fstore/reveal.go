@@ -24,41 +24,45 @@ func (f *Firestore) Answers(ctx context.Context, questionID string) (answers []s
 		return answers, fmt.Errorf("collection by mode: %w", err)
 	}
 
-	iter := f.c.Collection(answersCollection).WhereEntity(firestore.PropertyFilter{
+	q := f.c.Collection(answersCollection).WhereEntity(firestore.PropertyFilter{
 		Path:     "question_id",
 		Operator: EqualOp,
 		Value:    questionID,
-	}).Documents(ctx)
+	})
 
-	// f.c.RunTransaction(ctx, func(ctx context.Context, t *firestore.Transaction) error {
-	// 	t.Execute
-	// 	return nil
-	// })
+	err = f.c.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		iter := tx.Documents(q)
 
-loop:
-	for {
-		d, err := iter.Next()
-		switch {
-		case err == iterator.Done:
-			break loop
-		case err != nil:
-			return nil, fmt.Errorf("answers iter: %w", err)
+	loop:
+		for {
+			d, err := iter.Next()
+			switch {
+			case err == iterator.Done:
+				break loop
+			case err != nil:
+				return fmt.Errorf("answers iter: %w", err)
+			}
+
+			err = tx.Update(d.Ref, []firestore.Update{
+				{Path: "closed", Value: true},
+			})
+			if err != nil {
+				return fmt.Errorf("doc %q update: %w", d.Ref.ID, err)
+			}
+
+			a := store.Answer{}
+			err = d.DataTo(&a)
+			if err != nil {
+				return fmt.Errorf("data %#v to answer: %w", d, err)
+			}
+
+			answers = append(answers, a)
 		}
 
-		_, err = d.Ref.Update(ctx, []firestore.Update{
-			{Path: "closed", Value: true},
-		})
-		if err != nil {
-			return nil, fmt.Errorf("doc %q update: %w", d.Ref.ID, err)
-		}
-
-		a := store.Answer{}
-		err = d.DataTo(&a)
-		if err != nil {
-			return nil, fmt.Errorf("data %#v to answer: %w", d, err)
-		}
-
-		answers = append(answers, a)
+		return nil
+	})
+	if err != nil {
+		return answers, fmt.Errorf("transaction: %w", err)
 	}
 
 	return answers, nil
