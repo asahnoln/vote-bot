@@ -52,11 +52,11 @@ func (h *StatsHandler) Handle(ctx context.Context, upd Update) (msgs []Request, 
 							},
 							{
 								IsHeader: true,
-								Text:     "Кол-во правильных ответов",
+								Text:     "Баланс",
 							},
 							{
 								IsHeader: true,
-								Text:     "Баланс",
+								Text:     "Кол-во правильных ответов",
 							},
 							{
 								IsHeader: true,
@@ -72,8 +72,8 @@ func (h *StatsHandler) Handle(ctx context.Context, upd Update) (msgs []Request, 
 	for _, u := range stats {
 		msg.RichMessage.Blocks[0].Cells = append(msg.RichMessage.Blocks[0].Cells, []RichBlockTableCell{
 			{Text: u.Name, Align: AlignCenter},
-			{Text: fmt.Sprintf("%d", u.RightAnswerCnt), Align: AlignCenter},
 			{Text: fmt.Sprintf("%d$", u.Acc), Align: AlignCenter},
+			{Text: fmt.Sprintf("%d", u.RightAnswerCnt), Align: AlignCenter},
 			{Text: fmt.Sprintf("%0.2f", u.AvgSpeed), Align: AlignCenter},
 		})
 	}

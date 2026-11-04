@@ -40,11 +40,11 @@ func TestStats(t *testing.T) {
 							},
 							{
 								IsHeader: true,
-								Text:     "Кол-во правильных ответов",
+								Text:     "Баланс",
 							},
 							{
 								IsHeader: true,
-								Text:     "Баланс",
+								Text:     "Кол-во правильных ответов",
 							},
 							{
 								IsHeader: true,
@@ -57,11 +57,11 @@ func TestStats(t *testing.T) {
 								Align: "center",
 							},
 							{
-								Text:  "9",
+								Text:  "9999$",
 								Align: "center",
 							},
 							{
-								Text:  "9999$",
+								Text:  "9",
 								Align: "center",
 							},
 							{
@@ -75,11 +75,11 @@ func TestStats(t *testing.T) {
 								Align: "center",
 							},
 							{
-								Text:  "8",
+								Text:  "9999$",
 								Align: "center",
 							},
 							{
-								Text:  "9999$",
+								Text:  "8",
 								Align: "center",
 							},
 							{
