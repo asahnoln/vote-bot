@@ -3,7 +3,7 @@ package fstore
 import (
 	"context"
 	"fmt"
-	"time"
+	"strconv"
 
 	"cloud.google.com/go/firestore"
 	"github.com/asahnoln/vote-bot/store"
@@ -75,24 +75,14 @@ func (f *Firestore) FirstQuestionMissed(ctx context.Context) (ok bool, err error
 	return idx > 0, nil
 }
 
-func (f *Firestore) SaveCurrentQuestionSentAt(ctx context.Context) error {
-	q, err := f.getQuestionByCurrentIdx(ctx, 0)
+func (f *Firestore) SaveCurrentQuestionSentAt(ctx context.Context, userID int) error {
+	_, err := f.c.Collection(UsersCollection).Doc(strconv.Itoa(userID)).Update(ctx, []firestore.Update{
+		{Path: "last_question_sent_at", Value: firestore.ServerTimestamp},
+	})
 	if err != nil {
-		return fmt.Errorf("current question by idx: %w", err)
+		return fmt.Errorf("user %d update: %w", userID, err)
 	}
 
-	col, err := f.CollectionByMode(ctx, QuestionsCollection)
-	if err != nil {
-		return fmt.Errorf("collection by mode: %w", err)
-	}
-
-	_, err = f.c.Collection(col).Doc(q.ID).Update(ctx,
-		[]firestore.Update{
-			{Path: "sent_at", Value: time.Now()},
-		})
-	if err != nil {
-		return fmt.Errorf("current question update: %w", err)
-	}
 	return nil
 }
 

@@ -202,18 +202,15 @@ func TestSaveBetWithStatsData(t *testing.T) {
 	c := firestoreMemoryEmulatorClient(t, ctx)
 	resetDB(ctx, c)
 
-	c.Collection("questions").Doc("test-q-109").Set(ctx, map[string]any{
-		"sent_at": time.Now().Add(-3 * time.Second),
-	})
-
 	c.Collection("answers").Doc("235:test-q-109").Set(ctx, map[string]any{
 		"user_id":  235,
 		"is_right": true,
 	})
 
 	c.Collection("users").Doc("235").Set(ctx, map[string]any{
-		"right_answer_cnt": 2,
-		"avg_speed":        1.5,
+		"right_answer_cnt":      2,
+		"avg_speed":             1.5,
+		"last_question_sent_at": time.Now().Add(-3 * time.Second),
 	})
 
 	f := fstore.New(c)

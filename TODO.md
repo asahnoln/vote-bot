@@ -81,8 +81,8 @@ Each user has an account. (At the start they have 1000$)
 - [x] Sent people message on mode change???
 - [x] Right now all-in is a little hacky in callback...
 - [x] Race condition on answers and bets
+- [x] Set webhook with secret token
 - [ ] Make sure question close edits are in priority over other edits
-- [ ] Set webhook with secret token
 - [ ] Message on last question???
 - [ ] Send admin next question after closing current
 - [ ] Check if someone looses on last tutrial question to fix the message

@@ -110,11 +110,6 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("transaction: %w", err)
 	}
 
-	q, err := f.question(ctx, questionID)
-	if err != nil {
-		return fmt.Errorf("user query: %w", err)
-	}
-
 	// Not in tutorial mode
 	// TODO: Make more understandable
 	mode := store.RealMode
@@ -125,7 +120,7 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 	upds := []firestore.Update{}
 	if a.IsRight && mode != store.TutorialMode {
 		upds = append(upds, firestore.Update{Path: "right_answer_cnt", Value: firestore.Increment(1)})
-		upds = append(upds, firestore.Update{Path: "avg_speed", Value: (u.AvgSpeed*float64(u.RightAnswerCnt) + time.Since(q.SentAt).Seconds()) / (float64(u.RightAnswerCnt) + 1)})
+		upds = append(upds, firestore.Update{Path: "avg_speed", Value: (u.AvgSpeed*float64(u.RightAnswerCnt) + time.Since(u.LastQuestionSentAt).Seconds()) / (float64(u.RightAnswerCnt) + 1)})
 	}
 	upds = append(upds, firestore.Update{Path: "acc", Value: firestore.Increment(betMlp)})
 

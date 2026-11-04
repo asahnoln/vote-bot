@@ -74,10 +74,6 @@ func TestQuestion(t *testing.T) {
 		t.Errorf("request 2nd user id: got %v; want %v", got, want)
 	}
 
-	if got, want := storeSpy.questionSentAtStoreSpy.called, true; got != want {
-		t.Errorf("question save sent at called: got %v; want %v", got, want)
-	}
-
 	if got, want := msgs[3].(tg.SendRichMessage).ChatID, 10001; got != want {
 		t.Errorf("request final admin user id: got %v; want %v", got, want)
 	}
@@ -97,11 +93,15 @@ func TestQuestionHandleResponse(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := spy.userID, 22; got != want {
+	if got, want := spy.lastMessageStoreSpy.userID, 22; got != want {
 		t.Errorf("last user ID saved: got %v; want %v", got, want)
 	}
-	if got, want := spy.msgID, 1853; got != want {
+	if got, want := spy.lastMessageStoreSpy.msgID, 1853; got != want {
 		t.Errorf("last msg ID saved: got %v; want %v", got, want)
+	}
+
+	if got, want := spy.questionSentAtStoreSpy.userID, 22; got != want {
+		t.Errorf("question save sent at user ID: got %v; want %v", got, want)
 	}
 }
 
@@ -126,7 +126,7 @@ func TestQuestionHandleResponseDontSaveAdminMessage(t *testing.T) {
 		t.Fatalf("got err %v; want nil", err)
 	}
 
-	if got, want := spy.userID, 0; got != want {
+	if got, want := spy.lastMessageStoreSpy.userID, 0; got != want {
 		t.Errorf("last user ID saved: got %v; want %v", got, want)
 	}
 	if got, want := spy.msgID, 0; got != want {
@@ -196,7 +196,24 @@ func TestQuestionSaveSentAtError(t *testing.T) {
 	h := tg.QuestionHandler{
 		Store: stub,
 	}
-	_, err := h.Handle(context.Background(), tg.Update{})
+	err := h.HandleResponse(context.Background(), tg.Message{})
+
+	if got, want := err, wantErr; !errors.Is(got, want) {
+		t.Fatalf("got err %v; want %v", got, want)
+	}
+}
+
+func TestLastMessageError(t *testing.T) {
+	wantErr := errors.New("question sent at error")
+	stub := &questionHandlerStoreStub{
+		lastMessageStoreSpy: lastMessageStoreSpy{
+			err: wantErr,
+		},
+	}
+	h := tg.QuestionHandler{
+		Store: stub,
+	}
+	err := h.HandleResponse(context.Background(), tg.Message{})
 
 	if got, want := err, wantErr; !errors.Is(got, want) {
 		t.Fatalf("got err %v; want %v", got, want)
@@ -229,11 +246,11 @@ type questionHandlerStoreStub struct {
 }
 
 type questionSentAtStoreSpy struct {
-	called bool
+	userID int
 	err    error
 }
 
-func (s *questionSentAtStoreSpy) SaveCurrentQuestionSentAt(context.Context) error {
-	s.called = true
+func (s *questionSentAtStoreSpy) SaveCurrentQuestionSentAt(ctx context.Context, userID int) error {
+	s.userID = userID
 	return s.err
 }
