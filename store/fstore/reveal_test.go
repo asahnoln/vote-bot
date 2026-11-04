@@ -96,4 +96,9 @@ func TestAnswers(t *testing.T) {
 	if diff := cmp.Diff(want, answers); diff != "" {
 		t.Errorf("answers mismatch (-want +got):\n%s", diff)
 	}
+
+	d, _ := c.Collection("answers").Doc("156:answer-q-51").Get(ctx)
+	if got, want := d.Data()["closed"], true; got != want {
+		t.Errorf("closed: got %v; want %v", got, want)
+	}
 }

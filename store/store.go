@@ -21,6 +21,7 @@ type Answer struct {
 	A       string `firestore:"a"`
 	AllIn   bool   `firestore:"all_in"`
 	Acc     int    `firestore:"acc"`
+	Closed  bool   `firestore:"closed"`
 }
 
 type User struct {
@@ -39,6 +40,7 @@ var (
 	ErrQuestionHasNoRightAnswer         = errors.New("question has no right answer")
 	ErrQuestionsOffsetMustNotBeNegative = errors.New("questions offset must not be negative")
 	ErrUserAlreadySaved                 = errors.New("user already saved")
+	ErrAnswerClosed                     = errors.New("answer is closed")
 )
 
 const AccountStartMoney = 1000

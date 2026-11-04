@@ -2,6 +2,7 @@ package fstore_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -356,5 +357,28 @@ func TestTutorialSaveBetWontSaveStats(t *testing.T) {
 	}
 	if got, want := d.Data()["right_answer_cnt"], int64(4); got != want {
 		t.Errorf("avg speed: got %v; want %v", got, want)
+	}
+}
+
+func TestSaveBetErrorsIfAnswerIsClosed(t *testing.T) {
+	ctx := context.Background()
+
+	c := firestoreMemoryEmulatorClient(t, ctx)
+	resetDB(ctx, c)
+
+	c.Collection("questions").Doc("test-q-closed").Set(ctx, map[string]any{})
+
+	c.Collection("users").Doc("112").Set(ctx, map[string]any{"user_id": 112})
+	c.Collection("answers").Doc("112:test-q-closed").Set(ctx, map[string]any{
+		"user_id": 112,
+		"a":       "wrong answer",
+		"closed":  true,
+	})
+
+	f := fstore.New(c)
+
+	err := f.SaveBet(ctx, 112, "test-q-closed", 100)
+	if got, want := err, store.ErrAnswerClosed; !errors.Is(got, want) {
+		t.Errorf("got err %v; want %q", got, want)
 	}
 }

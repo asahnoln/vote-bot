@@ -30,6 +30,11 @@ func (f *Firestore) Answers(ctx context.Context, questionID string) (answers []s
 		Value:    questionID,
 	}).Documents(ctx)
 
+	// f.c.RunTransaction(ctx, func(ctx context.Context, t *firestore.Transaction) error {
+	// 	t.Execute
+	// 	return nil
+	// })
+
 loop:
 	for {
 		d, err := iter.Next()
@@ -38,6 +43,13 @@ loop:
 			break loop
 		case err != nil:
 			return nil, fmt.Errorf("answers iter: %w", err)
+		}
+
+		_, err = d.Ref.Update(ctx, []firestore.Update{
+			{Path: "closed", Value: true},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("doc %q update: %w", d.Ref.ID, err)
 		}
 
 		a := store.Answer{}

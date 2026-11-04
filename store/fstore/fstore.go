@@ -28,7 +28,7 @@ const (
 )
 
 func New(c *firestore.Client) *Firestore {
-	return &Firestore{c}
+	return &Firestore{c: c}
 }
 
 func (f *Firestore) Mode(ctx context.Context) (store.Mode, error) {

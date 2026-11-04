@@ -22,6 +22,7 @@ func (f *Firestore) SaveAnswer(ctx context.Context, userID int, questionID strin
 	if err != nil {
 		return fmt.Errorf("collection by mode: %w", err)
 	}
+
 	_, err = f.c.Collection(answersCollection).
 		Doc(answerDocID(userID, questionID)).
 		Set(ctx,
@@ -70,25 +71,43 @@ func (f *Firestore) SaveBet(ctx context.Context, userID int, questionID string, 
 		return fmt.Errorf("collection by mode: %w", err)
 	}
 
-	a, err := f.queryAndMap[store.Answer](ctx, answersCollection, answerDocID(userID, questionID))
-	if err != nil {
-		return fmt.Errorf("answer query: %w", err)
-	}
-
+	aID := answerDocID(userID, questionID)
+	a := store.Answer{}
+	aRef := f.c.Collection(answersCollection).Doc(aID)
 	betMlp := bet
-	if !a.IsRight {
-		betMlp *= -1
-	}
-	_, err = f.c.Collection(answersCollection).
-		Doc(answerDocID(userID, questionID)).
-		Set(ctx,
+	err = f.c.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		d, err := tx.Get(aRef)
+		if err != nil {
+			return fmt.Errorf("get: %w", err)
+		}
+
+		err = d.DataTo(&a)
+		if err != nil {
+			return fmt.Errorf("data to: %w", err)
+		}
+
+		if a.Closed {
+			return fmt.Errorf("answer %q: %w", aID, store.ErrAnswerClosed)
+		}
+
+		if !a.IsRight {
+			betMlp *= -1
+		}
+
+		err = tx.Set(aRef,
 			map[string]any{
 				"bet":    bet,
 				"all_in": bet == u.Acc,
 				"acc":    u.Acc + betMlp,
 			}, firestore.MergeAll)
+		if err != nil {
+			return fmt.Errorf("bet set: %w", err)
+		}
+
+		return nil
+	})
 	if err != nil {
-		return fmt.Errorf("doc set: %w", err)
+		return fmt.Errorf("transaction: %w", err)
 	}
 
 	q, err := f.question(ctx, questionID)
