@@ -80,7 +80,7 @@ Each user has an account. (At the start they have 1000$)
 - [x] Start bot with secret token from QR
 - [x] Sent people message on mode change???
 - [x] Right now all-in is a little hacky in callback...
-- [ ] Race condition on answers and bets
+- [x] Race condition on answers and bets
 - [ ] Make sure question close edits are in priority over other edits
 - [ ] Set webhook with secret token
 - [ ] Message on last question???
