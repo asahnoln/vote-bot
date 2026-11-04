@@ -3,6 +3,7 @@ package tg
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -99,6 +100,7 @@ type Sender interface {
 type Bot struct {
 	Dest      Sender
 	ErrorChan chan<- error
+	Token     string
 	hs        []Handler
 }
 
@@ -126,10 +128,25 @@ func (b *Bot) Handle(h Handler) {
 	b.hs = append(b.hs, h)
 }
 
+var ErrWrongTelegramToken = fmt.Errorf("wrong telegram token")
+
+const TelegramSecretTokenHeader = "X-Telegram-Bot-Api-Secret-Token"
+
 func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
+	if token := r.Header.Get(TelegramSecretTokenHeader); token != b.Token {
+		w.WriteHeader(http.StatusUnauthorized)
+		b.asyncError(fmt.Errorf("got token %q: %w", token, ErrWrongTelegramToken))
+		return
+	}
+
 	upd, err := parseUpdate(w, r)
 	if err != nil {
 		b.asyncError(err)
+		return
+	}
+
+	if len(b.hs) == 0 {
+		b.asyncError(errors.New("no handlers assigned"))
 		return
 	}
 

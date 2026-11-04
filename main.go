@@ -48,6 +48,7 @@ func main() {
 	b := &tg.Bot{
 		Dest:      dest,
 		ErrorChan: errCh,
+		Token:     os.Getenv("TELEGRAM_SECRET_TOKEN"),
 	}
 	registerHandles(b, fireStore)
 

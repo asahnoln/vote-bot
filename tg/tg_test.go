@@ -22,7 +22,6 @@ func init() {
 	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
 }
 
-// TODO: Check if update is correct for every type of action, have a default action as well
 func TestDefaultNotFound(t *testing.T) {
 	r := httptest.NewRequest("", "/", nil)
 	w := httptest.NewRecorder()
@@ -83,6 +82,53 @@ func TestBotDestError(t *testing.T) {
 		if got, want := w.Code, http.StatusOK; got != want {
 			t.Errorf("bot response code: got %v; want %v", got, want)
 		}
+	})
+}
+
+func TestBotChecksWebhookTokenNoHeaderFromTG(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		errChan := make(chan error, 1)
+		b := tg.Bot{
+			Token:     "secretToken",
+			ErrorChan: errChan,
+		}
+
+		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))
+		w := httptest.NewRecorder()
+
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusUnauthorized; got != want {
+			t.Errorf("bot response code: got %v; want %v", got, want)
+		}
+
+		err := <-errChan
+		if got, want := err, tg.ErrWrongTelegramToken; !errors.Is(got, want) {
+			t.Errorf("got err %v; want %v", got, want)
+		}
+	})
+}
+
+func TestBotChecksWebhookTokenRight(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		b := tg.Bot{
+			Token: "secretToken",
+		}
+
+		r := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader("{}"))
+		r.Header.Set("X-Telegram-Bot-Api-Secret-Token", "secretToken")
+		w := httptest.NewRecorder()
+
+		b.ServeHTTP(w, r)
+
+		if got, want := w.Code, http.StatusOK; got != want {
+			t.Errorf("bot response code: got %v; want %v", got, want)
+		}
+
+		// err := <-errChan
+		// if got, want := err, tg.ErrWrongTelegramToken; !errors.Is(got, want) {
+		// 	t.Errorf("got err %v; want %v", got, want)
+		// }
 	})
 }
 
