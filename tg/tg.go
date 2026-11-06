@@ -134,6 +134,12 @@ const TelegramSecretTokenHeader = "X-Telegram-Bot-Api-Secret-Token"
 
 func (b *Bot) webhook(w http.ResponseWriter, r *http.Request) {
 	if token := r.Header.Get(TelegramSecretTokenHeader); token != b.Token {
+		// TODO: Remove this logger
+		{
+			body, _ := io.ReadAll(r.Body)
+			defer r.Body.Close()
+			slog.Info("body without token", "body", body)
+		}
 		w.WriteHeader(http.StatusUnauthorized)
 		b.asyncError(fmt.Errorf("got token %q: %w", token, ErrWrongTelegramToken))
 		return
